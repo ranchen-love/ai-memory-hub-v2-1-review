@@ -24,13 +24,13 @@ Um histórico de conversa não é necessariamente uma memória confiável. Decis
 ## Como funciona
 ```mermaid
 flowchart LR
-  A["Authorized exports / manifests / checkpoints"] --> B["Grants and adapters"]
-  B --> C["L0–L3 · Projects · Memory candidates"]
-  B --> D["Versioned files · SHA-256"]
-  C --> E["Local Vault"]
+  A["Exportações / manifestos / checkpoints autorizados"] --> B["Permissões de fonte e adaptadores"]
+  B --> C["L0–L3 · Projetos · Candidatos de memória"]
+  B --> D["Arquivos versionados · SHA-256"]
+  C --> E["Vault local"]
   D --> E
-  E --> F["Reviewed offline transfer"]
-  F --> G["Authorized recipient Vault"]
+  E --> F["Transferência offline revisada"]
+  F --> G["Vault receptor autorizado"]
 ```
 O **Vault** é uma pasta local controlada pelo proprietário e armazenada **fora do repositório Git**. Usa um índice SQLite e blocos de arquivos endereçados por conteúdo. Cada instância possui uma classe de sensibilidade; permissões do sistema operacional protegem o acesso. Pessoas ou públicos diferentes precisam de identidades ou limites de armazenamento separados.
 L0 identifica a conversa, L1 resume, L2 registra objetivos, decisões, testes e próximas ações; L3 guarda mensagens visíveis originais **somente mediante autorização adicional**, com sua fonte e revisão. Atualizações em L2 não alteram nem inventam o histórico L3.
