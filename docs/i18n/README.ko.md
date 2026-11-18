@@ -1,5 +1,5 @@
 # AI Memory Hub — 사용자가 소유하는 AI 기억 허브
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **대화 맥락도, 파일도, 통제권도 사용자에게.** 로컬 우선·플랫폼 중립 방식으로 장기 기억, 프로젝트 이어 하기, AI 에이전트 간 승인된 인계를 지원하는 기반입니다.
 **버전 2.2.0 · Python 3.11 이상 · MIT 라이선스 · CLI**
 대화 기록만으로는 장기 프로젝트를 안정적으로 이어가기 어렵습니다. 중요한 결정은 긴 대화 속에 묻히고 첨부 파일이나 AI 결과물은 생성 당시의 맥락에서 분리됩니다. 다른 AI로 옮기면 설명부터 다시 해야 하죠. **AI Memory Hub**는 명시적으로 허용한 대화 맥락, 증거, 프로젝트 상태, 실제 파일 바이트를 특정 AI 서비스와 독립된 로컬 Vault에 저장합니다.
@@ -51,7 +51,7 @@ python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consen
 ```
 `examples/memory-hub.json`에는 파일을 포함한 4개의 합성 항목이 있습니다. 다시 실행하면 변경되지 않은 항목을 중복 저장하지 않습니다. `asset copy`는 Vault 안에 해시가 검증된 사본을 생성합니다.
 ### 승인된 소스 가져오기
-먼저 Vault를 초기화하세요. `memory-hub.json`이 있는 디렉터리를 `source grant ID normalized --path PATH --consent`로 등록하고 `local run --source ID`를 실행합니다. `local status`에서 권한, 처리 상태와 오류를 확인하세요. ChatGPT 내보내기는 `chatgpt_export`와 다운로드한 지원 `.json`/`.zip`을 사용합니다. L3를 보관할 때에만 별도의 `--allow-raw` 승인을 추가합니다. 전역 채팅 감시 기능은 없습니다. [어댑터](docs/adapters.md)와 [배포 안내](docs/deployment.md)를 참고하세요.
+먼저 Vault를 초기화하세요. `memory-hub.json`이 있는 디렉터리를 `source grant ID normalized --path PATH --consent`로 등록하고 `local run --source ID`를 실행합니다. `local status`에서 권한, 처리 상태와 오류를 확인하세요. ChatGPT 내보내기는 `chatgpt_export`와 다운로드한 지원 `.json`/`.zip`을 사용합니다. L3를 보관할 때에만 별도의 `--allow-raw` 승인을 추가합니다. 전역 채팅 감시 기능은 없습니다. [어댑터](../adapters.md)와 [배포 안내](../deployment.md)를 참고하세요.
 ### 다른 Vault로 프로젝트 전달
 `handoff`는 기본으로 꺼져 있으므로 양쪽 Vault에서 활성화합니다. 파일을 포함하려면 승인한 정확한 버전을 선택해야 합니다.
 ```sh
@@ -77,6 +77,6 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 Vault에는 애플리케이션 자체 암호화가 없으며 OS 권한과 디스크 암호화 및 백업을 별도로 관리해야 합니다. 소스 권한 취소는 미래의 읽기를 중지하지만 기존 기록을 자동 삭제하지는 않습니다. 오프라인 ZIP도 암호화되지 않으므로 승인된 수신자와 안전한 전달 채널이 필요합니다. 외부 링크는 참조일 뿐, 실제 바이트 저장을 뜻하지 않습니다.
 프로그램 버전 2.2.0은 기존 기록 스키마 `2.1`과 호환되며 오프라인 전송에 별도의 2.2 형식을 사용합니다. 업그레이드 전에는 백업하고 복원한 사본에서 테스트하세요.
 ## 문서와 기여
-[배포·복구·전송](docs/deployment.md) · [사용자 안내](docs/guide.md) · [소스 어댑터](docs/adapters.md) · [프로토콜](docs/protocol.md) · [보안](SECURITY.md) · [MIT 라이선스](LICENSE)
+[배포·복구·전송](../deployment.md) · [사용자 안내](../guide.md) · [소스 어댑터](../adapters.md) · [프로토콜](../protocol.md) · [보안](../../SECURITY.md) · [MIT 라이선스](../../LICENSE)
 개발과 버그 제보에는 합성 자료만 사용하고 개인 내보내기나 파일을 커밋하지 마세요. 테스트 명령: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py`, `python scripts/smoke_v22.py`.
 **배포 상태:** 핵심 코드는 합성 데이터로 검증되었지만 저장소의 공개 전환과 공식 2.2.0 GitHub Release는 별도 단계입니다.

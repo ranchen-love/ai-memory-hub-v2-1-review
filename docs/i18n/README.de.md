@@ -1,5 +1,5 @@
 # AI Memory Hub — KI-Erinnerungen unter eigener Kontrolle
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **Dein Kontext. Deine Dateien. Deine Entscheidung.** Eine lokale, plattformneutrale Grundlage für langfristige KI-Erinnerungen, nachvollziehbare Projektarbeit und autorisierte Übergaben zwischen KI-Agenten.
 **Version 2.2.0 · Python 3.11+ · MIT-Lizenz · Kommandozeile (CLI)**
 Ein Chatverlauf ist noch kein verlässliches Langzeitgedächtnis. Entscheidungen verschwinden in langen Gesprächen, Anhänge verlieren ihren Zusammenhang und bei einem Wechsel des KI-Assistenten muss alles erneut erklärt werden. **AI Memory Hub** speichert ausdrücklich freigegebene Informationen, Herkunftsnachweise, Projektstände und **echte Dateiinhalte** in einem lokalen Vault – unabhängig von einzelnen KI-Anbietern.
@@ -51,7 +51,7 @@ python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consen
 ```
 Das Manifest `examples/memory-hub.json` enthält vier synthetische Einträge einschließlich einer Datei. Erneute Importe kennzeichnen unveränderte Daten, statt Duplikate zu erzeugen. `asset copy` erzeugt eine überprüfte Kopie innerhalb des Vaults.
 ### Freigegebene Quellen importieren
-Zuerst den Vault initialisieren. Ein Verzeichnis mit `memory-hub.json` per `source grant ID normalized --path PATH --consent` freigeben; anschließend `local run --source ID` und `local status` ausführen. Für ChatGPT den Adapter `chatgpt_export` mit einer bereits heruntergeladenen unterstützten `.json`- oder `.zip`-Datei wählen. `--allow-raw` nur bei ausdrücklicher L3-Zustimmung setzen. Eine globale Chatüberwachung existiert nicht. Siehe [Adapter](docs/adapters.md) und [Deployment](docs/deployment.md).
+Zuerst den Vault initialisieren. Ein Verzeichnis mit `memory-hub.json` per `source grant ID normalized --path PATH --consent` freigeben; anschließend `local run --source ID` und `local status` ausführen. Für ChatGPT den Adapter `chatgpt_export` mit einer bereits heruntergeladenen unterstützten `.json`- oder `.zip`-Datei wählen. `--allow-raw` nur bei ausdrücklicher L3-Zustimmung setzen. Eine globale Chatüberwachung existiert nicht. Siehe [Adapter](../adapters.md) und [Deployment](../deployment.md).
 ### Projekt zwischen unabhängigen Vaults übertragen
 `handoff` ist standardmäßig deaktiviert. Auf beiden Seiten aktivieren und die freigegebenen Dateirevisionen gezielt auswählen.
 ```sh
@@ -77,6 +77,6 @@ Mit `config set FEATURE on|off` ändern. `local run --source ID` verwendet norma
 Der Vault wird nicht von der Anwendung verschlüsselt. Betriebssystemrechte, Festplattenverschlüsselung und Backups müssen gesondert eingerichtet werden. Das Entziehen einer Quellenfreigabe stoppt zukünftiges Lesen, löscht aber keine gespeicherten Revisionen. Transfer-ZIPs sind unverschlüsselt und dürfen nur über einen freigegebenen Kanal an berechtigte Empfänger gehen. Ein externer Link ist kein bereits gespeicherter Dateiinhalt.
 Die Anwendung ist V2.2.0 und unterstützt weiterhin das Datensatzschema `2.1`; das Offline-Transferformat trägt die Version 2.2. Vor Updates eine Sicherung erstellen und das Upgrade an einer wiederhergestellten Kopie prüfen.
 ## Dokumentation und Mitwirkung
-[Einrichtung, Backup und Transfer](docs/deployment.md) · [Benutzerhandbuch](docs/guide.md) · [Adapter](docs/adapters.md) · [Protokoll](docs/protocol.md) · [Sicherheit](SECURITY.md) · [MIT-Lizenz](LICENSE)
+[Einrichtung, Backup und Transfer](../deployment.md) · [Benutzerhandbuch](../guide.md) · [Adapter](../adapters.md) · [Protokoll](../protocol.md) · [Sicherheit](../../SECURITY.md) · [MIT-Lizenz](../../LICENSE)
 Für Beiträge ausschließlich synthetische Daten verwenden, keine privaten Exporte oder Anhänge veröffentlichen. Tests: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` und `python scripts/smoke_v22.py`.
 **Veröffentlichungsstand:** Der V2.2-Kern ist implementiert und synthetisch getestet. Die öffentliche Freigabe des GitHub-Repositories und ein offizielles Release 2.2.0 sind eigenständige Veröffentlichungsschritte.

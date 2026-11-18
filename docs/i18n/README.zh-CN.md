@@ -1,5 +1,5 @@
 # AI Memory Hub · 开放、可迁移的 AI 记忆中枢
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **你的上下文、你的文件、你的控制权。** 一套本地优先、模型与平台中立的 AI 长期记忆、项目延续及跨 Agent 授权交接底座。
 **当前版本：2.2.0 · Python 3.11+ · MIT 开源许可 · 命令行工具（CLI）**
 AI 对话很方便，但**聊天记录本身并不等于可靠的长期记忆**。重要决策埋在长对话里，上传附件和生成文件逐渐与背景脱节；换一个 AI 或几周后继续项目，又要重新解释前因后果。AI Memory Hub 将**经过授权的上下文、来源证据、项目状态和真实文件字节**保存到独立、可追溯的本地存储中，而不是被某个 AI 平台锁定。
@@ -59,7 +59,7 @@ python -m ai_memory_hub --root ../my-vault source grant work normalized --path /
 python -m ai_memory_hub --root ../my-vault local run --source work
 python -m ai_memory_hub --root ../my-vault local status
 ```
-以上目录是占位符，使用真实文件前需明确敏感等级和授权范围。ChatGPT 导出使用 `chatgpt_export` 适配器及已下载的受支持 `.json` / `.zip`；只有用户明确批准保存原文时才添加独立的 `--allow-raw` 授权。软件不会自动安装平台连接器或后台监听器。详见[来源适配器](docs/adapters.md)和[本地部署指南](docs/deployment.md)。
+以上目录是占位符，使用真实文件前需明确敏感等级和授权范围。ChatGPT 导出使用 `chatgpt_export` 适配器及已下载的受支持 `.json` / `.zip`；只有用户明确批准保存原文时才添加独立的 `--allow-raw` 授权。软件不会自动安装平台连接器或后台监听器。详见[来源适配器](../adapters.md)和[本地部署指南](../deployment.md)。
 ### 将项目交给另一个独立 Vault
 默认关闭 `handoff`，需要在双方实例分别开启。交接包默认只有上下文及引用，附带 `ID@REV` 才会选择特定获准文件版本。
 ```sh
@@ -71,7 +71,7 @@ python -m ai_memory_hub --root ../recipient transfer receive --input APPROVED_CO
 python -m ai_memory_hub --root ../recipient transfer inspect PACKAGE_ID --consent
 python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration-notes@1 --consent
 ```
-其中 `APPROVED_COPY.zip` 是发送方审核后产生、通过另外批准的可信渠道传输的实际文件；`PACKAGE_ID` 是接收命令返回的 ID。**ZIP 不加密**，SHA-256 校验内容完整性，**并不能证明发送人身份**。L3 原文和未经选择的文件字节不会默认外发。参见[交接及运维手册](docs/deployment.md)。
+其中 `APPROVED_COPY.zip` 是发送方审核后产生、通过另外批准的可信渠道传输的实际文件；`PACKAGE_ID` 是接收命令返回的 ID。**ZIP 不加密**，SHA-256 校验内容完整性，**并不能证明发送人身份**。L3 原文和未经选择的文件字节不会默认外发。参见[交接及运维手册](../deployment.md)。
 ## 五种独立同步开关
 | 开关 | 普通模式默认 | 作用 |
 | --- | --- | --- |
@@ -89,11 +89,11 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 - **不混淆文件与链接：** 外部 URL 仅是引用；只有取得并写入真实字节才算文件归档。来源缺失也不会报告为全量成功。
 - **兼容性：** 软件版本 2.2.0 继续使用既有的 2.1 记录 Schema，同时加入 2.2 离线传输包；升级请先备份并在恢复副本测试。
 ## 文档、开源与贡献
-- [部署、恢复和跨 Vault 交接](docs/deployment.md)
-- [完整使用指南](docs/guide.md)
-- [数据源适配器及平台限制](docs/adapters.md)
-- [数据协议](docs/protocol.md) · [记录 JSON Schema](schemas/protocol.schema.json) · [传输 Schema](schemas/transfer.schema.json)
-- [安全边界](SECURITY.md) · [MIT 许可证](LICENSE)
+- [部署、恢复和跨 Vault 交接](../deployment.md)
+- [完整使用指南](../guide.md)
+- [数据源适配器及平台限制](../adapters.md)
+- [数据协议](../protocol.md) · [记录 JSON Schema](../../schemas/protocol.schema.json) · [传输 Schema](../../schemas/transfer.schema.json)
+- [安全边界](../../SECURITY.md) · [MIT 许可证](../../LICENSE)
 开发者可创建分支、使用合成测试材料，避免提交任何私人导出和真实附件，并执行 Windows/Linux 适用的测试：
 ```sh
 python -m pip install jsonschema

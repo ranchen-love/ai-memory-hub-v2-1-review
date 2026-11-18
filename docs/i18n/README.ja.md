@@ -1,5 +1,5 @@
 # AI Memory Hub — 自分で管理できる AI メモリ基盤
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **会話の文脈も、ファイルも、管理権限もあなたのもの。** AI サービスに依存しない、ローカル優先の長期メモリ・プロジェクト継続・AI エージェント間引き継ぎのための基盤です。
 **バージョン 2.2.0 · Python 3.11 以上 · MIT ライセンス · CLI**
 長い AI チャットには、重要な判断や試行錯誤が埋もれます。添付ファイルと生成物は文脈から切り離され、別の AI に作業を渡すと同じ説明を繰り返すことになります。**AI Memory Hub** は、明示的に許可した会話の文脈、証拠、プロジェクト状態、実ファイルのバイト列を、特定の AI 事業者から独立したローカル Vault に記録します。
@@ -52,7 +52,7 @@ python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consen
 `examples/memory-hub.json` にはファイルを含む 4 件の合成データがあります。再実行しても同じデータは重複登録されません。`asset copy` は検証済みファイルのコピーを Vault 内に作ります。
 ### 許可した実データの取り込み
 Vault を初期化してから、`memory-hub.json` を持つ明示的なディレクトリを `source grant ID normalized --path PATH --consent` で登録し、`local run --source ID` を実行します。`local status` で読み取り結果と失敗・成功状態を確認します。
-ChatGPT には `chatgpt_export` と取得済み `.json` / 対応 `.zip` を指定します。L3 を保存する場合のみ追加の `--allow-raw` を許可します。自動的なプラットフォーム監視機能はありません。詳細は[入力アダプター](docs/adapters.md)と[導入ガイド](docs/deployment.md)を参照してください。
+ChatGPT には `chatgpt_export` と取得済み `.json` / 対応 `.zip` を指定します。L3 を保存する場合のみ追加の `--allow-raw` を許可します。自動的なプラットフォーム監視機能はありません。詳細は[入力アダプター](../adapters.md)と[導入ガイド](../deployment.md)を参照してください。
 ### 別 Vault へのプロジェクト引き継ぎ
 `handoff` は初期状態では無効です。両方の Vault で有効化し、転送するファイル版を個別に選びます。
 ```sh
@@ -78,6 +78,6 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 Vault 自体にはアプリ内暗号化がなく、OS 権限・ディスク暗号化・バックアップ管理を利用者が設定します。ソースの許可を取り消すと今後の読み取りを止めますが、保存済み履歴は自動削除されません。オフライン ZIP は暗号化されないため、安全な転送手段と受信者の承認が必要です。URL 参照と、バイト列を実際に保存したファイルは別物です。
 ソフトウェアの版は 2.2.0、既存レコードのスキーマは互換性のため `2.1` のままです。引き継ぎには別途 2.2 形式を使用します。アップグレード前にバックアップし、復元したコピーで試してください。
 ## ドキュメントと貢献
-[導入・バックアップ・転送](docs/deployment.md) · [利用ガイド](docs/guide.md) · [アダプター](docs/adapters.md) · [データ仕様](docs/protocol.md) · [セキュリティ](SECURITY.md) · [MIT ライセンス](LICENSE)
+[導入・バックアップ・転送](../deployment.md) · [利用ガイド](../guide.md) · [アダプター](../adapters.md) · [データ仕様](../protocol.md) · [セキュリティ](../../SECURITY.md) · [MIT ライセンス](../../LICENSE)
 開発や不具合報告には合成データを使い、個人のエクスポートや添付ファイルをコミットしないでください。テストは `python -m unittest discover -s tests -v`、`python scripts/smoke_release.py`、`python scripts/smoke_v22.py` で実行できます（必要に応じて `python -m pip install jsonschema`）。
 **公開状況：** V2.2 のコアは実装・合成テスト済みですが、GitHub リポジトリの一般公開と正式な 2.2.0 Release は別の手続きです。
