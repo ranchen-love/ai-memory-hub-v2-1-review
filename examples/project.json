@@ -1,0 +1,27 @@
+{
+  "schema_version": "2.1",
+  "kind": "project",
+  "id": "greenhouse-demo",
+  "sensitivity": "private",
+  "source": {
+    "provider": "synthetic",
+    "kind": "user_checkpoint",
+    "locator": "demo:calibration-log"
+  },
+  "data": {
+    "title": "Greenhouse demonstration",
+    "state": "active",
+    "summary": "Validate the fictional meter",
+    "timeline": [
+      {
+        "at": "2026-01-01T10:00:00+00:00",
+        "description": "Created the synthetic checklist"
+      }
+    ],
+    "file_refs": [
+      {
+        "asset_id": "calibration-notes"
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "2.1",
+  "kind": "session",
+  "id": "calibration-session",
+  "sensitivity": "private",
+  "source": {
+    "provider": "synthetic",
+    "kind": "user_checkpoint",
+    "locator": "demo:calibration-log"
+  },
+  "data": {
+    "title": "Greenhouse calibration",
+    "append": {
+      "verification": [
+        "Synthetic second reading matched the reference"
+      ]
+    },
+    "summary": "The second reading is recorded"
+  },
+  "base_revision": 1
+}

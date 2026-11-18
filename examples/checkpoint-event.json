@@ -1,0 +1,11 @@
+{
+  "schema_version": "2.1",
+  "id": "demo-checkpoint-event",
+  "type": "conversation_checkpoint",
+  "at": "2026-01-01T10:00:00+00:00",
+  "item": {
+    "key": "session-delta",
+    "kind": "record",
+    "path": "session-delta.json"
+  }
+}

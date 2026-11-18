@@ -1,0 +1,16 @@
+{
+  "schema_version": "2.1",
+  "kind": "memory",
+  "id": "greenhouse-procedure",
+  "sensitivity": "private",
+  "source": {
+    "provider": "synthetic",
+    "kind": "user_checkpoint",
+    "locator": "demo:calibration-log"
+  },
+  "data": {
+    "key": "demo fixture procedure",
+    "claim": "Review the checklist before changing the sample baseline",
+    "status": "candidate"
+  }
+}

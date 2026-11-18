@@ -1,0 +1,61 @@
+{
+  "schema_version": "2.1",
+  "kind": "session",
+  "id": "calibration-session",
+  "sensitivity": "private",
+  "source": {
+    "provider": "synthetic",
+    "kind": "user_checkpoint",
+    "locator": "demo:calibration-log"
+  },
+  "data": {
+    "title": "Greenhouse calibration",
+    "project_id": "greenhouse-demo",
+    "summary": "Checklist ready, second reading pending",
+    "checkpoint": {
+      "requirements": [
+        "Keep the original reference sample"
+      ],
+      "constraints": [
+        "Use synthetic inputs"
+      ],
+      "discussion": [
+        "Compare two calibration orders"
+      ],
+      "interactions": [
+        "Reviewer requested a boundary check"
+      ],
+      "evolution": [
+        "Moved boundary check before baseline write"
+      ],
+      "decisions": [
+        "Use the fixed synthetic reference"
+      ],
+      "rejected_options": [
+        {
+          "option": "Write before validation",
+          "reason": "Would hide an invalid baseline"
+        }
+      ],
+      "outcomes": [
+        "Draft checklist saved"
+      ],
+      "verification": [
+        "Checklist was reviewed in the synthetic example"
+      ],
+      "open_questions": [
+        "Record the second measurement"
+      ],
+      "next_actions": [
+        "Run the sample check and append the result"
+      ],
+      "file_refs": [
+        {
+          "asset_id": "calibration-notes",
+          "purpose": "Reference checklist"
+        }
+      ],
+      "goal": "Calibrate the fictional greenhouse meter"
+    }
+  }
+}

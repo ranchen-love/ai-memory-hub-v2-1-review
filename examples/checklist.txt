@@ -1,0 +1,4 @@
+Synthetic sample checklist
+1. Confirm fixture.
+2. Verify boundary conditions.
+3. Log the reading.

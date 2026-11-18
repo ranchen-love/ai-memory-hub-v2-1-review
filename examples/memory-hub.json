@@ -1,0 +1,29 @@
+{
+  "schema_version": "2.1",
+  "items": [
+    {
+      "key": "checklist",
+      "kind": "file",
+      "path": "checklist.txt",
+      "asset_id": "calibration-notes",
+      "origin": "ai_generated",
+      "project_id": "greenhouse-demo",
+      "session_id": "calibration-session"
+    },
+    {
+      "key": "project",
+      "kind": "record",
+      "path": "project.json"
+    },
+    {
+      "key": "session",
+      "kind": "record",
+      "path": "session.json"
+    },
+    {
+      "key": "candidate",
+      "kind": "record",
+      "path": "memory.json"
+    }
+  ]
+}
