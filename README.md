@@ -38,4 +38,6 @@ Use `config show`, `config preset archive` or `config set event on` after the ro
 - A locally selected ChatGPT conversation JSON export from an eligible account. Raw import requires a separate grant and accepts eligible visible text on the selected branch only.
 - Any regular local file into the Vault, or a stable external URL as a reference. Link health reports declared expiry or a separately supplied observation. Local file checks validate SHA-256.
 
+For a real local setup, including optional scheduling, transfer and rollback, follow [the deployment guide](docs/deployment.md).
+
 See [the protocol](docs/protocol.md), [JSON Schema](schemas/protocol.schema.json) and [platform guide](docs/adapters.md). The release uses the MIT license. See [security and storage boundaries](SECURITY.md) before using real data.

@@ -147,8 +147,19 @@ def git_tree(path):
     return any(os.path.lexists(parent / ".git") for parent in (path, *path.parents))
 
 
+def require_local_path(path):
+    if os.name == "nt":
+        import ctypes
+
+        if path.drive.startswith("\\\\") or ctypes.windll.kernel32.GetDriveTypeW(
+            ctypes.c_wchar_p(path.anchor)
+        ) == 4:
+            raise Denied("select a local Windows volume")
+
+
 def instance_path(root):
     original = Path(root).expanduser().absolute()
+    require_local_path(original)
     for part in (original, *original.parents):
         if os.path.lexists(part) and reparse(part):
             raise Denied("instance paths must not traverse symbolic links or reparse points")

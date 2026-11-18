@@ -4,12 +4,14 @@ from collections import Counter
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
+import re
+import zipfile
 from typing import Iterator, Protocol
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from . import SCHEMA
-from .model import Denied, HubError, Missing, ident, now, one_of, read_json, seq, shape, text
-from .store import checked_relative, reparse
+from .model import Denied, HubError, Missing, ident, now, one_of, read_json, seq, shape, strict_json, text
+from .store import checked_relative, reparse, require_local_path
 
 
 @dataclass(frozen=True)
@@ -36,9 +38,13 @@ class Adapter(Protocol):
 
 
 MANIFEST = "memory-hub.json"
+CHATGPT_SHARD = re.compile(r"conversations(?:[-_]\d+)?\.json")
+MAX_SHARD = 128 * 1024 * 1024
+MAX_EXPORT = 512 * 1024 * 1024
 
 
 def local_input(path):
+    require_local_path(path)
     for part in (path, *path.parents):
         if reparse(part):
             raise Denied("authorized source must not traverse symbolic links or reparse points")
@@ -88,9 +94,7 @@ class ChatGPTExport:
     capabilities = Capabilities(True, False, False, False, False, False)
 
     def items(self, root, level, allow_raw):
-        conversations = seq(read_json(root))
-        counts = Counter(value for entry in conversations if isinstance((value := chatgpt_id(entry)), str))
-        for index, entry in enumerate(conversations, start=1):
+        for index, (counts, entry) in enumerate(chatgpt_conversations(root), start=1):
             try:
                 export_id = text(chatgpt_id(entry), 400)
                 if counts[export_id] > 1:
@@ -118,6 +122,50 @@ class ChatGPTExport:
                     "schema_version": SCHEMA, "kind": "session", "id": entry_id, "sensitivity": level,
                     "source": source, "data": fields,
                 })
+
+
+def chatgpt_conversations(path):
+    if path.suffix.lower() == ".json":
+        entries = seq(read_json(path))
+        counts = chatgpt_counts(entries)
+        yield from ((counts, entry) for entry in entries)
+        return
+    try:
+        with zipfile.ZipFile(path) as archive:
+            shards = [member for member in archive.infolist() if CHATGPT_SHARD.fullmatch(member.filename)]
+            if not shards:
+                raise HubError("no supported conversation JSON at the ZIP root; select an extracted JSON file")
+            if len({member.filename for member in shards}) != len(shards):
+                raise HubError("duplicate conversation ZIP member")
+            if len(shards) > 64 or sum(member.file_size for member in shards) > MAX_EXPORT:
+                raise HubError("export exceeds the ZIP import limit; use smaller JSON slices")
+            ordered = sorted(shards, key=lambda member: member.filename)
+            counts = Counter()
+            for member in ordered:
+                counts.update(chatgpt_counts(read_chatgpt_shard(archive, member)))
+                if len(counts) > 100_000:
+                    raise HubError("conversation limit reached; authorize smaller export slices")
+            for member in ordered:
+                for entry in read_chatgpt_shard(archive, member):
+                    yield counts, entry
+    except (zipfile.BadZipFile, NotImplementedError) as exc:
+        raise HubError("invalid or unsupported export ZIP") from exc
+
+
+def read_chatgpt_shard(archive, member):
+    if member.orig_filename != member.filename or member.file_size > MAX_SHARD or member.flag_bits & 1:
+        raise HubError("conversation ZIP member has an irregular name, exceeds its limit or is encrypted")
+    with archive.open(member) as stream:
+        data = stream.read(MAX_SHARD + 1)
+    if len(data) != member.file_size or len(data) > MAX_SHARD:
+        raise HubError("conversation ZIP member size mismatch")
+    return seq(strict_json(data.decode("utf-8-sig")))
+
+
+def chatgpt_counts(entries):
+    if len(entries) > 100_000:
+        raise HubError("conversation limit reached; authorize smaller export slices")
+    return Counter(key for entry in entries if isinstance((key := chatgpt_id(entry)), str) and len(key) <= 400)
 
 
 def chatgpt_id(entry):
@@ -165,6 +213,7 @@ def visible_chatgpt_messages(conversation):
 ADAPTERS = {
     "normalized": ManifestAdapter(),
     "codex_workspace": ManifestAdapter(),
+    "local_checkpoint": ManifestAdapter(),
     "chatgpt_export": ChatGPTExport(),
 }
 
@@ -177,7 +226,9 @@ def grant(store, source_id, adapter, path, allow_raw):
     path = local_input(Path(path).expanduser().absolute())
     if adapter == "chatgpt_export":
         if not path.is_file():
-            raise Missing("choose a local ChatGPT conversation JSON file")
+            raise Missing("choose an existing local ChatGPT ZIP or conversation JSON")
+        if path.suffix.lower() not in (".json", ".zip"):
+            raise HubError("ChatGPT grant requires a ZIP or JSON file")
     elif not path.is_dir():
         raise Missing("choose an existing source directory")
     with store.transaction(write=True) as db:
@@ -221,6 +272,6 @@ def describe(source):
         status = "unreachable"
     return {
         "id": source["id"], "adapter": source["adapter"], "state": status,
-        "granted_at": source["granted_at"], "raw_grant": bool(source["allow_raw"]),
+        "authorization": "granted", "granted_at": source["granted_at"], "raw_grant": bool(source["allow_raw"]),
         "capabilities": asdict(ADAPTERS[source["adapter"]].capabilities),
     }
