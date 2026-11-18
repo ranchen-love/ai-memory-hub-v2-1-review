@@ -24,13 +24,13 @@
 ## 구조
 ```mermaid
 flowchart LR
-  A["Authorized exports / manifests / checkpoints"] --> B["Grants and adapters"]
-  B --> C["L0–L3 · Projects · Memory candidates"]
-  B --> D["Versioned files · SHA-256"]
-  C --> E["Local Vault"]
+  A["승인된 로컬 내보내기 / 명세서 / 체크포인트"] --> B["소스 권한과 어댑터"]
+  B --> C["L0–L3 · 프로젝트 · 기억 후보"]
+  B --> D["파일 버전 · SHA-256"]
+  C --> E["로컬 Vault"]
   D --> E
-  E --> F["Reviewed offline transfer"]
-  F --> G["Authorized recipient Vault"]
+  E --> F["검토된 오프라인 인계"]
+  F --> G["승인된 수신 Vault"]
 ```
 **Vault**는 Git 저장소 밖에 둔 사용자 소유의 로컬 디렉터리입니다. SQLite 색인과 SHA-256 기반 파일 저장소를 사용하며, 인스턴스마다 하나의 민감도 등급을 갖습니다. 접근 통제는 운영체제 권한으로 처리하므로 서로 다른 접근 주체에는 별도의 계정이나 저장 경계가 필요합니다.
 L0는 대화 목록, L1은 개요, L2는 목표·결정·검증·후속 작업, L3는 **추가 동의를 받은 실제 표시 메시지**입니다. L2가 나중에 갱신되어도 원래 L3 원문 및 출처를 덮어쓰지 않습니다.
