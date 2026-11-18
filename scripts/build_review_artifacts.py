@@ -10,6 +10,8 @@ from pathlib import Path
 
 ALLOWED = {
     ".gitattributes", ".github/workflows/test.yml", ".gitignore", "LICENSE", "README.md", "SECURITY.md",
+    "README.zh-CN.md", "README.ja.md", "README.ko.md", "README.es.md",
+    "README.fr.md", "README.de.md", "README.pt-BR.md", "README.ru.md",
     "ai_memory_hub/__init__.py", "ai_memory_hub/__main__.py", "ai_memory_hub/adapters.py",
     "ai_memory_hub/assets.py", "ai_memory_hub/handoff.py", "ai_memory_hub/model.py",
     "ai_memory_hub/store.py", "ai_memory_hub/sync.py", "ai_memory_hub/transfer.py",
@@ -17,7 +19,8 @@ ALLOWED = {
     "examples/checklist.txt", "examples/checkpoint-event.json", "examples/memory-hub.json",
     "examples/memory.json", "examples/project.json", "examples/session-delta.json", "examples/session.json",
     "pyproject.toml", "schemas/protocol.schema.json", "schemas/transfer.schema.json", "scripts/build_review_artifacts.py", "scripts/smoke_release.py",
-    "scripts/smoke_v22.py", "tests/test_deployment.py", "tests/test_hub.py", "tests/test_protocol_schema.py",
+    "scripts/smoke_v22.py", "scripts/check_readme_i18n.py",
+    "tests/test_deployment.py", "tests/test_hub.py", "tests/test_protocol_schema.py",
 }
 ROOT = Path(__file__).resolve().parents[1]
 
