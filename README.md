@@ -1,5 +1,5 @@
 # AI Memory Hub
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](README.md) · [简体中文](docs/i18n/README.zh-CN.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Español](docs/i18n/README.es.md) · [Français](docs/i18n/README.fr.md) · [Deutsch](docs/i18n/README.de.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md) · [Русский](docs/i18n/README.ru.md)
 > **Your context. Your files. Your control.** A local-first, platform-neutral foundation for lasting AI memory, verifiable project continuity, and selective handoffs between AI agents.
 **Current version: 2.2.0 · Python 3.11+ · MIT License · Command-line interface (CLI)**
 AI conversations are useful—but a conversation history alone is not a dependable long-term project workspace. Decisions become buried, attachments lose their context, and switching assistants can mean explaining everything again. **AI Memory Hub** gives you an independent, versioned place to preserve *authorized* context, its evidence, and the actual files associated with it, without tying your archive to one AI provider.

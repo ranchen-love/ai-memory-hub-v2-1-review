@@ -10,8 +10,10 @@ from pathlib import Path
 
 ALLOWED = {
     ".gitattributes", ".github/workflows/test.yml", ".gitignore", "LICENSE", "README.md", "SECURITY.md",
-    "README.zh-CN.md", "README.ja.md", "README.ko.md", "README.es.md",
-    "README.fr.md", "README.de.md", "README.pt-BR.md", "README.ru.md",
+    "docs/i18n/README.zh-CN.md", "docs/i18n/README.ja.md",
+    "docs/i18n/README.ko.md", "docs/i18n/README.es.md",
+    "docs/i18n/README.fr.md", "docs/i18n/README.de.md",
+    "docs/i18n/README.pt-BR.md", "docs/i18n/README.ru.md",
     "ai_memory_hub/__init__.py", "ai_memory_hub/__main__.py", "ai_memory_hub/adapters.py",
     "ai_memory_hub/assets.py", "ai_memory_hub/handoff.py", "ai_memory_hub/model.py",
     "ai_memory_hub/store.py", "ai_memory_hub/sync.py", "ai_memory_hub/transfer.py",
@@ -21,6 +23,10 @@ ALLOWED = {
     "pyproject.toml", "schemas/protocol.schema.json", "schemas/transfer.schema.json", "scripts/build_review_artifacts.py", "scripts/smoke_release.py",
     "scripts/smoke_v22.py", "scripts/check_readme_i18n.py",
     "tests/test_deployment.py", "tests/test_hub.py", "tests/test_protocol_schema.py",
+}
+LEGACY_ALLOWED = {
+    "README.zh-CN.md", "README.ja.md", "README.ko.md", "README.es.md",
+    "README.fr.md", "README.de.md", "README.pt-BR.md", "README.ru.md",
 }
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -37,7 +43,7 @@ def tree(commit):
         header, name = item.split(b"\t", 1)
         file = name.decode("utf-8")
         mode, kind, oid = header.split()
-        if file not in ALLOWED or mode != b"100644" or kind != b"blob":
+        if file not in (ALLOWED | LEGACY_ALLOWED) or mode != b"100644" or kind != b"blob":
             raise ValueError("unapproved history entry: " + file)
         entries[file] = oid.decode("ascii")
     return entries

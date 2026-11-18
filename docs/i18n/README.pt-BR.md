@@ -1,5 +1,5 @@
 # AI Memory Hub — Memória de IA sob seu controle
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **Seu contexto. Seus arquivos. Seu controle.** Uma base local e independente de plataformas para memória de longo prazo, continuidade de projetos e transferência autorizada entre agentes de IA.
 **Versão 2.2.0 · Python 3.11+ · Licença MIT · Interface de linha de comando (CLI)**
 Um histórico de conversa não é necessariamente uma memória confiável. Decisões importantes se perdem em diálogos longos; anexos e arquivos gerados deixam de estar ligados ao contexto; mudar de assistente pode exigir repetir tudo. O **AI Memory Hub** mantém contexto autorizado, evidências, estado dos projetos e **bytes reais de arquivos** em um Vault local, sem depender da memória interna de um único serviço de IA.
@@ -51,7 +51,7 @@ python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consen
 ```
 O exemplo `examples/memory-hub.json` seleciona quatro itens fictícios, incluindo um arquivo real. Repetir a importação marca dados inalterados, sem duplicá-los. `asset copy` cria uma cópia local verificada dentro do Vault.
 ### Importar fontes autorizadas
-Inicialize um Vault e autorize uma pasta com `memory-hub.json` usando `source grant ID normalized --path PATH --consent`. Depois execute `local run --source ID` e consulte `local status`. Para ChatGPT, escolha `chatgpt_export` e um `.json` ou `.zip` compatível já baixado. Adicione `--allow-raw` somente com autorização expressa para preservar L3. Não existe um monitor global automático de conversas. Veja [adaptadores](docs/adapters.md) e [implantação](docs/deployment.md).
+Inicialize um Vault e autorize uma pasta com `memory-hub.json` usando `source grant ID normalized --path PATH --consent`. Depois execute `local run --source ID` e consulte `local status`. Para ChatGPT, escolha `chatgpt_export` e um `.json` ou `.zip` compatível já baixado. Adicione `--allow-raw` somente com autorização expressa para preservar L3. Não existe um monitor global automático de conversas. Veja [adaptadores](../adapters.md) e [implantação](../deployment.md).
 ### Entregar um projeto a outro Vault
 A opção `handoff` vem desativada. Ative-a no remetente e no destinatário; selecione cada versão de arquivo que deseja incluir.
 ```sh
@@ -77,6 +77,6 @@ Altere com `config set FEATURE on|off`. `local run --source ID` usa `full` por p
 O aplicativo não criptografa o Vault internamente: configure permissões do sistema, criptografia de disco e backups. Revogar uma fonte interrompe leituras futuras, mas não elimina automaticamente revisões já armazenadas. Pacotes ZIP offline não são criptografados: escolha um destinatário e um canal aprovados. Um URL externo é apenas uma referência até os bytes estarem efetivamente armazenados.
 O software é V2.2.0 e mantém compatibilidade com o esquema de registros `2.1`; o envelope de transferência offline é 2.2. Faça backup e teste atualizações em uma cópia restaurada antes da mudança definitiva.
 ## Documentação e contribuições
-[Implantação, recuperação e transferência](docs/deployment.md) · [Guia completo](docs/guide.md) · [Adaptadores](docs/adapters.md) · [Protocolo](docs/protocol.md) · [Segurança](SECURITY.md) · [Licença MIT](LICENSE)
+[Implantação, recuperação e transferência](../deployment.md) · [Guia completo](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Segurança](../../SECURITY.md) · [Licença MIT](../../LICENSE)
 Use somente dados sintéticos em contribuições, nunca exportações privadas. Testes: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` e `python scripts/smoke_v22.py`.
 **Situação do lançamento:** o núcleo V2.2 já foi implementado e validado sinteticamente. Tornar o repositório público e criar uma Release oficial 2.2.0 são etapas separadas.

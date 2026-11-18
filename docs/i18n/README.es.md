@@ -1,5 +1,5 @@
 # AI Memory Hub — Memoria de IA bajo tu control
-**Languages:** [English](README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+**Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **Tu contexto, tus archivos, tus decisiones.** Una base local y neutral respecto a las plataformas para la memoria a largo plazo, la continuidad de proyectos y las transferencias autorizadas entre agentes de IA.
 **Versión 2.2.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**
 El historial de un chat no es necesariamente una memoria fiable. Las decisiones importantes quedan enterradas, los adjuntos pierden su contexto y cambiar de asistente implica volver a explicar el proyecto. **AI Memory Hub** conserva el contexto autorizado, su procedencia, el estado del proyecto y los **bytes reales** de archivos seleccionados en un Vault local e independiente de cualquier proveedor.
@@ -51,7 +51,7 @@ python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consen
 ```
 `examples/memory-hub.json` contiene cuatro entradas sintéticas, incluido un archivo. Una segunda importación informa que no hay cambios, sin duplicar registros. `asset copy` crea una copia local verificada dentro del Vault.
 ### Importar una fuente autorizada
-Inicializa primero tu Vault. Registra un directorio con un manifiesto `memory-hub.json` usando `source grant ID normalized --path PATH --consent`; después ejecuta `local run --source ID` y consulta `local status`. Para ChatGPT usa el adaptador `chatgpt_export` y un archivo `.json` o `.zip` compatible que hayas descargado. Solo autoriza `--allow-raw` si deseas guardar L3 de forma explícita. No existe un vigilante global de chats. Más detalles en [adaptadores](docs/adapters.md) y [despliegue](docs/deployment.md).
+Inicializa primero tu Vault. Registra un directorio con un manifiesto `memory-hub.json` usando `source grant ID normalized --path PATH --consent`; después ejecuta `local run --source ID` y consulta `local status`. Para ChatGPT usa el adaptador `chatgpt_export` y un archivo `.json` o `.zip` compatible que hayas descargado. Solo autoriza `--allow-raw` si deseas guardar L3 de forma explícita. No existe un vigilante global de chats. Más detalles en [adaptadores](../adapters.md) y [despliegue](../deployment.md).
 ### Transferir un proyecto a otro Vault
 El interruptor `handoff` está desactivado por defecto. Actívalo en ambos Vaults y selecciona las versiones exactas de los archivos que deseas compartir.
 ```sh
@@ -77,6 +77,6 @@ Modifica un control con `config set FEATURE on|off`. `local run --source ID` uti
 El Vault no dispone de cifrado incorporado: configura permisos del sistema, cifrado de disco y copias de seguridad. Revocar una fuente detiene futuras lecturas, pero no borra automáticamente los registros existentes. Los ZIP de transferencia carecen de cifrado y requieren un canal confiable y la autorización del destinatario. Un enlace externo sigue siendo una referencia hasta que se almacenen los bytes.
 La aplicación es V2.2.0, compatible con el esquema de registros `2.1`, y usa una envoltura independiente 2.2 para transferencias. Haz copias de seguridad y prueba actualizaciones en una restauración antes de cambiar la instancia real.
 ## Documentación y contribuciones
-[Despliegue y recuperación](docs/deployment.md) · [Guía completa](docs/guide.md) · [Adaptadores](docs/adapters.md) · [Protocolo](docs/protocol.md) · [Seguridad](SECURITY.md) · [Licencia MIT](LICENSE)
+[Despliegue y recuperación](../deployment.md) · [Guía completa](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Seguridad](../../SECURITY.md) · [Licencia MIT](../../LICENSE)
 Usa datos sintéticos en pruebas y contribuciones; nunca subas exportaciones personales. Pruebas: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` y `python scripts/smoke_v22.py`.
 **Estado de publicación:** el núcleo ya funciona y está validado con datos sintéticos; hacer público el repositorio y crear una Release oficial 2.2.0 son pasos separados.
