@@ -1,50 +1,51 @@
 # Workspace coverage and boundaries
 
-The reference architecture has nineteen root modules. The product tree carries all nineteen logical modules plus its own engine and packaging files. The initializer copies the owner-facing workspace from an explicit manifest, while developer files remain in the product source.
+The reference architecture has nineteen root modules. The product tree carries all nineteen logical modules plus the standalone engine and packaging files. The initializer uses an explicit manifest for owner-facing templates. Developer-only source remains in the product tree.
 
-## Root mapping
+## Root module mapping
 
-| Reference module | General equivalent | Handling and evidence |
-| --- | --- | --- |
-| .github | Test and review artifact workflows | Product-only. Windows and Ubuntu exercises, history scan and exact release trees. |
-| assets | [Assets](../assets/README.md), empty index, engine | Template and existing byte store. The onboarding smoke retrieves an exact version. Actual attachments are excluded. |
-| candidates | [Candidate intake](../candidates/README.md), schema, demo | Blank intake guidance and optional synthetic candidate. The smoke covers review, explicit approval and revision history. |
-| collaboration | [Collaboration](../collaboration/workflows.md) | Platform-neutral roles, verification and consent-based transfer. |
-| config | [Configuration](../config/README.md) | Ordinary preset, local binding and deny-by-default ignore template. Real paths, credentials and task definitions remain local. |
-| core | [Core index](../core/INDEX.md) and five empty policies | Navigation and scope are copied. Identity and standing decisions are owner-filled. |
-| docs | [Workspace installation](workspace.md) and existing translated product pages | Developer validation preserves i18n layout. The initializer carries technical guides only. |
-| examples | Synthetic project, structured checkpoint and bytes | The opt-in demo is copied without grants. |
-| integrations | [Bootstrap](../integrations/memory-bootstrap.md), [capabilities](../integrations/capabilities.md) | Version reread and authorized fallback. Connector availability is checked in its environment. |
-| knowledge | [Knowledge topics](../knowledge/README.md) | Empty index and reusable evidence template. Existing personal topics are excluded. |
-| life-archive | [Life archive](../life-archive/README.md) | Twelve unknown categories, optional aggregate health checks and timeline. Source-specific raw ingestion is an optional future adapter. |
-| memory | [Memory](../memory/README.md), empty facts projection, engine | Accepted objects remain in the Vault. Personal facts and previous decisions are excluded. |
-| projects | [Projects](../projects/README.md), template and engine | Empty project organization and optional synthetic project. |
-| schemas | Existing engine schemas plus workspace schemas | Preserve record schema 2.1. Add optional memory classification, life data and derived indexes. |
-| scripts | Release files, onboarding smoke, i18n checker | Developer tools stay in source. Installed CLI implements initialization and validation. |
-| sessions | [Session index](../sessions/README.md), engine | L0–L3, explicit provenance, scoped raw permission. |
-| tests | Existing engine suite and workspace validation | Release verification covers installed tooling, sample import and independent Vault transfer. |
-| vendor | [Dependency boundary](../vendor/README.md) | General engine source is first-party. No mirror of the engine or user data is needed. |
-| workflows | [Memory](../workflows/memory-lifecycle.md), research, development, writing, sync and handoff | Shared methods; organization-specific weekly-report and media tasks remain local extensions. |
+| Reference module | General equivalent | Implementation | Verification evidence | Exclusions or differences |
+| --- | --- | --- | --- | --- |
+| .github | Test and review artifact workflows | Product CI on Windows and Ubuntu, plus review packaging | Both platform suites, Gitleaks and exact ZIP/Bundle checks | Developer configuration stays in source, scoped runtime jobs stay local |
+| assets | [Assets](../assets/README.md), empty manifest and engine | Versioned references plus existing content-addressed Vault | Onboarding retrieves exact bytes in the independent receiver | Personal originals and temporary external content are excluded |
+| candidates | [Candidate intake](../candidates/README.md), schema and demo | Explicit normalized intake, evidence and owner review | Onboarding denies unapproved acceptance and preserves revision 2 | Existing personal candidate queues are excluded |
+| collaboration | [Collaboration](../collaboration/workflows.md) | Neutral roles, validation and exact-version authorized transfer | Onboarding validates receiver access to a selected asset | Roles bind to actual scope, not an existing account |
+| config | [Configuration](../config/README.md), defaults and local binding | Ordinary defaults, separate Vault identity, deny-by-default Git ignores | Blank init checks all five switches and rejects a wrong same-level Vault | Local paths, credentials, jobs and inherited grants belong to the owner |
+| core | [Core index](../core/INDEX.md) and five empty policy modules | Needs-based navigation and owner-scoped instructions | Init test verifies all shipped Markdown links | Existing identity, preferences and standing rules stay in their original instance |
+| docs | [Workspace installation](workspace.md) and existing product translations | Technical setup instructions and existing language layout | i18n checker validates all nine, product README diff is empty | Product copy belongs to the designated product writer |
+| examples | Opt-in synthetic project, checkpoint and assets | Explicit fixture copy with no automatic grants | Onboarding checks zero grants, then grants and imports four items | Real chats, source files and original data are excluded |
+| integrations | [Bootstrap](../integrations/memory-bootstrap.md), [capabilities](../integrations/capabilities.md) | Version check, scoped reads, explicit fallback and review flow | Onboarding compares template/engine versions, installed smoke runs off checkout | Unverified live connectors, credentials and account-specific automation are excluded |
+| knowledge | [Knowledge topics](../knowledge/README.md) | Topic index with evidence and repeatable verification | Blank init validates index and template links | Personal topics and organization-specific knowledge are excluded |
+| life-archive | [Life archive](../life-archive/README.md) and schemas | Twelve-category profile, timeline, lineage and optional aggregates | Workspace tests check unknown coverage, precision, cycles and level boundaries | Personal life records and device exports are excluded |
+| memory | [Memory](../memory/README.md), empty projection and Vault | Evidence-backed revision workflow with optional local view | Onboarding checks empty facts, accepted projection and history | Original facts, deliberations and decisions are excluded |
+| projects | [Projects](../projects/README.md) and project template | Project state, decisions, evidence, checkpoints, next work | Onboarding checks the synthetic project's state and L2 checkpoint | Personal project names, files and project history are excluded |
+| schemas | Existing engine definitions plus workspace/life schemas | Protocol 2.1 plus optional classification and workspace 1.0 | Schema suite resolves shared definitions and validates fixture inputs | Private-specific descriptors are replaced by common interfaces |
+| scripts | Release builder, onboarding smoke and i18n checker | CLI for owners, signed-off tooling for developer checks | Exact allowlist build and installed smoke exercise the real runtime | No instance-specific job or local machine wrapper is bundled as a default |
+| sessions | [Session index](../sessions/README.md) and engine | L0–L3, revision history and optional provenance | Existing tests validate separated L3 authorization and immutable evidence | Existing transcripts and indexes with user material are excluded |
+| tests | Existing suite and workspace-specific tests | Independent source and installed test entry points | Double init, denial, wrong Vault, installed packaging and transfer tested | Use only synthetic inputs |
+| vendor | [Dependency boundary](../vendor/README.md) | Reference first-party engine with no duplicated vendored core | Current tree includes the module and exact ZIP rules include its documentation | Engine source is already first-party; mirroring provides no additional capability |
+| workflows | [Core workflows](../workflows/memory-lifecycle.md) | Memory, sync, research, writing, quality, development and handoff | Onboarding and existing engine suites verify authority and permissions | Specialist media and weekly-report workflows remain owner extensions |
 
-## Submodule mapping
+## Core submodule mapping
 
-| Reference concept | General implementation | Difference |
-| --- | --- | --- |
-| Agent rules, identity, communication, preferences and boundaries | `AGENTS.md`, neutral compatibility shims and `core/` | Owner fields are empty. Any future production policies require owner approval. |
-| Fact registry, lifecycle proposals, decision log and version tracking | `memory/`, `candidates/`, canonical Vault revisions, `workspace check` | Local approval is the default. An expressly authorized private PR is an optional review channel. |
-| Category profiles and field extensions | `life-archive/profile.json`, [twelve-category taxonomy](../life-archive/taxonomy.md), record schema | Includes provenance, status, sensitivity, timing, correction and cross-record links. Personal values are excluded. |
-| Timeline, gaps and quality | `life-archive/timeline.json`, coverage checker | Unknown dates remain unknown, explicit precision and category coverage are validated. |
-| Health trend structure and raw-source tooling | `health/README.md` within the life archive, aggregate schema and health-check | Optional de-identified aggregates and synthetic fixture. Device-specific import, raw archives and production schedules stay out of the default product. |
-| Integration routing, version check, storage and no-connector fallback | `integrations/` and existing local CLI adapters | Manual, manifest and approved exports are first-class paths; unsupported platform access remains unverified. |
-| Data quality, development, research, writing and handoff | `workflows/` and `collaboration/` | Platform-neutral workflows replace instance-specific reporting programs. |
+| Reference concept | General equivalent | Implementation | Verification evidence | Exclusions or differences |
+| --- | --- | --- | --- | --- |
+| Agent entry, identity, scope and policy | AGENTS.md, CLAUDE.md, GEMINI.md and core/ | Neutral shims, empty authority fields and core routing | Init checks links; blank data test | Personal policy and access require user approval |
+| Fact registry, proposals and version history | memory/, candidates/ and workspace facts | Optional indexes backed by Vault approval and immutable revisions | Onboarding requires approval and retains classification | A private PR is optional; no automatic remote publication |
+| Life category profiles and extensions | life-archive/profile.json, taxonomy and life schema | Twelve categories, status, evidence, sensitivity, timing and cross-record keys | Coverage and schema tests | Owner supplies values, raw originals remain separately authorized |
+| Timeline, gaps and corrections | life-archive/timeline.json, data-quality guidance and checker | Explicit date precision, coverage states, successor consistency and no cycles | Unknown baseline and invalid precision/cycle tests | Original episodes, locations and real timestamps are excluded |
+| Health schema and raw-source tooling | life-archive/health/, aggregate schema and health-check | Opt-in de-identified aggregates with sample-only validation | Health schema/dedupe tests and synthetic onboarding | Device-specific raw imports and production schedules are excluded |
+| Connector routing, storage and re-read | integrations/, assets/ and existing adapters | Explicit authorization, version comparison, fallback and actual byte checks | Installed smoke and authorized receiver byte verification | No assumed live connector or schedule |
+| Research, development, documentation and handoff | workflows/ and collaboration/ | Evidence-driven portable workflows | Onboarding and existing cross-Vault tests verify core behavior | Instance-specific reporting scripts stay optional |
 
-## Functional evidence
+## Functional mapping
 
-| Function | Implementation and reproducer |
-| --- | --- |
-| Init, no overwrite, path safety | `workspace init` and `workspace check`. Workspace unit tests cover empty initialization, agent links, refusal in Git, overlap, symlink and ACL failures. |
-| Propose, validate, review, approve, reread | `local run`, `memory review`, explicit `import --review-decision --consent`, `memory history`, then `workspace facts`. Onboarding smoke verifies denial without approval and accepted revision 2. |
-| Project, checkpoint, bytes and handoff | Existing V2.2 CLI with a synthetic approved manifest. The recipient Vault retrieves the exact approved file in the onboarding smoke. |
-| Privacy and release | Explicit current and historical allowlists, full-history secret scan, exact ZIP tree and self-contained Bundle. The installed smoke runs outside the checkout. |
+| Reference behavior | General equivalent | Implementation | Verification evidence | Exclusions or differences |
+| --- | --- | --- | --- | --- |
+| Initialize, protect and validate | workspace init/check | Owner-only non-nested roots and Vault identity binding | Workspace tests cover denial, path safety, no overwrite and wrong binding | Existing dirs are kept intact; use a new scope or deliberate recovery |
+| Propose, review and approve | local run, memory review, import and workspace facts | Validate evidence, approve with explicit consent and reread the true revision | Onboarding proves unapproved acceptance denied and accepted revision 2 | No implicit remote review or publish |
+| Project, session and assets | Existing session/project commands and manifest | Use a real project link, checkpoint and bytes | Onboarding compares bytes retrieved in an independent recipient Vault | L3 and unrelated files remain at origin |
+| Optional archive and health | workspace check and health-check | Validate coverage, accepted lineage and de-identified aggregates | Schema and synthetic onboarding coverage | No automated raw-data adapter or original health material |
+| Release and privacy | Current/historical allowlists, Gitleaks and packaging | Validate the distribution root, current ZIP and complete bundle | Artifact job and installed smoke run on named final SHA | Public publication and formal release need owner approval |
 
-The product tree contains source and synthetic fixtures. The workspace contains an owner's working notes and approval views. The separately protected Vault provides the durable data boundary. A public distribution does not grant access to another user's workspace or Vault.
+The product tree contains source and synthetic fixtures. An initialized workspace contains the owner's working notes and views. The separate Vault provides the durable data boundary. A public distribution does not grant access to another user's workspace or Vault.
