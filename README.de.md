@@ -24,13 +24,13 @@ Ein Chatverlauf ist noch kein verlässliches Langzeitgedächtnis. Entscheidungen
 ## Architektur
 ```mermaid
 flowchart LR
-  A["Authorized exports / manifests / checkpoints"] --> B["Grants and adapters"]
-  B --> C["L0–L3 · Projects · Memory candidates"]
-  B --> D["Versioned files · SHA-256"]
-  C --> E["Local Vault"]
+  A["Freigegebene Exporte / Manifeste / Checkpoints"] --> B["Quellenfreigaben und Adapter"]
+  B --> C["L0–L3 · Projekte · Erinnerungskandidaten"]
+  B --> D["Dateiversionen · SHA-256"]
+  C --> E["Lokaler Vault"]
   D --> E
-  E --> F["Reviewed offline transfer"]
-  F --> G["Authorized recipient Vault"]
+  E --> F["Geprüfte Offline-Übergabe"]
+  F --> G["Autorisierter Empfänger-Vault"]
 ```
 Ein **Vault** ist ein vom Besitzer kontrolliertes lokales Verzeichnis **außerhalb von Git**. Es verwendet einen SQLite-Index und inhaltsadressierte Datei-Blobs. Jede Instanz besitzt genau eine Schutzklasse; Betriebssystemrechte sichern den Zugriff. Für unterschiedliche Empfänger sind getrennte Konten oder Speichergrenzen erforderlich.
 L0 benennt eine Konversation, L1 fasst sie zusammen, L2 enthält Ziele, Entscheidungen, Prüfungen und nächste Aufgaben. L3 bewahrt nach **gesonderter Freigabe** echte sichtbare Nachrichten samt Originalquelle und Revision auf. Spätere L2-Änderungen überschreiben oder erfinden keine historischen L3-Texte.
