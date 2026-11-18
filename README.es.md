@@ -24,13 +24,13 @@ El historial de un chat no es necesariamente una memoria fiable. Las decisiones 
 ## Arquitectura
 ```mermaid
 flowchart LR
-  A["Authorized exports / manifests / checkpoints"] --> B["Grants and adapters"]
-  B --> C["L0–L3 · Projects · Memory candidates"]
-  B --> D["Versioned files · SHA-256"]
-  C --> E["Local Vault"]
+  A["Exportaciones / manifiestos / puntos de control autorizados"] --> B["Permisos de origen y adaptadores"]
+  B --> C["L0–L3 · Proyectos · Candidatos de memoria"]
+  B --> D["Archivos versionados · SHA-256"]
+  C --> E["Vault local"]
   D --> E
-  E --> F["Reviewed offline transfer"]
-  F --> G["Authorized recipient Vault"]
+  E --> F["Transferencia offline revisada"]
+  F --> G["Vault receptor autorizado"]
 ```
 Un **Vault** es un directorio local, controlado por su propietario y separado del repositorio Git. Usa un índice SQLite y blobs identificados por el hash de su contenido. Cada instancia tiene un nivel de sensibilidad; los permisos del sistema operativo protegen el acceso. Para usuarios distintos se requieren cuentas o límites de almacenamiento separados.
 L0 identifica la conversación; L1 la resume; L2 registra objetivos, decisiones, pruebas y tareas pendientes. L3 conserva mensajes visibles originales **solo con consentimiento adicional**, incluyendo su fuente y revisión. Una actualización L2 no inventa ni sobrescribe los mensajes históricos L3.
