@@ -109,7 +109,8 @@ def run_item(store, db, blobs, grant, base, item, event=None):
             "SELECT digest FROM receipts WHERE grant_id=? AND item=?", (grant["grant_id"], item.key),
         ).fetchone()
         if not event and previous and previous["digest"] == key:
-            return {"status": "unchanged"}
+            kind = "asset" if item.kind == "link" else record["kind"]
+            return {"status": "unchanged", "kind": kind}
         if item.kind == "link":
             asset_id, owner = managed_asset(grant, item)
             result = put_link(
@@ -174,6 +175,7 @@ def run_batch(store, blobs, feature, source_id=None, governance=None):
             "run_id": run_id, "feature": feature, "scope": "granted_local_sources", "sources": [],
             "created": 0, "updated": 0, "unchanged": 0, "errors": [],
         }
+        items_by_kind = dict.fromkeys(("session", "project", "memory", "asset"), 0)
         for grant in sources:
             totals = {"source_id": grant["id"], "grant_id": grant["grant_id"],
                       "created": 0, "updated": 0, "unchanged": 0, "errors": 0}
@@ -197,6 +199,7 @@ def run_batch(store, blobs, feature, source_id=None, governance=None):
                             result = run_item(store, db, blobs, grant, base, item)
                         totals[result["status"]] += 1
                         report[result["status"]] += 1
+                        items_by_kind[result["kind"]] += 1
                     except RECOVERABLE as exc:
                         if item is None:
                             raise
@@ -205,19 +208,30 @@ def run_batch(store, blobs, feature, source_id=None, governance=None):
             except RECOVERABLE as exc:
                 report["errors"].append(failure(exc, grant["id"]))
                 totals["errors"] += 1
+            totals["status"] = source_outcome(totals)
+        report["archive"] = {
+            "status": archive_coverage(report["sources"]),
+            "selection": "all_active_grants" if source_id is None else "selected_grant",
+            "configured_sources": len(sources), "items": items_by_kind,
+        }
         if feature == "weekly":
+            report["governance"] = {"status": "failed", "scope": "long_term_memory"}
             try:
                 with store.transaction(write=True) as db:
                     store.require(db, feature)
                     weekly_review(store, db, blobs, report, governance)
             except RECOVERABLE as exc:
                 report["errors"].append(failure(exc, "instance-governance"))
-        if report["errors"]:
-            state = "partial"
-        elif sources or feature == "weekly":
+        archive = report["archive"]["status"]
+        governed = report.get("governance", {}).get("status") == "completed"
+        if report["errors"] or archive == "partial":
+            state = "partial" if governed or archive in ("partial", "completed") else "failed"
+        elif archive == "completed":
             state = "completed"
+        elif governed:
+            state = "governance_only"
         else:
-            state = "no_sources"
+            state = "no_sources" if archive == "not_configured" else archive
         report["status"] = state
         with store.transaction(write=True) as db:
             db.execute("UPDATE runs SET finished_at=?, state=?, report=? WHERE id=?",
@@ -225,18 +239,39 @@ def run_batch(store, blobs, feature, source_id=None, governance=None):
         return report
 
 
+def source_outcome(counts):
+    successful = any(counts[key] for key in ("created", "updated", "unchanged"))
+    if counts["errors"]:
+        return "partial" if successful else "failed"
+    return "completed" if successful else "no_items"
+
+
+def archive_coverage(sources):
+    states = {source["status"] for source in sources}
+    if not states:
+        return "not_configured"
+    if states == {"completed"} or states == {"no_items"}:
+        return next(iter(states))
+    return "partial" if states.intersection({"completed", "partial"}) else "failed"
+
+
 def weekly_review(store, db, blobs, report, governance):
-    report["memory_review"] = memory_review(store.latest(db, "memory"))
+    try:
+        report["memory_review"] = memory_review(store.latest(db, "memory"))
+        if governance is not None:
+            report["instance_governance"] = governance()
+        if report.get("instance_governance", {"status": "pass"})["status"] == "pass":
+            report["governance"]["status"] = "completed"
+        else:
+            report["errors"].append({"code": "governance_failed", "kind": "memory"})
+    except RECOVERABLE as exc:
+        report["errors"].append(failure(exc, "instance-governance"))
     report["asset_integrity"] = {}
     for item in store.latest(db, "asset"):
         state = availability(db, blobs, item)["status"]
         report["asset_integrity"][state] = report["asset_integrity"].get(state, 0) + 1
         if state in ("missing", "corrupt", "unreachable", "permission_denied", "expired"):
             report["errors"].append({"code": state, "asset_id": item["id"], "kind": "asset"})
-    if governance is not None:
-        report["instance_governance"] = governance()
-        if report["instance_governance"]["status"] != "pass":
-            report["errors"].append({"code": "governance_failed", "kind": "memory"})
 
 
 def dispatch(store, blobs, source_id, event_path):
@@ -266,30 +301,37 @@ def status(store):
         recent = [dict(row) for row in db.execute(
             "SELECT * FROM runs ORDER BY started_at DESC LIMIT 10",
         )]
-        last_success = {
-            row["feature"]: row["finished_at"] for row in db.execute(
-                "SELECT feature, max(finished_at) finished_at FROM runs WHERE state='completed' GROUP BY feature",
-            )
-        }
-        reports = [json.loads(row["report"]) for row in db.execute(
-            "SELECT report FROM runs WHERE report IS NOT NULL ORDER BY finished_at DESC",
-        )]
+        active = {source["id"]: source["grant_id"] for source in sources}
+        covered, pending = {}, []
+        last_success, last_archive, last_governance = {}, {}, {}
+        for row in db.execute(
+            "SELECT feature, finished_at, report FROM runs WHERE report IS NOT NULL ORDER BY finished_at DESC",
+        ):
+            report = json.loads(row["report"])
+            feature, finished = row["feature"], row["finished_at"]
+            archive = report.get("archive")
+            selected = {source["source_id"]: source["grant_id"] for source in report["sources"]}
+            if (archive and archive["selection"] == "all_active_grants" and archive["status"] == "completed"
+                    and selected == active):
+                last_archive.setdefault(feature, finished)
+                if report["status"] == "completed":
+                    last_success.setdefault(feature, finished)
+            if report.get("governance", {}).get("status") == "completed":
+                last_governance.setdefault(feature, finished)
+            for source in report["sources"]:
+                source_id = source["source_id"]
+                if active.get(source_id) == source["grant_id"] and source_id not in covered:
+                    covered[source_id] = source.get("status", "legacy_unclassified")
+                    pending.extend(error for error in report["errors"] if error.get("source_id") == source_id)
     for entry in recent:
         entry["report"] = json.loads(entry["report"]) if entry["report"] else None
-    active = {s["id"]: s["grant_id"] for s in sources}
-    pending = []
-    covered = {}
-    for report in reports:
-        for source in report["sources"]:
-            source_id = source["source_id"]
-            if active.get(source_id) == source["grant_id"] and source_id not in covered:
-                covered[source_id] = "partial" if source["errors"] else "completed"
-                pending.extend(error for error in report["errors"] if error.get("source_id") == source_id)
-        if covered.keys() == active.keys():
-            break
+        if entry["report"] and "archive" not in entry["report"]:
+            entry["report"]["legacy_status"] = entry["report"]["status"]
+            entry["state"] = entry["report"]["status"] = "legacy_unclassified"
     return {
         "settings": store.settings(),
         "sources": [{**describe(source), "last_scan": covered.get(source["id"], "not_run")} for source in sources],
         "latest_runs": recent, "last_success": last_success, "pending": pending,
+        "last_archive_success": last_archive, "last_governance_success": last_governance,
         "applied_events": events, "retry": "run the same sync feature with the same active source grants",
     }

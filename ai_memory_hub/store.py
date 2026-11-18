@@ -265,6 +265,8 @@ class Store:
         query = "SELECT * FROM revisions WHERE kind=? AND id=?"
         params = [kind, ident(entry_id)]
         if revision is not None:
+            if type(revision) is not int or not 1 <= revision < 2**63:
+                raise HubError("invalid revision")
             query += " AND revision=?"
             params.append(revision)
         row = db.execute(query + " ORDER BY revision DESC LIMIT 1", params).fetchone()
@@ -287,6 +289,32 @@ class Store:
             (kind, ident(entry_id)),
         )
         return [record(row) for row in rows]
+
+    @staticmethod
+    def session_revisions(db):
+        for row in db.execute("SELECT * FROM revisions WHERE kind='session' ORDER BY id, revision"):
+            yield record(row)
+
+    def session_view(self, db, item, layer, raw_consent=False):
+        if layer != "L3":
+            return view_session(item, layer)
+        if not raw_consent or self.level not in ("private", "restricted"):
+            raise Denied("L3 requires separate read consent within a private or restricted instance")
+        rows = db.execute(
+            """SELECT * FROM revisions WHERE kind='session' AND id=? AND revision<=?
+            ORDER BY revision DESC""", (item["id"], item["revision"]),
+        )
+        for row in rows:
+            raw = record(row)
+            if "messages" in raw["data"]:
+                result = view_session(item, "L0")
+                result.update({
+                    "layer": "L3", "source": raw["source"], "messages": raw["data"]["messages"],
+                    "raw_revision": raw["revision"], "raw_record_digest": raw["record_digest"],
+                    "raw_created_at": raw["created_at"],
+                })
+                return result
+        raise Missing("raw messages are unavailable at the requested session revision")
 
     @staticmethod
     def append(db, kind, entry_id, content, fingerprint, previous):
@@ -331,13 +359,15 @@ class Store:
                 if not old_fields.get("checkpoint"):
                     raise Conflict("append requires an existing L2 checkpoint")
                 checkpoint = strict_json(canonical(old_fields["checkpoint"]))
+                self.resolve_refs(db, patch.get("file_refs", []))
                 for key, value in patch.items():
                     if key in LISTS:
                         checkpoint[key].extend(value)
                     else:
                         checkpoint[key] = value
             if checkpoint is not None:
-                self.resolve_refs(db, checkpoint["file_refs"])
+                if patch is None:
+                    self.resolve_refs(db, checkpoint["file_refs"])
                 fields["checkpoint"] = checkpoint
                 origins = (origins if patch is not None else []) + [{"revision": current + 1, "source": data["source"]}]
             elif "checkpoint" in old_fields:
@@ -353,6 +383,7 @@ class Store:
 
 
 def view_session(item, layer):
+    one_of(layer, ("L0", "L1", "L2"))
     fields = item["data"]
     result = {key: value for key, value in item.items() if key not in ("data", "checkpoint_sources")}
     result.update({"layer": layer, "title": fields["title"], "project_id": fields.get("project_id")})
@@ -361,8 +392,6 @@ def view_session(item, layer):
     if layer == "L2":
         result["checkpoint"] = fields.get("checkpoint")
         result["checkpoint_sources"] = item["checkpoint_sources"]
-    if layer == "L3":
-        result["messages"] = fields.get("messages")
     return result
 
 

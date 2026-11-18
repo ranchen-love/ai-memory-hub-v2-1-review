@@ -125,7 +125,10 @@ class HubTests(unittest.TestCase):
         item = self.items("session", "session-1")[0]
         for layer in ("L0", "L1", "L2"):
             self.assertNotIn("synthetic raw text", json.dumps(view_session(item, layer)))
-        self.assertEqual(view_session(item, "L3")["messages"][0]["id"], "m1")
+        with self.store.transaction() as db:
+            with self.assertRaises(Denied):
+                self.store.session_view(db, item, "L3")
+            self.assertEqual(self.store.session_view(db, item, "L3", raw_consent=True)["messages"][0]["id"], "m1")
 
     def test_vault_dedupe_version_integrity_and_traceability(self):
         original = self.inbox / "demo.pdf"
@@ -428,6 +431,131 @@ class HubTests(unittest.TestCase):
                     Store(self.root)
             finally:
                 self.root.chmod(0o700)
+
+    def test_latest_and_historical_l3_resolve_original_source(self):
+        self.ingest(record(fields={"title": "L0 title"}))
+        raw = record(base=1)
+        raw["source"] = {**SOURCE, "kind": "observed_messages", "locator": "synthetic:raw-export"}
+        raw["data"]["messages"] = [{"id": "visible-1", "role": "user", "text": "first visible text"}]
+        self.ingest(raw, allow_raw=True)
+        delta = record(fields={"title": "New context", "append": {"verification": ["passed"]}}, base=2)
+        self.ingest(delta)
+        self.ingest(record(fields={"title": "Renamed", "summary": "Updated summary"}, base=3))
+        cli = [sys.executable, "-m", "ai_memory_hub", "--root", str(self.root), "session", "show", "session-1"]
+
+        def show(*args):
+            result = subprocess.run([*cli, *args], capture_output=True)
+            return result.returncode, json.loads(result.stdout if result.returncode == 0 else result.stderr)
+
+        code, latest = show("--layer", "L3", "--consent")
+        self.assertEqual(code, 0, latest)
+        self.assertEqual((latest["revision"], latest["raw_revision"]), (4, 2))
+        self.assertEqual(latest["source"], raw["source"])
+        self.assertEqual(latest["messages"], raw["data"]["messages"])
+        self.assertEqual(latest["raw_record_digest"], self.items("session", "session-1")[1]["record_digest"])
+        self.assertEqual(show("--layer", "L3")[1]["code"], "permission_denied")
+        self.assertEqual(show("--revision", "1", "--layer", "L3", "--consent")[1]["code"], "missing")
+        self.assertEqual(show("--revision", "3", "--layer", "L3", "--consent")[1]["raw_revision"], 2)
+        self.assertNotIn("messages", show("--layer", "L2")[1])
+        raw["base_revision"] = 4
+        raw["data"]["messages"] = [{"id": "visible-2", "role": "assistant", "text": "new transcript revision"}]
+        raw["source"]["locator"] = "synthetic:new-export"
+        self.ingest(raw, allow_raw=True)
+        self.assertEqual(show("--layer", "L3", "--consent")[1]["raw_revision"], 5)
+        self.assertEqual(show("--revision", "4", "--layer", "L3", "--consent")[1]["raw_revision"], 2)
+        self.assertEqual(sum("messages" in r["data"] for r in self.items("session", "session-1")), 2)
+
+    def test_weekly_governance_without_sources_has_separate_success(self):
+        report = run_batch(self.store, self.blobs, "weekly")
+        self.assertEqual(report["status"], "governance_only")
+        self.assertEqual(report["governance"]["status"], "completed")
+        self.assertEqual(report["archive"]["status"], "not_configured")
+        state = status(self.store)
+        self.assertNotIn("weekly", state["last_success"])
+        self.assertNotIn("weekly", state["last_archive_success"])
+        self.assertIn("weekly", state["last_governance_success"])
+
+    def test_weekly_archive_distinguishes_empty_partial_and_complete(self):
+        self.manifest()
+        grant(self.store, "source", "normalized", self.inbox, False)
+        empty = run_batch(self.store, self.blobs, "weekly")
+        self.assertEqual(empty["archive"]["status"], "no_items")
+        self.assertEqual(status(self.store)["sources"][0]["last_scan"], "no_items")
+        self.write("s.json", record())
+        self.manifest({"key": "session", "kind": "record", "path": "s.json"},
+                      {"key": "asset", "kind": "file", "path": "demo.txt"})
+        partial = run_batch(self.store, self.blobs, "weekly")
+        self.assertEqual(partial["archive"]["status"], "partial")
+        self.assertEqual(partial["governance"]["status"], "completed")
+        self.assertEqual(partial["archive"]["items"], {"session": 1, "project": 0, "memory": 0, "asset": 0})
+        self.assertEqual(status(self.store)["pending"][0]["code"], "missing")
+        (self.inbox / "demo.txt").write_bytes(b"synthetic upload")
+        complete = run_batch(self.store, self.blobs, "weekly")
+        self.assertEqual(complete["archive"]["status"], "completed")
+        self.assertEqual(complete["archive"]["items"]["asset"], 1)
+        self.assertIn("weekly", status(self.store)["last_archive_success"])
+        self.assertEqual(status(self.store)["pending"], [])
+
+    def test_weekly_coverage_is_bound_to_all_current_grants(self):
+        self.write("session.json", record())
+        self.manifest({"key": "session", "kind": "record", "path": "session.json"})
+        grant(self.store, "first", "normalized", self.inbox, False)
+        run_batch(self.store, self.blobs, "weekly")
+        self.assertIn("weekly", status(self.store)["last_archive_success"])
+        second = self.directory / "second"
+        second.mkdir()
+        (second / "memory-hub.json").write_text('{"schema_version":"2.1","items":[]}', encoding="utf-8")
+        grant(self.store, "second", "normalized", second, False)
+        self.assertNotIn("weekly", status(self.store)["last_archive_success"])
+        report = run_batch(self.store, self.blobs, "weekly")
+        self.assertEqual((report["status"], report["archive"]["status"]), ("partial", "partial"))
+        self.assertEqual([s["status"] for s in report["sources"]], ["completed", "no_items"])
+        self.assertNotIn("weekly", status(self.store)["last_success"])
+        self.assertIn("weekly", status(self.store)["last_governance_success"])
+        scoped = run_batch(self.store, self.blobs, "weekly", "first")
+        self.assertEqual(scoped["archive"]["selection"], "selected_grant")
+        self.assertNotIn("weekly", status(self.store)["last_archive_success"])
+
+    def test_archive_success_survives_independent_governance_failure(self):
+        self.write("s.json", record())
+        self.manifest({"key": "s", "kind": "record", "path": "s.json"})
+        grant(self.store, "source", "normalized", self.inbox, False)
+        report = run_batch(self.store, self.blobs, "weekly", governance=lambda: {"status": "fail"})
+        self.assertEqual((report["status"], report["governance"]["status"], report["archive"]["status"]),
+                         ("partial", "failed", "completed"))
+        state = status(self.store)
+        self.assertIn("weekly", state["last_archive_success"])
+        self.assertNotIn("weekly", state["last_governance_success"])
+        self.assertNotIn("weekly", state["last_success"])
+
+    def test_legacy_reports_cannot_supply_archive_success(self):
+        old = {"status": "completed", "sources": [], "errors": []}
+        with self.store.transaction(write=True) as db:
+            db.execute("INSERT INTO runs VALUES (?,?,?,?,?,?)",
+                       ("old", "weekly", AT, AT, "completed", json.dumps(old)))
+        state = status(self.store)
+        self.assertEqual(state["latest_runs"][0]["state"], "legacy_unclassified")
+        self.assertNotIn("weekly", state["last_success"])
+        self.assertNotIn("weekly", state["last_archive_success"])
+
+    def test_checkpoint_append_keeps_unpinned_reference_and_project_history(self):
+        doc = record()
+        doc["data"]["checkpoint"]["file_refs"].append({"asset_id": "later"})
+        self.ingest(doc)
+        source = self.inbox / "later.txt"
+        source.write_bytes(b"arrived after checkpoint")
+        self.add(source, asset_id="later")
+        delta = record(fields={"title": "Verification", "append": {"verification": ["passed"]}}, base=1)
+        self.ingest(delta)
+        refs = self.items("session", "session-1")[1]["data"]["checkpoint"]["file_refs"]
+        self.assertEqual(refs, [{"asset_id": "later"}])
+        self.ingest(record(fields={"title": "Moved", "project_id": "other"}, base=2))
+        self.store.settings(feature="handoff", enabled=True)
+        path = Path(create_handoff(self.store, self.blobs, "demo")["path"])
+        history = json.loads(path.read_text(encoding="utf-8"))
+        self.assertEqual(history["sessions"], [])
+        self.assertEqual([item["revision"] for item in history["timeline"]], [1, 2])
+        self.assertEqual(history["files"], [{"id": "later", "version": None, "status": "unresolved"}])
 
     def test_cli_routes_from_documented_entry_point(self):
         payload = self.write("sample.json", record())

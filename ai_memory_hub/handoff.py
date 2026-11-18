@@ -18,7 +18,16 @@ def create_handoff(store, blobs, project_id):
         store.require(db, "handoff")
         project = store.get(db, "project", project_id)
         sessions = [item for item in store.latest(db, "session") if item["data"].get("project_id") == project_id]
-        if project is None and not sessions:
+        prior_sessions = []
+        historical_refs = set()
+        for revision in store.session_revisions(db):
+            fields = revision["data"]
+            if fields.get("project_id") != project_id:
+                continue
+            prior_sessions.append(timeline_entry(revision))
+            for ref in fields.get("checkpoint", {}).get("file_refs", []):
+                historical_refs.add((ref["asset_id"], ref.get("version")))
+        if project is None and not prior_sessions:
             raise Missing("project and associated sessions not found")
         views = [view_session(item, "L2") for item in sessions]
         refs = {}
@@ -31,9 +40,7 @@ def create_handoff(store, blobs, project_id):
         if project:
             for ref in project["data"].get("file_refs", []):
                 linked.add((ref["asset_id"], ref.get("version")))
-        for item in views:
-            for ref in (item["checkpoint"] or {}).get("file_refs", []):
-                linked.add((ref["asset_id"], ref.get("version")))
+        linked.update(historical_refs)
         for asset_id, version in sorted(linked, key=lambda pair: (pair[0], pair[1] or 0)):
             item = store.get(db, "asset", asset_id, version) if version else None
             key = f"{asset_id}@{version}" if version else asset_id
@@ -46,13 +53,9 @@ def create_handoff(store, blobs, project_id):
                 "storage": fields["storage"], "sha256": fields["sha256"], "source": item["source"],
                 "availability": availability(db, blobs, item),
             }
-        timeline = []
-        for item in sessions:
-            for rev in store.history(db, "session", item["id"]):
-                if rev["data"].get("project_id") == project_id:
-                    timeline.append(timeline_entry(rev))
-        for rev in store.history(db, "project", project_id):
-            timeline.append(timeline_entry(rev))
+        timeline = prior_sessions + [
+            timeline_entry(revision) for revision in store.history(db, "project", project_id)
+        ]
     bundle = {
         "schema_version": SCHEMA, "kind": "project_handoff", "project_id": project_id,
         "sensitivity": store.level, "created_at": now(), "project": project,

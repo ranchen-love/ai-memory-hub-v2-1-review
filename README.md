@@ -7,7 +7,7 @@ AI Memory Hub is a local, platform-neutral CLI for personal memory candidates, c
 Use Python 3.11 or newer. From the code checkout, choose a new path outside the Git tree. Replace it with a path under your user profile for regular use.
 
 ```sh
-python -m ai_memory_hub --root ../hub-demo init
+python -m ai_memory_hub --root ../hub-demo init --wizard
 python -m ai_memory_hub --root ../hub-demo source grant demo normalized --path examples --consent
 python -m ai_memory_hub --root ../hub-demo sync full
 python -m ai_memory_hub --root ../hub-demo session list --project greenhouse-demo
@@ -17,7 +17,7 @@ python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consen
 python -m ai_memory_hub --root ../hub-demo sync status
 ```
 
-The first sync creates four records. A retry reports four unchanged items. `asset copy` returns the path of a verified copy inside the owner-only vault. Run `asset refs calibration-notes` to trace references.
+Choose Ordinary or press Enter in the wizard. For unattended initialization use `init --preset ordinary`. The first sync creates four records. A retry reports four unchanged items. `asset copy` returns the path of a verified copy inside the owner-only vault. Run `asset refs calibration-notes` to trace references.
 
 The module works directly from source without runtime dependencies. An optional package install uses `python -m pip install .` from the pinned checkout and installs the `ai-memory-hub` command. Set `AI_MEMORY_HUB_ROOT` in your shell if you use one instance often. Setup details, file versions and transfer examples are in [the user guide](docs/guide.md).
 
@@ -38,4 +38,4 @@ Use `config show`, `config preset archive` or `config set event on` after the ro
 - A locally selected ChatGPT conversation JSON export from an eligible account. Raw import requires a separate grant and accepts eligible visible text on the selected branch only.
 - Any regular local file into the Vault, or a stable external URL as a reference. Link health reports declared expiry or a separately supplied observation. Local file checks validate SHA-256.
 
-See [the protocol](docs/protocol.md), [JSON Schema](schemas/protocol.schema.json) and [platform guide](docs/adapters.md). The release uses the MIT license.
+See [the protocol](docs/protocol.md), [JSON Schema](schemas/protocol.schema.json) and [platform guide](docs/adapters.md). The release uses the MIT license. See [security and storage boundaries](SECURITY.md) before using real data.

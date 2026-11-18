@@ -42,7 +42,9 @@ def parser():
     commands = cli.add_subparsers(dest="command", required=True)
     init = commands.add_parser("init", help="initialize an owner-only instance")
     init.add_argument("--sensitivity", choices=LEVELS, default="private")
-    init.add_argument("--preset", choices=PRESETS, default="ordinary")
+    setup = init.add_mutually_exclusive_group()
+    setup.add_argument("--preset", choices=PRESETS, default="ordinary")
+    setup.add_argument("--wizard", action="store_true", help="choose a path and sync preset interactively")
     config = sub(commands.add_parser("config", help="view or change independent sync switches"))
     config.add_parser("show")
     swap = config.add_parser("preset")
@@ -144,16 +146,14 @@ def show_records(store, args):
         if args.action == "history":
             items = store.history(db, args.command, args.id)
             return {"records": [view_session(item, "L0") for item in items] if args.command == "session" else items}
+        if args.command == "session" and args.layer == "L3":
+            consent(args)
         item = store.get(db, args.command, args.id, args.revision)
-    if item is None:
-        raise Missing("record not found")
-    if args.command != "session":
-        return item
-    if args.layer == "L3":
-        consent(args)
-        if "messages" not in item["data"]:
-            raise Missing("raw messages are unavailable in this revision")
-    return view_session(item, args.layer)
+        if item is None:
+            raise Missing("record not found")
+        if args.command != "session":
+            return item
+        return store.session_view(db, item, args.layer, raw_consent=args.consent)
 
 
 def copy_blob(store, blobs, item):
@@ -213,7 +213,33 @@ def asset_command(store, blobs, args):
     return export_public_text(store, blobs, item, args.output)
 
 
+def setup_wizard(root):
+    def prompt(label):
+        print(label, end=" ", file=sys.stderr, flush=True)
+        try:
+            return input().strip()
+        except EOFError:
+            raise HubError("setup wizard ended before a choice was entered") from None
+
+    if not root:
+        default = str(Path.home() / "AI-Memory-Hub")
+        root = prompt(f"Instance path outside Git [{default}]") or default
+    print(
+        "1 Ordinary: weekly and on-demand. "
+        "2 Archive: adds daily catch-up. "
+        "3 Collaboration: adds daily, events and handoff.",
+        file=sys.stderr,
+    )
+    option = prompt("Sync preset [1]")
+    if option not in ("", "1", "2", "3"):
+        raise HubError("choose 1, 2 or 3")
+    return root, {"": "ordinary", "1": "ordinary", "2": "archive", "3": "collaboration"}[option]
+
+
 def execute(args, governance=None, initial_switches=None):
+    if args.command == "init" and args.wizard:
+        args.root, args.preset = setup_wizard(args.root)
+        initial_switches = None
     if not args.root:
         raise HubError("select an instance with --root or AI_MEMORY_HUB_ROOT")
     if args.command == "init":
@@ -261,7 +287,7 @@ def main(argv=None, governance=None, initial_switches=None):
     try:
         result = execute(args, governance=governance, initial_switches=initial_switches)
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 1 if result.get("status") in ("partial", "no_sources") else 0
+        return 1 if result.get("status") in ("failed", "partial", "no_sources", "no_items") else 0
     except (HubError, OSError, json.JSONDecodeError, UnicodeError, sqlite3.Error, RecursionError) as exc:
         error = failure(exc, None)
         print(json.dumps({"status": "error", "code": error["code"], "reason": error["message"]}), file=sys.stderr)
