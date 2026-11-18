@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AI Memory Hub 2.2 offline transfer manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "sensitivity",
+    "context_sha256",
+    "assets"
+  ],
+  "properties": {
+    "format": {
+      "const": "2.2"
+    },
+    "sensitivity": {
+      "enum": [
+        "public",
+        "internal",
+        "private",
+        "restricted"
+      ]
+    },
+    "context_sha256": {
+      "$ref": "#/$defs/sha256"
+    },
+    "assets": {
+      "type": "array",
+      "maxItems": 256,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "version",
+          "sha256",
+          "size"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9223372036854775807
+          },
+          "sha256": {
+            "$ref": "#/$defs/sha256"
+          },
+          "size": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1073741824
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    }
+  }
+}

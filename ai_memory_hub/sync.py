@@ -157,7 +157,7 @@ def already_event(db, event, payload_digest):
     return old is not None
 
 
-def run_batch(store, blobs, feature, source_id=None, governance=None):
+def run_batch(store, blobs, feature, source_id=None, governance=None, archive_only=False):
     one_of(feature, ("full", "daily", "weekly"))
     with store.transaction() as db:
         store.require(db, feature)
@@ -174,6 +174,9 @@ def run_batch(store, blobs, feature, source_id=None, governance=None):
         report = {
             "run_id": run_id, "feature": feature, "scope": "granted_local_sources", "sources": [],
             "created": 0, "updated": 0, "unchanged": 0, "errors": [],
+            "execution": {"runtime": "local_cli",
+                          "entrypoint": "local_archive" if archive_only else "sync",
+                          "scheduler": "not_verified"},
         }
         items_by_kind = dict.fromkeys(("session", "project", "memory", "asset"), 0)
         for grant in sources:
@@ -214,7 +217,9 @@ def run_batch(store, blobs, feature, source_id=None, governance=None):
             "selection": "all_active_grants" if source_id is None else "selected_grant",
             "configured_sources": len(sources), "items": items_by_kind,
         }
-        if feature == "weekly":
+        if feature == "weekly" and archive_only:
+            report["governance"] = {"status": "not_run", "scope": "local_archive_only"}
+        if feature == "weekly" and not archive_only:
             report["governance"] = {"status": "failed", "scope": "long_term_memory"}
             try:
                 with store.transaction(write=True) as db:
@@ -302,7 +307,7 @@ def status(store):
             "SELECT * FROM runs ORDER BY started_at DESC LIMIT 10",
         )]
         active = {source["id"]: source["grant_id"] for source in sources}
-        covered, pending = {}, []
+        covered, source_success, pending = {}, {}, []
         last_success, last_archive, last_governance = {}, {}, {}
         for row in db.execute(
             "SELECT feature, finished_at, report FROM runs WHERE report IS NOT NULL ORDER BY finished_at DESC",
@@ -320,6 +325,8 @@ def status(store):
                 last_governance.setdefault(feature, finished)
             for source in report["sources"]:
                 source_id = source["source_id"]
+                if active.get(source_id) == source["grant_id"] and source.get("status") == "completed":
+                    source_success.setdefault(source_id, finished)
                 if active.get(source_id) == source["grant_id"] and source_id not in covered:
                     covered[source_id] = source.get("status", "legacy_unclassified")
                     pending.extend(error for error in report["errors"] if error.get("source_id") == source_id)
@@ -330,7 +337,9 @@ def status(store):
             entry["state"] = entry["report"]["status"] = "legacy_unclassified"
     return {
         "settings": store.settings(),
-        "sources": [{**describe(source), "last_scan": covered.get(source["id"], "not_run")} for source in sources],
+        "execution": {"runtime": "local_cli", "vault": "opened", "scheduler": "not_verified"},
+        "sources": [{**describe(source), "last_scan": covered.get(source["id"], "not_run"),
+                     "last_archive_success": source_success.get(source["id"])} for source in sources],
         "latest_runs": recent, "last_success": last_success, "pending": pending,
         "last_archive_success": last_archive, "last_governance_success": last_governance,
         "applied_events": events, "retry": "run the same sync feature with the same active source grants",

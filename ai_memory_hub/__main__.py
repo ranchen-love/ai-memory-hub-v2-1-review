@@ -1,23 +1,22 @@
 """Command-line entry point for local users and authorized executors."""
 
 import argparse
-import hashlib
 import json
 import os
 import sqlite3
 import sys
 from pathlib import Path
-from uuid import uuid4
 
 from . import VERSION
-from .adapters import ADAPTERS, describe, grant, list_sources, revoke
+from .adapters import ADAPTERS, describe, grant, list_sources, local_input, revoke
 from .assets import (
-    LINK_STATES, LocalVault, availability, export_public_text, observe_link, put_file, put_link, references,
+    LINK_STATES, LocalVault, availability, export_public_text, observe_link, put_file, put_link, references, retrieve_blob,
 )
 from .handoff import create_handoff
 from .model import FEATURES, LEVELS, PRESETS, Denied, HubError, Missing, read_json
-from .store import Store, memory_review, private_directory, view_session
+from .store import Store, memory_review, view_session
 from .sync import dispatch, failure, run_batch, status
+from .transfer import inspect_transfer, pack_transfer, receive_transfer, retrieve_transfer
 
 ORIGINS = ("user_upload", "ai_generated", "workspace_artifact")
 
@@ -123,9 +122,28 @@ def parser():
     event.add_argument("--source", required=True)
     event.add_argument("--event", required=True, help="event JSON path relative to an active source")
     permit(event)
+    local = sub(commands.add_parser("local", help="run or inspect an authorized local archive"))
+    local.add_parser("status")
+    local_run = local.add_parser("run")
+    local_run.add_argument("--source", required=True, help="an existing explicit source grant")
+    local_run.add_argument("--mode", choices=("full", "weekly", "daily"), default="full")
     handoff = commands.add_parser("handoff", help="write a local project context package")
     handoff.add_argument("--project", required=True)
     permit(handoff)
+    transfer = sub(commands.add_parser("transfer", help="prepare or receive a project package"))
+    sender = transfer.add_parser("pack")
+    sender.add_argument("--project", required=True)
+    sender.add_argument("--asset", action="append", default=[], metavar="ID@REV")
+    permit(sender)
+    receiver = transfer.add_parser("receive")
+    receiver.add_argument("--input", required=True, type=Path)
+    permit(receiver)
+    for action in ("inspect", "file"):
+        read = transfer.add_parser(action)
+        read.add_argument("id")
+        if action == "file":
+            read.add_argument("asset", metavar="ID@REV")
+        permit(read)
     return cli
 
 
@@ -156,30 +174,6 @@ def show_records(store, args):
         return store.session_view(db, item, args.layer, raw_consent=args.consent)
 
 
-def copy_blob(store, blobs, item):
-    if item["data"]["storage"] != "vault":
-        raise Missing("the external reference has no stored file to copy")
-    directory = store.root / "retrieved"
-    private_directory(directory)
-    expected = item["data"]["sha256"]
-    filename = uuid4().hex + Path(item["data"]["name"]).suffix
-    temporary = directory / (".incomplete-" + filename)
-    try:
-        with blobs.open_blob(expected) as origin, temporary.open("xb") as target:
-            sha = hashlib.sha256()
-            for chunk in iter(lambda: origin.read(1024 * 1024), b""):
-                sha.update(chunk)
-                target.write(chunk)
-            if sha.hexdigest() != expected:
-                raise HubError("blob integrity check failed")
-            target.flush()
-            os.fsync(target.fileno())
-        os.replace(temporary, directory / filename)
-    finally:
-        temporary.unlink(missing_ok=True)
-    return {"status": "retrieved", "path": str(directory / filename), "sha256": expected}
-
-
 def asset_command(store, blobs, args):
     action = args.action
     if action in ("add", "link"):
@@ -189,7 +183,7 @@ def asset_command(store, blobs, args):
         if action == "link":
             with store.transaction(write=True) as db:
                 return put_link(store, db, args.url, args.name, source, expires_at=args.expires_at, **fields)
-        with blobs.stage(args.file.expanduser()) as staged, store.transaction(write=True) as db:
+        with blobs.stage(local_input(args.file.expanduser().absolute())) as staged, store.transaction(write=True) as db:
             return put_file(store, db, blobs, staged, args.name or args.file.name, source, **fields)
     with store.transaction(write=action == "observe") as db:
         if action == "list":
@@ -209,7 +203,9 @@ def asset_command(store, blobs, args):
             return {**item, "availability": availability(db, blobs, item)}
     consent(args)
     if action == "copy":
-        return copy_blob(store, blobs, item)
+        if item["data"]["storage"] != "vault":
+            raise Missing("the external reference has no stored file to copy")
+        return retrieve_blob(store.root, blobs, item["data"]["sha256"], item["data"]["name"])
     return export_public_text(store, blobs, item, args.output)
 
 
@@ -255,7 +251,7 @@ def execute(args, governance=None, initial_switches=None):
         return store.settings()
     if args.command == "import":
         consent(args)
-        record = read_json(args.input.expanduser())
+        record = read_json(local_input(args.input.expanduser().absolute()))
         with store.transaction(write=True) as db:
             return store.ingest(db, record, args.allow_raw, args.review_decision)
     if args.command in ("session", "project", "memory"):
@@ -271,6 +267,19 @@ def execute(args, governance=None, initial_switches=None):
         with store.transaction() as db:
             sources = list_sources(db)
         return {"sources": [describe(source) for source in sources]}
+    if args.command == "local":
+        if args.action == "status":
+            return status(store)
+        return run_batch(store, blobs, args.mode, args.source, archive_only=True)
+    if args.command == "transfer":
+        consent(args)
+        if args.action == "pack":
+            return pack_transfer(store, blobs, args.project, args.asset)
+        if args.action == "receive":
+            return receive_transfer(store, blobs, args.input)
+        if args.action == "inspect":
+            return inspect_transfer(store, blobs, args.id)
+        return retrieve_transfer(store, blobs, args.id, args.asset)
     if args.command == "handoff":
         consent(args)
         return create_handoff(store, blobs, args.project)

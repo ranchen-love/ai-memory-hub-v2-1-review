@@ -31,6 +31,7 @@ class Staged(NamedTuple):
 
 class BlobStore(Protocol):
     def stage(self, source: Path) -> ContextManager[Staged]: ...
+    def stage_stream(self, source: BinaryIO, limit: int) -> ContextManager[Staged]: ...
     def publish(self, staged: Staged) -> None: ...
     def check(self, sha256: str) -> str: ...
     def read_small(self, sha256: str, limit: int) -> bytes: ...
@@ -61,21 +62,28 @@ class LocalVault:
         source.stat()
         if not source.is_file():
             raise HubError("asset source must be a regular file")
+        with source.open("rb") as origin:
+            before = os.fstat(origin.fileno())
+            with self.stage_stream(origin, before.st_size) as staged:
+                after = os.fstat(origin.fileno())
+                if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns) or staged.size != after.st_size:
+                    raise Conflict("asset source changed while reading; retry with a stable copy")
+                yield staged
+
+    @contextmanager
+    def stage_stream(self, source, limit):
         private_directory(self.directory)
         with tempfile.NamedTemporaryFile(dir=self.directory, prefix=".partial-", delete=False) as stream:
             path = Path(stream.name)
             sha = hashlib.sha256()
             size = 0
             try:
-                with source.open("rb") as origin:
-                    before = os.fstat(origin.fileno())
-                    for chunk in iter(lambda: origin.read(1024 * 1024), b""):
-                        sha.update(chunk)
-                        size += len(chunk)
-                        stream.write(chunk)
-                    after = os.fstat(origin.fileno())
-                    if (before.st_size, before.st_mtime_ns) != (after.st_size, after.st_mtime_ns) or size != after.st_size:
-                        raise Conflict("asset source changed while reading; retry with a stable copy")
+                for chunk in iter(lambda: source.read(1024 * 1024), b""):
+                    size += len(chunk)
+                    if size > limit:
+                        raise Conflict("asset exceeds the authorized size")
+                    sha.update(chunk)
+                    stream.write(chunk)
                 stream.flush()
                 os.fsync(stream.fileno())
                 stream.close()
@@ -264,3 +272,24 @@ def export_public_text(store, blobs, item, destination):
     with target.open("xb") as stream:
         stream.write(data)
     return {"status": "written", "path": str(target), "sha256": item["data"]["sha256"]}
+
+
+def retrieve_blob(root, blobs, expected, name):
+    directory = root / "retrieved"
+    private_directory(directory)
+    filename = uuid.uuid4().hex + Path(name).suffix
+    temporary = directory / (".incomplete-" + filename)
+    try:
+        with blobs.open_blob(expected) as origin, temporary.open("xb") as target:
+            sha = hashlib.sha256()
+            for chunk in iter(lambda: origin.read(1024 * 1024), b""):
+                sha.update(chunk)
+                target.write(chunk)
+            if sha.hexdigest() != expected:
+                raise HubError("blob integrity check failed")
+            target.flush()
+            os.fsync(target.fileno())
+        os.replace(temporary, directory / filename)
+    finally:
+        temporary.unlink(missing_ok=True)
+    return {"status": "retrieved", "path": str(directory / filename), "sha256": expected}
