@@ -24,13 +24,13 @@
 ## アーキテクチャ
 ```mermaid
 flowchart LR
-  A["Authorized exports / manifests / checkpoints"] --> B["Grants and adapters"]
-  B --> C["L0–L3 · Projects · Memory candidates"]
-  B --> D["Versioned files · SHA-256"]
-  C --> E["Local Vault"]
+  A["許可されたローカル出力 / 清単 / チェックポイント"] --> B["ソース許可とアダプター"]
+  B --> C["L0–L3 · プロジェクト · 記憶候補"]
+  B --> D["ファイル履歴 · SHA-256"]
+  C --> E["ローカル Vault"]
   D --> E
-  E --> F["Reviewed offline transfer"]
-  F --> G["Authorized recipient Vault"]
+  E --> F["確認済みのオフライン引き継ぎ"]
+  F --> G["認可された受信側 Vault"]
 ```
 **Vault** は Git リポジトリ外に作る利用者管理のローカルディレクトリで、SQLite の索引と内容ハッシュによるファイル保存を利用します。1 つの Vault は 1 つの機密区分を扱い、OS のアクセス制御で保護します。
 L0 は会話の識別、L1 は概要、L2 は目標・決定・検証・次の行動、L3 は別途同意を得た実際の可視メッセージです。L2 を更新しても過去の L3 原文や出典は書き換えません。
