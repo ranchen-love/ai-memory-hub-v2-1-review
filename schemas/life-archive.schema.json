@@ -1,0 +1,440 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Life archive profile and timeline",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "kind": {
+          "const": "life_profile"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "category": {
+                "enum": [
+                  "01",
+                  "02",
+                  "03",
+                  "04",
+                  "05",
+                  "06",
+                  "07",
+                  "08",
+                  "09",
+                  "10",
+                  "11",
+                  "12"
+                ]
+              },
+              "status": {
+                "enum": [
+                  "unknown",
+                  "partial",
+                  "reviewed"
+                ]
+              },
+              "records": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/record"
+                }
+              }
+            },
+            "required": [
+              "category",
+              "status",
+              "records"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 12,
+          "maxItems": 12
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "categories"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "1.0"
+        },
+        "kind": {
+          "const": "life_timeline"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/timeline_event"
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "kind",
+        "events"
+      ],
+      "additionalProperties": false
+    }
+  ],
+  "$defs": {
+    "record": {
+      "type": "object",
+      "properties": {
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+        },
+        "category": {
+          "enum": [
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12"
+          ]
+        },
+        "status": {
+          "enum": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ]
+        },
+        "evidence_level": {
+          "enum": [
+            "official",
+            "secondary",
+            "unverified"
+          ]
+        },
+        "source": {
+          "$ref": "protocol.schema.json#/$defs/source"
+        },
+        "source_type": {
+          "enum": [
+            "user_statement",
+            "document",
+            "official_record",
+            "system_sync",
+            "secondary_source"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200000
+        },
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "private",
+            "restricted"
+          ]
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+          },
+          "uniqueItems": true
+        },
+        "superseded_by": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+        },
+        "related_records": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "record_id",
+        "category",
+        "status",
+        "evidence_level",
+        "source",
+        "source_type",
+        "created_at",
+        "updated_at",
+        "summary",
+        "sensitivity"
+      ],
+      "additionalProperties": false
+    },
+    "timeline_event": {
+      "type": "object",
+      "properties": {
+        "record_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+        },
+        "category": {
+          "enum": [
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12"
+          ]
+        },
+        "status": {
+          "enum": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ]
+        },
+        "evidence_level": {
+          "enum": [
+            "official",
+            "secondary",
+            "unverified"
+          ]
+        },
+        "source": {
+          "$ref": "protocol.schema.json#/$defs/source"
+        },
+        "source_type": {
+          "enum": [
+            "user_statement",
+            "document",
+            "official_record",
+            "system_sync",
+            "secondary_source"
+          ]
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200000
+        },
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "private",
+            "restricted"
+          ]
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "supersedes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+          },
+          "uniqueItems": true
+        },
+        "superseded_by": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+        },
+        "related_records": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+          },
+          "uniqueItems": true
+        },
+        "extensions": {
+          "type": "object"
+        },
+        "occurred_at": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "date_precision": {
+          "enum": [
+            "day",
+            "month",
+            "year",
+            "unknown"
+          ]
+        }
+      },
+      "required": [
+        "record_id",
+        "category",
+        "status",
+        "evidence_level",
+        "source",
+        "source_type",
+        "created_at",
+        "updated_at",
+        "summary",
+        "sensitivity",
+        "occurred_at",
+        "date_precision"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "date_precision": {
+                "const": "unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "occurred_at": {
+                "type": "null"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "date_precision": {
+                "const": "day"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "occurred_at": {
+                "type": "string",
+                "format": "date"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "date_precision": {
+                "const": "month"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "occurred_at": {
+                "type": "string",
+                "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "date_precision": {
+                "const": "year"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "occurred_at": {
+                "type": "string",
+                "pattern": "^[0-9]{4}$"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

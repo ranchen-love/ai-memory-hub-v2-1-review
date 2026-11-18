@@ -13,10 +13,13 @@ from .assets import (
     LINK_STATES, LocalVault, availability, export_public_text, observe_link, put_file, put_link, references, retrieve_blob,
 )
 from .handoff import create_handoff
+from .life import health_coverage
 from .model import FEATURES, LEVELS, PRESETS, Denied, HubError, Missing, read_json
 from .store import Store, memory_review, view_session
 from .sync import dispatch, failure, run_batch, status
 from .transfer import inspect_transfer, pack_transfer, receive_transfer, retrieve_transfer
+from .workspace import check_workspace, facts_projection, init_workspace
+
 
 ORIGINS = ("user_upload", "ai_generated", "workspace_artifact")
 
@@ -144,6 +147,19 @@ def parser():
         if action == "file":
             read.add_argument("asset", metavar="ID@REV")
         permit(read)
+    workspace = sub(commands.add_parser("workspace", help="initialize or verify a portable memory workspace"))
+    initialize = workspace.add_parser("init")
+    initialize.add_argument("--path", required=True, type=Path)
+    initialize.add_argument("--vault", type=Path)
+    initialize.add_argument("--sensitivity", choices=LEVELS, default="private")
+    initialize.add_argument("--demo", action="store_true", help="include synthetic inputs without authorizing them")
+    workspace.add_parser("check").add_argument("--path", required=True, type=Path)
+    facts = workspace.add_parser("facts")
+    facts.add_argument("--path", required=True, type=Path)
+    permit(facts)
+    health = workspace.add_parser("health-check")
+    health.add_argument("--input", required=True, type=Path)
+    permit(health)
     return cli
 
 
@@ -233,6 +249,15 @@ def setup_wizard(root):
 
 
 def execute(args, governance=None, initial_switches=None):
+    if args.command == "workspace":
+        if args.action == "init":
+            return init_workspace(args.path, args.vault, args.sensitivity, args.demo)
+        if args.action == "check":
+            return check_workspace(args.path)
+        consent(args)
+        if args.action == "facts":
+            return facts_projection(args.path)
+        return health_coverage(read_json(local_input(args.input.expanduser().absolute())))
     if args.command == "init" and args.wizard:
         args.root, args.preset = setup_wizard(args.root)
         initial_switches = None

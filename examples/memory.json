@@ -11,6 +11,7 @@
   "data": {
     "key": "demo fixture procedure",
     "claim": "Review the checklist before changing the sample baseline",
-    "status": "candidate"
+    "status": "candidate",
+    "classification": "rule"
   }
 }

@@ -23,6 +23,26 @@ ALLOWED = {
     "pyproject.toml", "schemas/protocol.schema.json", "schemas/transfer.schema.json", "scripts/build_review_artifacts.py", "scripts/smoke_release.py",
     "scripts/smoke_v22.py", "scripts/check_readme_i18n.py",
     "tests/test_deployment.py", "tests/test_hub.py", "tests/test_protocol_schema.py",
+    "AGENTS.md", "CLAUDE.md", "GEMINI.md",
+    "ai_memory_hub/life.py", "ai_memory_hub/workspace-files.json", "ai_memory_hub/workspace.py",
+    "assets/README.md", "assets/manifest.json", "candidates/README.md",
+    "collaboration/agent-roles.md", "collaboration/handoff-protocol.md", "collaboration/verification.md",
+    "collaboration/workflows.md", "config/README.md", "config/sync-defaults.json",
+    "config/workspace.gitignore", "core/INDEX.md", "core/boundaries.md",
+    "core/communication.md", "core/hard-rules.md", "core/identity.md",
+    "core/preferences.md", "docs/readme-sync.md", "docs/workspace-parity.md",
+    "docs/workspace.md", "integrations/README.md", "integrations/capabilities.md",
+    "integrations/memory-bootstrap.md", "knowledge/README.md", "knowledge/TOPIC.md",
+    "life-archive/README.md", "life-archive/health/README.md", "life-archive/health/synthetic.json",
+    "life-archive/profile.json", "life-archive/taxonomy.md", "life-archive/timeline.json",
+    "memory/README.md", "memory/changelog.md", "memory/decisions.md",
+    "memory/facts.yaml", "memory/pending-review.md", "projects/README.md",
+    "projects/TEMPLATE.md", "schemas/health-summary.schema.json", "schemas/life-archive.schema.json",
+    "schemas/memory-candidate.schema.json", "schemas/workspace-index.schema.json", "scripts/smoke_workspace.py",
+    "sessions/README.md", "sessions/index.json", "setup.py",
+    "tests/test_workspace.py", "vendor/README.md", "workflows/data-quality.md",
+    "workflows/development.md", "workflows/document-writing.md", "workflows/hybrid-sync.md",
+    "workflows/memory-lifecycle.md", "workflows/project-handoff.md", "workflows/research.md",
 }
 LEGACY_ALLOWED = {
     "README.zh-CN.md", "README.ja.md", "README.ko.md", "README.es.md",
@@ -35,7 +55,7 @@ def git(*args):
     return subprocess.check_output(["git", "-C", str(ROOT), *args])
 
 
-def tree(commit):
+def tree(commit, approved):
     entries = {}
     for item in git("ls-tree", "-rz", commit).split(b"\0"):
         if not item:
@@ -43,7 +63,7 @@ def tree(commit):
         header, name = item.split(b"\t", 1)
         file = name.decode("utf-8")
         mode, kind, oid = header.split()
-        if file not in (ALLOWED | LEGACY_ALLOWED) or mode != b"100644" or kind != b"blob":
+        if file not in approved or mode != b"100644" or kind != b"blob":
             raise ValueError("unapproved history entry: " + file)
         entries[file] = oid.decode("ascii")
     return entries
@@ -61,10 +81,10 @@ def build(out, candidate=False):
     ref = git("symbolic-ref", "HEAD").decode().strip()
     if not ref.startswith("refs/heads/") or (not candidate and ref != "refs/heads/main"):
         raise ValueError("check out the standalone branch")
-    current = tree(head)
+    current = tree(head, ALLOWED)
     if set(current) != ALLOWED:
         raise ValueError("release tree differs from the approved file list")
-    histories = {oid for commit in commits for oid in tree(commit).values()}
+    histories = {oid for commit in commits for oid in tree(commit, ALLOWED | LEGACY_ALLOWED).values()}
     for oid in histories:
         git("cat-file", "blob", oid).decode("utf-8")
     version = re.search(rb'^VERSION = "(\d+\.\d+\.\d+)"$', git("show", "HEAD:ai_memory_hub/__init__.py"), re.M)[1].decode()

@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0",
+  "kind": "life_profile",
+  "categories": [
+    {
+      "category": "01",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "02",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "03",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "04",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "05",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "06",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "07",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "08",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "09",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "10",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "11",
+      "status": "unknown",
+      "records": []
+    },
+    {
+      "category": "12",
+      "status": "unknown",
+      "records": []
+    }
+  ]
+}

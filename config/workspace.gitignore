@@ -1,0 +1,3 @@
+# An initialized workspace is private. Mirror individually reviewed items to a separate repository.
+*
+!.gitignore
