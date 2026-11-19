@@ -1,5 +1,7 @@
 # AI Memory Hub
+
 **Languages:** [简体中文](../../README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+
 ---
 **Own your AI memory: organized, verifiable, portable, and under your control.**
 AI Memory Hub combines a **complete personal memory Workspace template with a local versioned Vault engine** for durable facts, conversations, projects, files, a life archive, and authorized transfers between different AI agents.

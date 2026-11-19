@@ -1,5 +1,7 @@
 # AI Memory Hub
+
 **语言 / Languages：** [简体中文](README.md) · [English](docs/i18n/README.en.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Español](docs/i18n/README.es.md) · [Français](docs/i18n/README.fr.md) · [Deutsch](docs/i18n/README.de.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md) · [Русский](docs/i18n/README.ru.md)
+
 ---
 **把 AI 的长期记忆变成用户自己掌控、可以迁移和持续维护的资料体系。**
 AI Memory Hub 提供完整的**个人记忆工作区模板 + 本地 Vault 归档引擎**，用于组织长期事实、会话检查点、项目、文件、人生档案，以及不同 Agent 之间经授权的交接和版本确认。
