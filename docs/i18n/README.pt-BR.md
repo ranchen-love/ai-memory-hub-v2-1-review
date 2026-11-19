@@ -159,4 +159,4 @@ O software é V2.4.0 e mantém compatibilidade com o esquema de registros `2.1`;
 [Implantação, recuperação e transferência](../deployment.md) · [Guia completo](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Segurança](../../SECURITY.md) · [Licença MIT](../../LICENSE)
 Use somente dados sintéticos em contribuições, nunca exportações privadas. Testes: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` e `python scripts/smoke_v22.py`.
 
-**Situação do lançamento:** o núcleo V2.3 já foi implementado e validado sinteticamente. Tornar o repositório público e criar uma Release oficial 2.4.0 são etapas separadas.
+**Situação do lançamento:** consulte a visibilidade atual do repositório no GitHub. Uma Release oficial 2.4.0 exige uma etapa separada.

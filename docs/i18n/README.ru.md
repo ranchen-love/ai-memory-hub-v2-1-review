@@ -160,4 +160,4 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 [Развёртывание, резервные копии и передача](../deployment.md) · [Руководство](../guide.md) · [Адаптеры](../adapters.md) · [Протокол](../protocol.md) · [Безопасность](../../SECURITY.md) · [Лицензия MIT](../../LICENSE)
 Для разработки используйте только синтетические данные, не загружайте личные экспорты. Проверки: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` и `python scripts/smoke_v22.py`.
 
-**Статус публикации:** ядро V2.3 реализовано и проверено на тестовых данных. Открытие GitHub-репозитория и официальный Release 2.4.0 — отдельные шаги.
+**Статус публикации:** текущая видимость репозитория указана на GitHub. Подготовка официального Release 2.4.0 — отдельный шаг.
