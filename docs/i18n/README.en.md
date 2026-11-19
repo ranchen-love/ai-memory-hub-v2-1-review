@@ -90,7 +90,7 @@ These sections describe **supported subject areas, not a list of stored personal
 | Decision history | Rationales, replacements, date-scoped applicability |
 | Agent cooperation | Scope selection, verification, handoffs, version receipts |
 | Reusable practices | Research, development, writing, verification and review |
-[Core index](../../core/INDEX.md) · [Memory governance](../../memory/README.md) · [Workflows](../../workflows/)
+[Core index](../../core/INDEX.md) · [Memory governance](../../memory/README.md) · [Workflows](../../workflows/memory-lifecycle.md)
 ### C. Work, technology, and project knowledge
 | Area | Examples |
 | --- | --- |
@@ -139,6 +139,13 @@ Outcomes still depend on actual platform access, source coverage, and operationa
 ---
 ## IV. How is data organized?
 Like the private instance's design, the navigational path is **common entry → topic index → record or asset → source and revision history**.
+```mermaid
+flowchart LR
+    A["Shared Agent entry"] --> B["Topic indexes and task context"]
+    B --> C["Authorized personal Workspace"]
+    C --> D["Versioned local Vault"]
+    D --> E["Reviewed cross-agent handoff"]
+```
 ```text
 AI Memory Hub
 ├── README.md                   Default Chinese introduction

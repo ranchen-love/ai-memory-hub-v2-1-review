@@ -94,7 +94,7 @@
 | **决策及历史版本** | 决策依据、适用时间、变化原因、替代与归档 |
 | **多 Agent 协作** | 阅读范围、交接信息、验证标准及版本确认 |
 | **可复用工作流程** | 研究、研发、写作、项目交接和质量审核方法 |
-入口：[核心资料](core/INDEX.md) · [长期记忆](memory/README.md) · [协作协议](collaboration/) · [工作流](workflows/)
+入口：[核心资料](core/INDEX.md) · [长期记忆](memory/README.md) · [协作协议](collaboration/workflows.md) · [工作流](workflows/memory-lifecycle.md)
 ### C. 工作、技术与项目知识
 | 信息领域 | 保存方向 |
 | --- | --- |

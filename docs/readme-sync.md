@@ -1,19 +1,19 @@
-# Product README synchronization brief
-
-This engineering change leaves the root English README and the eight files in `docs/i18n/` intact. The product writer should keep the existing root navigation and synchronize the following confirmed changes across the nine languages.
-
-| Change | Exact path or command |
-| --- | --- |
-| Introduce the full workspace alongside the current engine | [Workspace installation](workspace.md), [coverage mapping](workspace-parity.md), [Agent entry](../AGENTS.md) |
-| Install and initialize | `python -m pip install .`, `ai-memory-hub workspace init --path ../my-hub`, `ai-memory-hub workspace check --path ../my-hub` |
-| Separate user data | Owner-only local workspace and sibling Vault by default. Optional `--vault PATH`, `--sensitivity LEVEL`. Both targets must be new and outside Git. |
-| Demonstrate the consent and approval loop | `workspace init --path ../hub-demo --demo` followed by the exact [synthetic onboarding](workspace.md#synthetic-onboarding) commands. Copying fixtures leaves grants disabled until explicitly granted. |
-| List meaningful owner modules | Parsed layout in the [core index](../core/INDEX.md). Include project templates, memory review, life taxonomy, evidence, bootstrap, file index and handoff. |
-| Explain life archive coverage | [Taxonomy](../life-archive/taxonomy.md), [134-field registry](../life-archive/field-registry.json) and `workspace check --path WORKSPACE`. Twelve categories, 52 domains and 134 registered slots all start without evidence. |
-| Describe the partial optional health extension | [Health extension](../life-archive/health/README.md) and `workspace health-check --input PATH --consent` validate de-identified aggregates. Raw health sync, backfilling and production scheduling are outside the extension. |
-| Describe shared content versioning | `version snapshot`, `version check`, `version reload` and `version confirm` use an authorized local snapshot and Agent-specific receipts. Exact options in [Memory bootstrap](../integrations/memory-bootstrap.md). |
-| Describe candidate governance | `candidate suggest ID --consent`, `candidate advance ID STATE --base REV --actor NAME --reason TEXT --consent` and `candidate history ID --consent`. [Lifecycle examples](../workflows/memory-lifecycle.md) include evidence attestation, approval, activation and optional manually attested PRs. |
-| Describe permission and reachability | Describe the verified deployment scope and separate actual recipient file access from metadata. Retain existing scheduling, L3, platform and storage boundaries. |
-| Version and compatibility | Product/engine version `2.3.0`; existing Vault record format `2.1`; new workspace format `1.0`. No existing V2.2 command is removed. |
-
-The PR is a private review candidate. Product copy should preserve the existing availability and publication status until the repository owner approves release.
+# README 多语言维护与同步说明
+## 默认语言和目录
+- GitHub 项目首页为根目录 `README.md`，默认简体中文。
+- 英文放在 `docs/i18n/README.en.md`；日语、韩语、西班牙语、法语、德语、巴西葡萄牙语和俄语也集中在 `docs/i18n/`，根目录不堆叠多份 README。
+- 九个页面顶部都必须提供同一顺序的语言导航，并使用相对于各自所在目录的正确链接。
+## 以私人版为蓝本的产品表达
+中文首页遵循私人记忆中枢的八个主章节：一、可以做什么；二、保存哪些方向；三、使用场景；四、如何组织；五、如何接入和使用；六、安全和控制；七、建设状态与边界；八、长期目标。
+对外版比私人版额外解释：运行环境、安装、工作区与 Vault 分离、合成数据首次体验、数据源授权、候选审核与单独激活、跨 Agent 版本检测与确认、项目与文件版本交接、状态查询及备份恢复。
+英文首页同步采用八部分结构。其他语言保留等价的完整产品介绍、操作示例、版本信息与安全限制，不得伪称已经实现的自动化。
+## V2.3 的事实依据
+- 产品版本 `2.3.0`；Vault 记录协议 `2.1`，工作区格式 `1.0`，离线传输协议 `2.2`。
+- [工作区安装](workspace.md)、[目录与功能对照](workspace-parity.md)、[Agent 统一入口](../AGENTS.md)。
+- [12/52/134 人生档案字段注册表](../life-archive/field-registry.json)与 [候选记忆生命周期](../workflows/memory-lifecycle.md)。
+- [多 Agent 共享记忆版本协议](../integrations/memory-bootstrap.md)及 [离线文件交接和恢复](deployment.md)。
+- 原始健康数据同步不是通用版既有功能；可选健康扩展目前仅校验获准的去标识化汇总。
+- 通用仓库目前仍为 Private。生产个人数据导入、本地调度和正式公开 Release 均需要用户另行授权与验证。
+## 自动校验
+使用 `python scripts/check_readme_i18n.py` 检查默认中文、语言链接、章节结构、九语言核心功能和合成演示命令；CI 在 Windows/Ubuntu 执行。发行文件白名单按现有仓库树逐项维护，新文件只能显式增加，历史遗留路径只在单独的历史白名单中保留。
+正式发布时以实际代码、运行测试和安全审计为依据更新状态，不将合成测试结果写成已连接任意 AI 平台。
