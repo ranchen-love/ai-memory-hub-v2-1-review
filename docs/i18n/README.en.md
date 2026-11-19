@@ -200,8 +200,6 @@ source coverage, missing information, required approvals,
 sync status, remaining limitations and acceptance evidence.
 ```
 
-**Access requirement:** This distribution repository is currently **Private**. A user or Agent without access cannot open the source merely by following the URL. A supported read permission or future authorized public release is necessary.
-
 Afterward, the owner should review the collected permission requests, proposed redactions, and final report. Users do not have to execute the low-level installation commands in the README. If an Agent lacks a command runner or GitHub write capability, it should report that limitation and continue the safe parts of the work.
 
 [Agent setup guide](../agent-onboarding.md) · [Installation details](../workspace.md)
@@ -224,7 +222,7 @@ Afterward, the owner should review the collected permission requests, proposed r
 
 **Not a generic delivered feature:** Universal access to hidden AI memories or every provider's conversations and attachments, unapproved background collection, or full raw-health-device ingestion from the private instance.
 
-The source distribution remains Private with no official public Release. Mocked GitHub workflows do not establish live-account acceptance.
+The source distribution has no official Release. Mocked GitHub workflows do not establish live-account acceptance.
 
 ## VIII. Documentation and direction
 
