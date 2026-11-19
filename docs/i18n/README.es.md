@@ -4,6 +4,8 @@
 
 ---
 
+**¿Es tu primera vez?** Sigue la [guía de instalación asistida por un Agent](../agent-onboarding.md). Puedes inicializar un Workspace y un Vault locales; crear tu repositorio privado, acceder a conversaciones y archivos reales, publicar en Git y programar sincronizaciones requieren herramientas disponibles y permisos explícitos.
+
 > **Tu contexto, tus archivos, tus decisiones.** Una base local y neutral respecto a las plataformas para la memoria a largo plazo, la continuidad de proyectos y las transferencias autorizadas entre agentes de IA.
 
 **Versión 2.3.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**

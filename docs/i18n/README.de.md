@@ -4,6 +4,8 @@
 
 ---
 
+**Zum ersten Mal hier?** Nutzen Sie den [Leitfaden zur Agent-gestützten Einrichtung](../agent-onboarding.md). Workspace und Vault lassen sich lokal initialisieren; ein eigenes privates GitHub-Repository, der Zugriff auf echte Gespräche/Dateien, Git-Veröffentlichung und Zeitplanung erfordern passende Werkzeuge und ausdrückliche Freigaben.
+
 > **Dein Kontext. Deine Dateien. Deine Entscheidung.** Eine lokale, plattformneutrale Grundlage für langfristige KI-Erinnerungen, nachvollziehbare Projektarbeit und autorisierte Übergaben zwischen KI-Agenten.
 
 **Version 2.3.0 · Python 3.11+ · MIT-Lizenz · Kommandozeile (CLI)**
