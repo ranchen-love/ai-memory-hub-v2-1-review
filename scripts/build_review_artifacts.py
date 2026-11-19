@@ -103,8 +103,11 @@ def build(out, candidate=False):
     release_tag = f"refs/tags/v{version}"
     if not candidate and git("rev-parse", release_tag + "^{commit}").decode().strip() != head:
         raise ValueError("release tag does not match checkout")
-    if set(commits) != set(git("rev-list", ref, *tags).decode().splitlines()):
-        raise ValueError("extra reachable history outside the review bundle")
+    bundled_commits = set(git("rev-list", ref, *tags).decode().splitlines())
+    # Review every reachable commit, including stale feature branches, but package
+    # only the selected release branch and approved tags.
+    if head not in bundled_commits or not bundled_commits.issubset(set(commits)):
+        raise ValueError("bundle revision scope is inconsistent with reviewed history")
     out = out.resolve()
     out.mkdir(exist_ok=True, parents=True)
     prefix = f"ai-memory-hub-v{version}" + ("-review" if candidate else "")
@@ -122,6 +125,8 @@ def build(out, candidate=False):
     artifacts = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in (archive, bundle)}
     metadata = {
         "commit": head, "root": roots[0], "reachable_commits": len(commits),
+        "bundled_commits": len(bundled_commits),
+        "reviewed_excluded_branch_commits": len(set(commits) - bundled_commits),
         "files": len(current), "history_blobs": len(histories), "tag": None if candidate else f"v{version}",
         "candidate": candidate, "ref": ref, "sha256": artifacts,
     }
