@@ -10,7 +10,7 @@ from unicodedata import category, normalize
 
 from . import SCHEMA
 from .model import (
-    Conflict, Denied, HubError, Missing, canonical, document, ident, no_credentials, one_of,
+    Conflict, Denied, HubError, Missing, canonical, document, ident, no_credentials, one_of, open_source,
     revision, seq, shape, strict_json, text,
 )
 from .shared_version import export_record
@@ -150,8 +150,6 @@ def read_member(root, name):
     before = path.lstat()
     if not stat.S_ISREG(before.st_mode) or before.st_nlink != 1:
         raise Denied("projection files must be regular files without hard links")
-    from .model import open_source
-
     with open_source(path) as source:
         opened = os.fstat(source.fileno())
         if not os.path.samestat(opened, before):

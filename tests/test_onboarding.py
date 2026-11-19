@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from ai_memory_hub import onboarding, shared_version
 from ai_memory_hub.adapters import grant, revoke
-from ai_memory_hub.model import Denied, digest, open_source
+from ai_memory_hub.model import Denied, open_source
 from ai_memory_hub.store import Store
 from ai_memory_hub.workspace import PROFILE, bootstrap_workspace, check_workspace
 
@@ -38,7 +38,7 @@ class OnboardingTests(unittest.TestCase):
         return onboarding.read_request(self.request_path)
 
     def apply(self, request):
-        return onboarding.apply(request, digest(request), True)
+        return onboarding.apply(request, onboarding.plan_fingerprint(request), True)
 
     def test_blank_read_only_approval_and_markdown(self):
         request = self.request()
@@ -48,12 +48,13 @@ class OnboardingTests(unittest.TestCase):
         self.assertFalse(self.workspace.exists())
         self.assertFalse(self.vault.exists())
         with self.assertRaises(Denied):
-            onboarding.apply(request, digest(request), False)
+            onboarding.apply(request, onboarding.plan_fingerprint(request), False)
         with self.assertRaises(Denied):
             onboarding.apply({**request, "sensitivity": "restricted"}, plan["plan_digest"], True)
         report = self.apply(request)
         self.assertEqual(report["status"], "completed")
         self.assertEqual(report["sync"]["scheduler"], "not_verified")
+        self.assertIsNone(Store(self.vault).settings()["weekly_preference"])
         self.assertEqual(len(report["life_archive"]["missing_fields"]), 134)
         self.assertEqual(set(report["life_archive"]["domains"].values()), {"unknown"})
         self.assertEqual(self.apply(request)["storage"], report["storage"])
@@ -78,17 +79,12 @@ class OnboardingTests(unittest.TestCase):
     def test_existing_unbound_data_preserved_and_interrupted_templates_resume(self):
         request = self.request()
         self.assertFalse(self.vault.exists())
-        with patch("ai_memory_hub.workspace.write_atomic", wraps=onboarding.write_atomic) as writer:
-            def interrupt(path, contents):
-                if path.name == "INDEX.md":
-                    raise OSError("synthetic interrupted template write")
-                writer.side_effect = None
-                try:
-                    return writer(path, contents)
-                finally:
-                    writer.side_effect = interrupt
+        def interrupt(path, contents):
+            if path.name == "INDEX.md":
+                raise OSError("synthetic interrupted template write")
+            return onboarding.write_atomic(path, contents)
 
-            writer.side_effect = interrupt
+        with patch("ai_memory_hub.workspace.write_atomic", side_effect=interrupt):
             self.assertEqual(self.apply(request)["status"], "blocked")
         self.assertTrue((self.vault / "index.sqlite").is_file())
         self.assertFalse((self.workspace / "config/workspace.json").exists())
@@ -112,6 +108,7 @@ class OnboardingTests(unittest.TestCase):
         session = fixture("examples/session.json")
         session["source"]["kind"] = "observed_messages"
         session["source"]["locator"] = "SYNTHETIC-PROSE-IN-LOCATOR"
+        session["source"]["observed_at"] = "2000-01-01T00:00:00Z"
         session["data"]["messages"] = [{"id": "raw-1", "role": "user", "text": "SYNTHETIC-RAW-EXPECTATION"}]
         self.write(inbox / "session.json", session)
         candidate = fixture("examples/memory.json")
@@ -136,6 +133,8 @@ class OnboardingTests(unittest.TestCase):
         self.assertEqual(second["status"], "completed")
         self.assertEqual(second["sources"][0]["created"], 1)
         self.assertEqual(second["sources"][0]["unchanged"], 4)
+        self.assertEqual(second["sources"][0]["date_coverage"]["dated_records"], 1)
+        self.assertEqual(second["sources"][0]["date_coverage"]["from"], "2000-01-01T00:00:00Z")
         self.assertEqual(second["data"]["session"][0]["layers"], dict.fromkeys(("L0", "L1", "L2", "L3"), True))
         self.assertEqual(len(second["data"]["project"]), 1)
         self.assertEqual(len(second["data"]["memory"]), 2)
@@ -247,6 +246,10 @@ class OnboardingTests(unittest.TestCase):
         onboarding.save_repo_receipt(store, "create", "synthetic/owner-example",
                                      {"status": "completed", "target": "synthetic/owner-example", "private": True})
         self.assertEqual(onboarding.report(request)["github"]["receipts"]["create"]["private"], True)
+        onboarding.save_repo_receipt(store, "create", "synthetic/owner-example", {"status": "blocked"})
+        remote = onboarding.report(request)["github"]
+        self.assertEqual(remote["receipts"]["create"]["status"], "blocked")
+        self.assertTrue(remote["last_success"]["create"]["private"])
 
 
 if __name__ == "__main__":

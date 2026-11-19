@@ -220,12 +220,19 @@ def run_batch(store, blobs, feature, source_id=None, governance=None, archive_on
                             except StopIteration:
                                 break
                             result = run_item(store, db, blobs, grant, base, item)
+                            if trace_items:
+                                row = db.execute(
+                                    """SELECT json_extract(content, '$.source.observed_at') AS observed_at
+                                    FROM revisions WHERE kind=? AND id=? AND revision=?""",
+                                    (result["kind"], result.get("id"), result.get("revision")),
+                                ).fetchone()
                         totals[result["status"]] += 1
                         report[result["status"]] += 1
                         items_by_kind[result["kind"]] += 1
                         if trace_items:
                             report["records"].append({
                                 "source_id": grant["id"], "item": item.key,
+                                "observed_at": row["observed_at"] if row else None,
                                 **{key: result.get(key) for key in ("status", "kind", "id", "revision")},
                             })
                     except RECOVERABLE as exc:

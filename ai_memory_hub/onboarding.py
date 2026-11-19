@@ -2,11 +2,11 @@
 
 import os
 import platform
-import re
 import shutil
 import sqlite3
 import sys
 from collections import Counter
+from datetime import datetime
 from pathlib import Path
 
 from . import SCHEMA, VERSION, candidates
@@ -61,12 +61,12 @@ def read_request(path):
                         "authorized": authorized, "allow_raw": raw})
     remote = value.get("github")
     if "github" in value:
+        from .github_publish import target_name
+
         shape(remote, ("target", "visibility"))
         one_of(remote["visibility"], ("private",))
-        if not isinstance(remote["target"], str) or not re.fullmatch(
-                r"[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_.-]{1,100}", remote["target"]):
-            raise HubError("GitHub target must be OWNER/NAME")
-        remote = {"target": remote["target"].lower(), "visibility": "private"}
+        owner, name = target_name(remote["target"])
+        remote = {"target": f"{owner.lower()}/{name.lower()}", "visibility": "private"}
     request = {"format": FORMAT, "workspace": root, "vault": vault, "sensitivity": level,
                "sources": sources, "github": remote}
     no_credentials(canonical(request))
@@ -120,6 +120,10 @@ def source_readiness(item, *, probe):
     return {"status": "not_verified", "reason": "content validation and coverage require apply"}
 
 
+def plan_fingerprint(request):
+    return digest({"engine_version": VERSION, "request": request})
+
+
 def plan(request):
     desired = request["github"]
     if desired:
@@ -132,7 +136,7 @@ def plan(request):
     else:
         remote = {"status": "not_requested"}
     result = {
-        "format": FORMAT, "kind": "onboarding_plan", "status": "planned", "plan_digest": digest(request),
+        "format": FORMAT, "kind": "onboarding_plan", "status": "planned", "plan_digest": plan_fingerprint(request),
         "engine_version": VERSION, "vault_schema_version": SCHEMA, "request": request,
         "storage": storage_plan(request),
         "capabilities": {
@@ -195,17 +199,18 @@ def import_life(root, level, item):
                 state = "partial"
             by_category[category] = {**previous, "records": records, "status": state}
         profile = {**profile, "categories": list(by_category.values())}
-        chosen = [entry["record_id"] for group in incoming["categories"] for entry in group["records"]]
+        chosen = [entry for group in incoming["categories"] for entry in group["records"]]
         updated = profile
     else:
         timeline = {**timeline, "events": merged_records(timeline["events"], incoming["events"])}
-        chosen = [entry["record_id"] for entry in incoming["events"]]
+        chosen = incoming["events"]
         updated = timeline
     archive_coverage(profile, timeline, level)
     if updated != old:
         write_atomic(destination, (canonical(updated) + "\n").encode("utf-8"))
     return {"status": "completed" if chosen else "partial", "outcome": "updated" if updated != old else "unchanged",
-            "records": sorted(set(chosen)), "source_digest": digest(incoming)}
+            "records": sorted({entry["record_id"] for entry in chosen}), "source_digest": digest(incoming),
+            "date_coverage": source_dates([entry["source"] for entry in chosen])}
 
 
 def save_setting(store, key, value):
@@ -225,6 +230,14 @@ def receipt_scope(item):
     return digest(item)
 
 
+def source_dates(records):
+    observed = sorted((record["observed_at"] for record in records if record.get("observed_at")),
+                      key=datetime.fromisoformat)
+    return {"basis": "source_observed_at", "from": observed[0] if observed else None,
+            "through": observed[-1] if observed else None, "dated_records": len(observed),
+            "undated_records": len(records) - len(observed)}
+
+
 def apply_source(root, store, item):
     ready = source_readiness(item, probe=False)
     if ready["status"] == "blocked":
@@ -237,13 +250,14 @@ def apply_source(root, store, item):
                         expected_grant=approved["grant_id"])
         state = {"no_items": "partial", "no_sources": "blocked"}.get(run["status"], run["status"])
         return {"status": state, "run_id": run["run_id"], "created": run["created"], "updated": run["updated"],
-                "unchanged": run["unchanged"], "records": run["records"], "errors": run["errors"]}
+                "unchanged": run["unchanged"], "records": run["records"], "errors": run["errors"],
+                "date_coverage": source_dates(run["records"])}
     except RECOVERABLE as exc:
         return problem(exc)
 
 
 def apply(request, expected, consent):
-    if not consent or expected != digest(request):
+    if not consent or expected != plan_fingerprint(request):
         raise Denied("apply requires explicit consent and the digest from this exact plan")
     try:
         root, binding, store = bootstrap_workspace(request["workspace"], request["vault"], request["sensitivity"])
@@ -311,11 +325,19 @@ def requested_repo(store, desired):
     return {"status": receipts.get("publish", receipts.get("create", {})).get("status", default),
             "creation": receipts.get("create", {}).get("status", default),
             "publication": receipts.get("publish", {}).get("status", "not_requested"),
-            **desired, "receipts": receipts}
+            **desired, "receipts": {key: val for key, val in receipts.items() if not key.endswith(":last_success")},
+            "last_success": {key.removesuffix(":last_success"): val for key, val in receipts.items()
+                             if key.endswith(":last_success")}}
 
 
 def save_repo_receipt(store, action, target, result):
-    save_setting(store, REPO_KEY + target.lower() + ":" + action, {**result, "verified_at": now()})
+    key = REPO_KEY + target.lower() + ":" + action
+    encoded = canonical({**result, "recorded_at": now()})
+    writes = [(key, encoded)]
+    if result["status"] == "completed":
+        writes.append((key + ":last_success", encoded))
+    with store.transaction(write=True) as db:
+        db.executemany("INSERT INTO settings VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value", writes)
 
 
 def require_repo_target(store, target):
@@ -325,7 +347,7 @@ def require_repo_target(store, target):
 
 
 def report(request, *, workspace_failure=None, bound=None):
-    result = {"format": FORMAT, "kind": "onboarding_report", "plan_digest": digest(request),
+    result = {"format": FORMAT, "kind": "onboarding_report", "plan_digest": plan_fingerprint(request),
               "engine_version": VERSION, "vault_schema_version": SCHEMA, "workspace": request["workspace"],
               "vault": request["vault"], "storage": workspace_failure, "sources": [],
               "github": requested_repo(None, request["github"]), "sync": {"scheduler": "not_verified"},
@@ -398,6 +420,12 @@ def markdown(result):
         count = len(source.get("records", ()))
         suffix = f" {source['reason']}" if "reason" in source else ""
         rows.append(f"- `{source['id']}` / `{source['adapter']}` — `{source['status']}`, {count} recorded items.{suffix}")
+        if source.get("run_id"):
+            rows.append(f"  - Run `{source['run_id']}`, created {source['created']}, updated {source['updated']}, "
+                        f"unchanged {source['unchanged']}, errors {len(source['errors'])}.")
+        dates = source.get("date_coverage")
+        if dates and dates["dated_records"]:
+            rows.append(f"  - Observed from `{dates['from']}` through `{dates['through']}`.")
     if not result["sources"]:
         rows.append("- No source was requested.")
     if "data" in result:
@@ -418,7 +446,7 @@ def markdown(result):
             rows.append(f"- Agent `{version['agent']}` / `{version['channel']}`: detected "
                         f"`{version['detected_sha'] or 'unknown'}`, synced `{version['synced_sha'] or 'unknown'}`.")
     for action, receipt in result["github"].get("receipts", {}).items():
-        rows.append(f"- GitHub {action}: `{receipt['status']}` at `{receipt['verified_at']}`. "
+        rows.append(f"- GitHub {action}: `{receipt['status']}` at `{receipt['recorded_at']}`. "
                     f"Target `{receipt.get('target', result['github']['target'])}`, "
                     f"commit `{receipt.get('commit_sha') or 'unverified'}`, "
                     f"PR `{receipt.get('pull_request') or 'not_requested'}`.")

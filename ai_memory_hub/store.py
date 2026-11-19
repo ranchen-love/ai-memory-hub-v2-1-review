@@ -270,7 +270,7 @@ class Store:
                 db.execute("UPDATE settings SET value=? WHERE key='switches'", (canonical(switches),))
         return {
             "schema_version": SCHEMA, "core_version": VERSION, "sensitivity": self.level,
-            "switches": switches, "weekly_preference": {"day": "SU", "time": "23:00", "timezone": "Asia/Shanghai"},
+            "switches": switches, "weekly_preference": None,
             "scheduler": "not_verified",
         }
 
