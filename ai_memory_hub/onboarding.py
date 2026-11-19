@@ -461,9 +461,11 @@ def write_markdown(request, path, result):
         request["workspace"], expected_vault=request["vault"], expected_level=request["sensitivity"],
     )
     path = Path(os.path.abspath(path.expanduser()))
-    if path.suffix.lower() != ".md" or not path.is_relative_to(root):
+    if path.suffix.lower() != ".md":
         raise Denied("select a new Markdown file inside the authorized Workspace")
     path = instance_path(path)
+    if not path.is_relative_to(root):
+        raise Denied("select a new Markdown file inside the authorized Workspace")
     if not path.parent.is_dir():
         raise Missing("the report parent directory must already exist")
     write_exclusive(path, result["markdown"].encode("utf-8"))

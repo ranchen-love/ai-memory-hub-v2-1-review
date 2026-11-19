@@ -126,7 +126,7 @@ class OnboardingTests(unittest.TestCase):
         request = self.request()
         first = self.apply(request)
         self.assertEqual(first["status"], "partial")
-        self.assertEqual(first["sources"][0]["created"], 4)
+        self.assertEqual(first["sources"][0]["created"], 4, first["sources"][0]["errors"])
         self.assertEqual(first["sources"][0]["errors"][0]["code"], "missing")
         (inbox / "checklist.txt").write_bytes(b"Synthetic file bytes\x00\xff")
         second = self.apply(request)

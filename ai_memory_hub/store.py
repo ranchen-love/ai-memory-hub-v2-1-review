@@ -142,7 +142,7 @@ def checked_relative(root, filename):
         path = path / part
         if reparse(path):
             raise Denied("symbolic links and reparse points are outside the source grant")
-    if not path.resolve().is_relative_to(root):
+    if not path.resolve().is_relative_to(root.resolve()):
         raise Denied("source path escapes its authorized directory")
     return path
 
