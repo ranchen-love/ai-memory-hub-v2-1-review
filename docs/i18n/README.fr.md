@@ -159,4 +159,4 @@ La version logicielle est 2.4.0, avec compatibilité du schéma des enregistreme
 [Déploiement et récupération](../deployment.md) · [Guide complet](../guide.md) · [Adaptateurs](../adapters.md) · [Protocole](../protocol.md) · [Sécurité](../../SECURITY.md) · [Licence MIT](../../LICENSE)
 Pour contribuer, utilisez des données fictives et ne publiez jamais d’exports personnels. Vérifications : `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` et `python scripts/smoke_v22.py`.
 
-**Publication :** consultez la visibilité actuelle du dépôt sur GitHub. La création d’une Release officielle 2.4.0 est une opération distincte.
+**Publication :** le noyau V2.3 a été implémenté et validé avec des données synthétiques. La mise en public du dépôt et la création d’une Release officielle 2.4.0 restent deux opérations distinctes.
