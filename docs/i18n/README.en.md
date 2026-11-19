@@ -1,5 +1,9 @@
 # AI Memory Hub
+
 **Languages:** [简体中文](../../README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+
+---
+
 **A user-controlled, reusable AI memory hub designed for long-term growth.**
 Turn scattered AI conversations, projects, files, and working preferences into a personal knowledge system that is **findable, understandable, updateable, traceable, and selectively portable**. The goal is not simply to make an AI “remember” things; it is to decide **what deserves preserving, how it may be used later, and how to keep the information reliable and under your control**.
 > **Purpose:** long-term personal memory · life archive · project and decision knowledge · shared multi-agent context · conversation and file archive · reusable workspaces
@@ -8,6 +12,16 @@ Turn scattered AI conversations, projects, files, and working preferences into a
 >
 > **Version:** V2.3.0 · Python 3.11+ · MIT · local-first · this repository remains **Private** and is not yet an official public Release.
 This distribution is a **depersonalized working system**, not a copy of someone else's private memory repository. Installation includes no real user's biography, medical records, conversation exports, credentials, or automatically approved data sources.
+
+**Why not just save every chat?**
+| Common problem | Design response |
+| --- | --- |
+| Conversations grow too long for a new agent to reread | **L0–L3 layered retrieval**: locate, summarize, inspect a checkpoint, and only then request the source text |
+| A temporary remark is mistaken for a permanent fact | **Candidate → review → separate activation**, with provenance and revisions |
+| Shared knowledge silently grows stale | **Detected does not mean synced**: reread changed scopes and explicitly acknowledge |
+| Old links vanish and deliverables cannot be recovered | **Stored bytes, exact revisions and SHA-256 verification** |
+| Failed imports are retried and duplicate records appear | **Per-item receipts and idempotent retries**, with partial-failure reporting |
+These capabilities are implemented and tested, but are not automatic connections to every provider.
 ---
 ## I. What can this repository do?
 ### 1. Provide a common long-term background to different AIs
@@ -33,6 +47,17 @@ Describe AI applications, Skills, plugins, MCP (Model Context Protocol) services
 [Integrations](../../integrations/README.md) · [Capability matrix](../../integrations/capabilities.md)
 ### 7. Archive conversations and real files, with optional health summaries
 Represent conversation history as **L0 index, L1 summary, L2 detailed checkpoint, and separately authorized L3 visible source messages**. Store the **actual bytes** of selected user uploads or AI-generated artifacts with SHA-256, immutable revisions, and source references—not only links that can expire.
+#### L0–L3: why do conversations have four layers?
+| Layer | What it contains or returns | When to use it |
+| --- | --- | --- |
+| **L0 · Index** | Title, session ID, related project, revision and locating information | Find which conversation discussed a topic |
+| **L1 · Summary** | L0 context plus an explicitly supplied summary | Decide whether a conversation is relevant |
+| **L2 · Structured checkpoint** | Goal, requirements, constraints, decisions, rejected options *with reasons*, results, verification, open questions, next actions and file references | Resume a project without rereading the entire transcript |
+| **L3 · Optional visible source messages** | Actually archived user, assistant or tool messages, source metadata and original revision evidence | Check the exact wording, only with additional permission |
+**These are progressively richer views, not four automatically generated summaries.** If a layer was never supplied or authorized, the application does not invent it. L3 archiving and access require specific consent and a `private` or `restricted` Vault.
+For example, a new agent can locate the synthetic `calibration-session` at L0, judge relevance at L1, and read a rejected calibration approach and remaining work at L2. Only if a real authorized transcript exists should it drill down to L3. **Updating L2 leaves historical L3 intact**, preserving the raw revision and source digest for later verification.
+[Session protocol](../protocol.md) · [Session guide](../../sessions/README.md) · [Revision and raw authorization](../guide.md)
+
 An optional health extension validates **explicitly authorized de-identified aggregates only**. It is not an Apple Health or device-level raw-data sync engine.
 [Sessions](../../sessions/README.md) · [Assets](../../assets/README.md) · [Health extension](../../life-archive/health/README.md) · [Adapters](../adapters.md)
 ### 8. Govern memory proposals, conflicts, corrections, and approval
@@ -61,6 +86,20 @@ This confirms a scoped read and acknowledgment, **not an AI's comprehension or a
 ### 10. Validate structure, access boundaries, and maintenance
 The product includes JSON Schema definitions, a strict release-file allowlist, Windows and Ubuntu tests, and independently checked review ZIP/Bundle artifacts. Each user's workspace and Vault are created separately; **no data source is authorized by default**.
 [Security](../../SECURITY.md) · [Access boundaries](../../core/boundaries.md) · [Recovery](../deployment.md) · [CI](../../.github/workflows/test.yml)
+
+### Small design decisions that make a big difference
+| Detail | Why it matters |
+| --- | --- |
+| **Start with checkpoints; seek raw messages only when needed** | Most handoffs need goals, evidence and next actions—not an entire transcript. Layered reading avoids unnecessary context ingestion |
+| **New summaries never rewrite old source evidence** | L2 supports append-only revisions with checkpoint sources; historical L3 remains tied to its original source and revision |
+| **Approval and activation are separate operations** | Even reviewed candidates cannot become active facts without a further authorized action; conflicting peers use exact record revisions |
+| **Each agent maintains its own confirmed baseline** | Agent A's read is not Agent B's read. `synced_sha` advances only after all changed scopes are acknowledged; unavailable sources report `unknown` |
+| **URLs are not stored file bytes** | External links remain references; content-addressed local blobs offer hash-based verification and exact version retrieval |
+| **Retries are scoped, not blind rewrites** | Item-level receipts return `unchanged` for previously processed records and report incomplete source coverage |
+| **An enabled switch is not a running schedule** | Configuration, local source permission, scheduler installation and actual run evidence are tracked independently |
+| **Workspace is not the Vault** | Agent-facing navigation and reusable templates are separated from durable private records and file bytes |
+These choices are about **provenance, recovery, and user permission**, not universal invisible capture or automatic native AI memory.
+
 ---
 ## II. What information does the system organize?
 These sections describe **supported subject areas, not a list of stored personal facts**. A freshly initialized workspace is empty of real personal history.
@@ -207,6 +246,16 @@ ai-memory-hub --root ../hub-demo-vault asset check calibration-notes
 ```
 `--demo` copies synthetic input only. The explicit source grant authorizes a read; re-running an unchanged import is idempotent. Review results remain candidates until independently accepted and activated.
 [Synthetic onboarding](../workspace.md#synthetic-onboarding)
+
+#### Read one session at L0, then L1, then L2
+After importing the synthetic demo, query one session at increasing levels of detail. The sample has no L3 source transcript; the CLI cannot recreate an unprovided transcript.
+```sh
+ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L0
+ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L1
+ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L2
+```
+In L2, `rejected_options` records *what was rejected and why*, `verification` records the supplied checks, and `next_actions` captures unfinished work. The AI should not fabricate validation results.
+
 ### 4. Customize your archive and display accepted memory
 Use the generated `core/` notes, `projects/` template, and `life-archive/profile.json` progressively. The 12 profile categories start `unknown`; there is no requirement to populate them at installation time.
 ```sh

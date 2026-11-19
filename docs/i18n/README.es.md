@@ -1,5 +1,9 @@
 # AI Memory Hub — Memoria de IA bajo tu control
+
 **Languages:** [简体中文](../../README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+
+---
+
 > **Tu contexto, tus archivos, tus decisiones.** Una base local y neutral respecto a las plataformas para la memoria a largo plazo, la continuidad de proyectos y las transferencias autorizadas entre agentes de IA.
 **Versión 2.3.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**
 El historial de un chat no es necesariamente una memoria fiable. Las decisiones importantes quedan enterradas, los adjuntos pierden su contexto y cambiar de asistente implica volver a explicar el proyecto. **AI Memory Hub** conserva el contexto autorizado, su procedencia, el estado del proyecto y los **bytes reales** de archivos seleccionados en un Vault local e independiente de cualquier proveedor.

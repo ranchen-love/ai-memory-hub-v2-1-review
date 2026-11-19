@@ -1,5 +1,9 @@
 # AI Memory Hub — 사용자가 소유하는 AI 기억 허브
+
 **Languages:** [简体中文](../../README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+
+---
+
 > **대화 맥락도, 파일도, 통제권도 사용자에게.** 로컬 우선·플랫폼 중립 방식으로 장기 기억, 프로젝트 이어 하기, AI 에이전트 간 승인된 인계를 지원하는 기반입니다.
 **버전 2.3.0 · Python 3.11 이상 · MIT 라이선스 · CLI**
 대화 기록만으로는 장기 프로젝트를 안정적으로 이어가기 어렵습니다. 중요한 결정은 긴 대화 속에 묻히고 첨부 파일이나 AI 결과물은 생성 당시의 맥락에서 분리됩니다. 다른 AI로 옮기면 설명부터 다시 해야 하죠. **AI Memory Hub**는 명시적으로 허용한 대화 맥락, 증거, 프로젝트 상태, 실제 파일 바이트를 특정 AI 서비스와 독립된 로컬 Vault에 저장합니다.
