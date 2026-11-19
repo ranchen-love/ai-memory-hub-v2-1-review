@@ -1,10 +1,10 @@
-"""Check README language navigation, local links and runnable example consistency."""
+"""Validate nine README languages, default Chinese, layout and V2.3 onboarding."""
 from pathlib import Path
 import re
 ROOT = Path(__file__).resolve().parents[1]
 FILES = (
     "README.md",
-    "docs/i18n/README.zh-CN.md",
+    "docs/i18n/README.en.md",
     "docs/i18n/README.ja.md",
     "docs/i18n/README.ko.md",
     "docs/i18n/README.es.md",
@@ -13,71 +13,85 @@ FILES = (
     "docs/i18n/README.pt-BR.md",
     "docs/i18n/README.ru.md",
 )
-REQUIRED_COMMANDS = (
-    "python -m ai_memory_hub --root ../hub-demo init --preset ordinary",
-    "python -m ai_memory_hub --root ../hub-demo source grant demo normalized --path examples --consent",
-    "python -m ai_memory_hub --root ../hub-demo local run --source demo",
-    "python -m ai_memory_hub --root ../hub-demo local status",
-    "python -m ai_memory_hub --root ../hub-demo session show calibration-session --layer L2",
-    "python -m ai_memory_hub --root ../hub-demo asset check calibration-notes",
-    "python -m ai_memory_hub --root ../hub-demo asset copy calibration-notes --consent",
+CORE_DEMO = (
+    "workspace init --path",
+    "workspace check --path",
+    "source grant sample normalized",
+    "local run --source sample",
 )
+TRANSFER = ("transfer pack", "transfer receive", "transfer inspect", "transfer file")
+LANGUAGE_HEADER = re.compile(r"^\*\*(?:Languages:|语言 / Languages：)\*\*")
+LINK = re.compile(r"\]\(([^)]+)\)")
+FENCE = re.compile(r"```([\w-]+)\n([\s\S]*?)\n```")
 def main():
     failures = []
-    nav = None
+    nav_labels = None
+    expected = {(ROOT / name).resolve() for name in FILES}
     for name in FILES:
         path = ROOT / name
         if not path.is_file():
             failures.append(f"{name}: missing translation")
             continue
-        text = path.read_text(encoding="utf-8")
-        lines = [line for line in text.splitlines() if line.startswith("**Languages:**")]
-        if len(lines) != 1:
-            failures.append(f"{name}: expected exactly one language navigation")
+        content = path.read_text(encoding="utf-8")
+        nav_lines = [line for line in content.splitlines() if LANGUAGE_HEADER.match(line)]
+        if len(nav_lines) != 1:
+            failures.append(f"{name}: expected one language selector")
         else:
-            nav_pairs = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", lines[0])
-            labels = tuple(label for label, _ in nav_pairs)
-            if len(nav_pairs) != len(FILES):
-                failures.append(f"{name}: incomplete language navigation")
-            if nav is None:
-                nav = labels
-            elif nav != labels:
-                failures.append(f"{name}: inconsistent language labels")
-            nav_files = {(path.parent / target).resolve() for _, target in nav_pairs}
-            if nav_files != {(ROOT / item).resolve() for item in FILES}:
-                failures.append(f"{name}: navigation targets differ from translation files")
-        for target in re.findall(r"\]\(([^)]+)\)", text):
-            target = target.split("#", 1)[0]
-            if target and "://" not in target and not target.startswith("mailto:"):
-                local_target = (path.parent / target).resolve()
-                if not local_target.is_relative_to(ROOT) or not local_target.is_file():
-                    failures.append(f"{name}: broken local link {target}")
-        blocks = re.findall(r"```([\w-]+)\n([\s\S]*?)\n```", text)
-        if sum(language == "mermaid" for language, _ in blocks) != 1:
-            failures.append(f"{name}: missing or duplicate architecture diagram")
+            pairs = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", nav_lines[0])
+            labels = tuple(label for label, _ in pairs)
+            if len(pairs) != len(FILES) or len(set(labels)) != len(FILES):
+                failures.append(f"{name}: incomplete or duplicate language choices")
+            if nav_labels is None:
+                nav_labels = labels
+            elif labels != nav_labels:
+                failures.append(f"{name}: inconsistent language ordering")
+            targets = {(path.parent / href).resolve() for _, href in pairs}
+            if targets != expected:
+                failures.append(f"{name}: language links do not match the nine pages")
+        for href in LINK.findall(content):
+            href = href.split("#", 1)[0]
+            if not href or "://" in href or href.startswith("mailto:"):
+                continue
+            target = (path.parent / href).resolve()
+            if not target.is_relative_to(ROOT) or not target.is_file():
+                failures.append(f"{name}: broken local link {href}")
+        blocks = FENCE.findall(content)
+        if sum(kind == "mermaid" for kind, _ in blocks) != 1:
+            failures.append(f"{name}: expected one architecture diagram")
         if any(re.search(r"\n[ \t]*\n", body) for _, body in blocks):
             failures.append(f"{name}: blank line inside code fence")
-        demos = [body.splitlines() for language, body in blocks if language == "sh" and REQUIRED_COMMANDS[0] in body]
-        if len(demos) != 1 or tuple(demos[0]) != REQUIRED_COMMANDS:
-            failures.append(f"{name}: synthetic quick-start commands have drifted")
-        for command in ("transfer pack", "transfer receive", "transfer inspect", "transfer file"):
-            if not any(command in body for _, body in blocks):
-                failures.append(f"{name}: missing working transfer example ({command})")
-        if "2.3.0" not in text:
-            failures.append(f"{name}: package version missing")
-        if "12" not in text or "52" not in text or "134" not in text:
-            failures.append(f"{name}: complete life archive summary missing")
-        if "synced_sha" not in text or "detected_sha" not in text:
-            failures.append(f"{name}: cross-agent version state missing")
-        if "candidate advance" not in text or "version confirm" not in text:
-            failures.append(f"{name}: governance and read-confirm commands missing")
-        if "workspace init --path ../workspace-demo-v23 --demo" not in text:
-            failures.append(f"{name}: V2.3 workspace onboarding missing")
-        if text.count("\n## ") < 7:
-            failures.append(f"{name}: expected full product and usage sections")
+        demos = [body for kind, body in blocks if kind == "sh" and all(term in body for term in CORE_DEMO)]
+        if len(demos) != 1:
+            failures.append(f"{name}: V2.3 synthetic onboarding missing or duplicated")
+        for command in TRANSFER:
+            if not any(kind == "sh" and command in body for kind, body in blocks):
+                failures.append(f"{name}: transfer example missing {command}")
+        for token in ("2.3.0", "12", "52", "134", "synced_sha", "detected_sha",
+                      "candidate advance", "version confirm"):
+            if token not in content:
+                failures.append(f"{name}: required V2.3 capability missing {token}")
+        if content.count("\n## ") < 7:
+            failures.append(f"{name}: expected complete project overview")
+    chinese = (ROOT / "README.md").read_text(encoding="utf-8")
+    chapters = (
+        "一、这个仓库可以做什么？",
+        "二、仓库保存哪些方向的内容？",
+        "三、常见使用场景",
+        "四、数据如何组织？",
+        "五、如何接入和使用？",
+        "六、隐私、安全和控制权",
+        "七、当前建设状态与边界",
+        "八、长期目标",
+    )
+    headings = tuple(re.findall(r"^## (.+)$", chinese, flags=re.M))
+    if headings != chapters:
+        failures.append("README.md: must match eight-part private-hub structure")
+    english = (ROOT / "docs/i18n/README.en.md").read_text(encoding="utf-8")
+    if len(re.findall(r"^## ", english, flags=re.M)) != 8:
+        failures.append("README.en.md: English guide must have eight main sections")
     if failures:
         print("\n".join(failures))
         raise SystemExit(1)
-    print(f"Validated {len(FILES)} complete README translations, navigation, links, diagrams and examples.")
+    print("Validated all nine language pages, Chinese default, eight-part structure, links and V2.3 examples.")
 if __name__ == "__main__":
     main()
