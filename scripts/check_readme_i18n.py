@@ -85,13 +85,13 @@ def main():
             failures.append(f"{name}: expected complete project overview")
     chinese = (ROOT / "README.md").read_text(encoding="utf-8")
     chapters = (
-        "一、这个仓库可以做什么？",
-        "二、仓库保存哪些方向的内容？",
-        "三、常见使用场景",
-        "四、数据如何组织？",
-        "五、如何接入和使用？",
-        "六、隐私、安全和控制权",
-        "七、当前建设状态与边界",
+        "一、这是什么？适合谁？",
+        "二、首次使用：让你的 AI 帮你搭建",
+        "三、关键能力：为什么这样设计？",
+        "四、资料分别放在哪里？",
+        "五、安装与快速体验",
+        "六、同步、权限与运行维护",
+        "七、当前已实现什么？还缺什么？",
         "八、长期目标",
     )
     headings = tuple(re.findall(r"^## (.+)$", chinese, flags=re.M))
@@ -100,6 +100,16 @@ def main():
     english = (ROOT / "docs/i18n/README.en.md").read_text(encoding="utf-8")
     if len(re.findall(r"^## ", english, flags=re.M)) != 8:
         failures.append("README.en.md: English guide must have eight main sections")
+    for new_path in ("docs/agent-onboarding.md", "docs/agent-onboarding.zh-CN.md"):
+        if not (ROOT / new_path).is_file():
+            failures.append(f"Missing Agent first-run guide: {new_path}")
+    if "为什么不直接保存一堆聊天记录？" in chinese:
+        failures.append("Removed sales comparison table reappeared in Chinese README")
+    if "docs/agent-onboarding.zh-CN.md" not in chinese:
+        failures.append("Chinese README must link the Agent first-run protocol")
+    agent_entry = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
+    if "docs/agent-onboarding.md" not in agent_entry:
+        failures.append("Agent entry must link to the onboarding protocol")
     if failures:
         print("\n".join(failures))
         raise SystemExit(1)
