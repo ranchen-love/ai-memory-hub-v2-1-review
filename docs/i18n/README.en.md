@@ -36,7 +36,7 @@ This is a living archive rather than a one-time profile questionnaire. Unknown f
 
 Retain reusable communication preferences, working standards, AI collaboration rules and constraints, while separating **facts, preferences, rules, decisions, inferences and open questions**. A one-off instruction is not automatically a permanent global rule, and a feature of one platform is not assumed to exist on another.
 
-[Core rules](../../core/) · [Memory records](../../memory/)
+[Core rules](../../core/INDEX.md) · [Memory records](../../memory/README.md)
 
 ### 4. L0–L3 conversation and historical context
 
@@ -51,7 +51,7 @@ Store not only summaries, but decision-oriented checkpoints and optionally autho
 
 **Design detail:** Read the shallowest useful layer first and access deeper evidence only when needed. These are not four automatically invented summaries. Missing material is not fabricated; L3 requires separate consent inside a protected local Vault. Updating L2 leaves historical L3 intact.
 
-[Conversation schema](../protocol.md) · [Session records](../../sessions/)
+[Conversation schema](../protocol.md) · [Session records](../../sessions/README.md)
 
 ### 5. Long-running project continuity
 
@@ -59,13 +59,13 @@ Preserve objectives, requirements, architecture constraints, important decisions
 
 A returning agent should understand **what has already been decided, why, what was validated, and what remains**, rather than relying on the complete transcript.
 
-[Projects](../../projects/) · [Project template](../../projects/TEMPLATE.md)
+[Projects](../../projects/README.md) · [Project template](../../projects/TEMPLATE.md)
 
 ### 6. Actual file bytes and verifiable versions
 
 Authorized user uploads and AI-generated deliverables can be archived with real bytes, SHA-256 checksums, provenance and versions linked to sessions or projects. A URL or file reference is **not** falsely labeled as recovered file content.
 
-[File assets](../../assets/) · [Asset operations](../guide.md)
+[File assets](../../assets/README.md) · [Asset operations](../guide.md)
 
 ### 7. Auditable memory changes and conflicts
 
@@ -73,7 +73,7 @@ New durable claims become candidates, pass validation and duplicate/conflict rev
 
 Corrections, revocations and supersession preserve history. Unsupported inferences are never promoted to verified facts automatically.
 
-[Memory lifecycle](../../workflows/memory-lifecycle.md) · [Candidates](../../candidates/)
+[Memory lifecycle](../../workflows/memory-lifecycle.md) · [Candidates](../../candidates/README.md)
 
 ### 8. Cross-agent shared-version detection
 
@@ -118,7 +118,7 @@ Other modules organize reusable rules, project and technical knowledge, tools an
 
 The generic health extension currently validates **explicitly authorized, de-identified aggregates only**. Raw medical-device history ingestion from the private instance is not part of this distribution.
 
-[Life archive](../../life-archive/) · [Knowledge and projects](../../knowledge/) · [Agent and tool integrations](../../integrations/)
+[Life archive](../../life-archive/README.md) · [Knowledge and projects](../../knowledge/README.md) · [Agent and tool integrations](../../integrations/README.md)
 
 ## III. Common use cases
 

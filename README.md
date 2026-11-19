@@ -38,7 +38,7 @@
 
 一次性的对话要求不会被自动视为永久规则；某个平台特有的功能也不会被误当成所有 Agent 都具备的能力。
 
-[核心规则与索引](core/) · [长期记忆](memory/)
+[核心规则与索引](core/INDEX.md) · [长期记忆](memory/README.md)
 
 ### 4. 分层管理会话与历史上下文（L0–L3）
 
@@ -53,7 +53,7 @@
 
 **设计细节：** 优先读取较浅层级，需要核对时再逐步深入。L0–L3 不是自动生成的四份摘要；未保存的内容不会被虚构。L3 须单独授权并保留在受保护的本地 Vault，后续修改 L2 不会覆盖历史原文。
 
-[会话协议](docs/protocol.md) · [会话目录](sessions/)
+[会话协议](docs/protocol.md) · [会话目录](sessions/README.md)
 
 ### 5. 保持长期项目的上下文连续性
 
@@ -61,7 +61,7 @@
 
 再次启动项目时，可以先回答**已经完成什么、为何采用当前方案、哪些结论验证过、还缺什么**，而不只是重新读取上万字聊天记录。
 
-[项目档案](projects/) · [项目模板](projects/TEMPLATE.md)
+[项目档案](projects/README.md) · [项目模板](projects/TEMPLATE.md)
 
 ### 6. 归档文件原件并追踪版本
 
@@ -69,7 +69,7 @@
 
 系统区分**外部链接、文件引用和真正已归档的文件原件**：只有链接时不会假称文件已保存，更不会自动读取未经授权的附件。
 
-[文件资产](assets/) · [文件操作与恢复](docs/guide.md)
+[文件资产](assets/README.md) · [文件操作与恢复](docs/guide.md)
 
 ### 7. 审核长期记忆的新增、更正和冲突
 
@@ -77,7 +77,7 @@
 
 更正、撤销、替代和历史修订均可追溯。AI 的推断或不完整证据不会自动升级为已确认事实。
 
-[记忆治理](workflows/memory-lifecycle.md) · [候选记录](candidates/)
+[记忆治理](workflows/memory-lifecycle.md) · [候选记录](candidates/README.md)
 
 ### 8. 检测跨 Agent 的记忆版本变化
 
@@ -122,7 +122,7 @@ V2.4 提供可执行的首次部署编排：评估当前工具与数据访问能
 
 健康相关的通用扩展目前仅支持**明确授权的去标识化汇总校验**；私人版特有的健康原始记录同步并未随通用版发布。
 
-[人生档案入口](life-archive/) · [知识与项目](knowledge/) · [工具及接入](integrations/)
+[人生档案入口](life-archive/README.md) · [知识与项目](knowledge/README.md) · [工具及接入](integrations/README.md)
 
 ## 三、典型使用场景
 
