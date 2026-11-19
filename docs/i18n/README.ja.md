@@ -161,4 +161,4 @@ Vault 自体にはアプリ内暗号化がなく、OS 権限・ディスク暗�
 [導入・バックアップ・転送](../deployment.md) · [利用ガイド](../guide.md) · [アダプター](../adapters.md) · [データ仕様](../protocol.md) · [セキュリティ](../../SECURITY.md) · [MIT ライセンス](../../LICENSE)
 開発や不具合報告には合成データを使い、個人のエクスポートや添付ファイルをコミットしないでください。テストは `python -m unittest discover -s tests -v`、`python scripts/smoke_release.py`、`python scripts/smoke_v22.py` で実行できます（必要に応じて `python -m pip install jsonschema`）。
 
-**公開状況：** V2.3 のコアは実装・合成テスト済みですが、GitHub リポジトリの一般公開と正式な 2.4.0 Release は別の手続きです。
+**公開状況：** V2.3 のコアは実装・合成テスト済みです。正式な 2.4.0 Release の作成は別の手続きです。
