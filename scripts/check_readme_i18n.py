@@ -1,4 +1,4 @@
-"""Validate nine README languages, professional Chinese structure and V2.4 onboarding."""
+"""Validate nine README languages and product-first V2.4 onboarding."""
 from pathlib import Path
 import re
 ROOT = Path(__file__).resolve().parents[1]
@@ -13,13 +13,6 @@ FILES = (
     "docs/i18n/README.pt-BR.md",
     "docs/i18n/README.ru.md",
 )
-CORE_DEMO = (
-    "workspace init --path",
-    "workspace check --path",
-    "source grant sample normalized",
-    "local run --source sample",
-)
-TRANSFER = ("transfer pack", "transfer receive", "transfer inspect", "transfer file")
 LANGUAGE_HEADER = re.compile(r"^\*\*(?:Languages:|语言 / Languages：)\*\*")
 LINK = re.compile(r"\]\(([^)]+)\)")
 FENCE = re.compile(r"```([\w-]+)\n([\s\S]*?)\n```")
@@ -68,16 +61,26 @@ def main():
             failures.append(f"{name}: expected one architecture diagram")
         if any(re.search(r"\n[ \t]*\n", body) for _, body in blocks):
             failures.append(f"{name}: blank line inside code fence")
-        demos = [body for kind, body in blocks if kind == "sh" and all(term in body for term in CORE_DEMO)]
-        if len(demos) != 1:
-            failures.append(f"{name}: synthetic onboarding missing or duplicated")
-        for command in TRANSFER:
-            if not any(kind == "sh" and command in body for kind, body in blocks):
-                failures.append(f"{name}: transfer example missing {command}")
-        for token in ("2.4.0", "12", "52", "134", "synced_sha", "detected_sha",
-                      "candidate advance", "version confirm"):
+        for token in ("2.4.0", "12", "52", "134", "synced_sha", "detected_sha"):
             if token not in content:
-                failures.append(f"{name}: required capability missing {token}")
+                failures.append(f"{name}: required memory feature missing {token}")
+        if name in ("README.md", "docs/i18n/README.en.md"):
+            prompts = [body for kind, body in blocks if kind == "text"]
+            if len(prompts) != 1 or (
+                "https://github.com/ranchen-love/ai-memory-hub-v2-1-review" not in prompts[0]
+            ):
+                failures.append(f"{name}: missing single copyable Agent setup prompt")
+            elif any(len(line) > 82 for line in prompts[0].splitlines()):
+                failures.append(f"{name}: Agent setup prompt exceeds 82 columns")
+            if any(kind == "sh" for kind, _ in blocks):
+                failures.append(f"{name}: CLI implementation commands belong in the setup guide")
+            for marker in ("AGENTS.md", "onboarding plan/apply/report", "Private"):
+                if marker not in content:
+                    failures.append(f"{name}: missing Agent onboarding feature {marker}")
+        else:
+            for marker in ("candidate advance", "version confirm"):
+                if marker not in content:
+                    failures.append(f"{name}: existing translated feature missing {marker}")
         for level in ("L0", "L1", "L2", "L3"):
             if f"| **{level}" not in content:
                 failures.append(f"{name}: missing detailed {level} layer explanation")
@@ -85,21 +88,31 @@ def main():
             failures.append(f"{name}: expected complete project overview")
     chinese = (ROOT / "README.md").read_text(encoding="utf-8")
     chapters = (
-        "一、项目概述",
-        "二、系统架构与数据组织",
-        "三、核心能力与设计机制",
-        "四、Agent 首次初始化与资料交付",
-        "五、安装与使用示例",
-        "六、数据安全与同步机制",
-        "七、实现状态与适用边界",
-        "八、技术文档与项目维护",
+        "一、主要功能",
+        "二、保存的信息领域",
+        "三、典型使用场景",
+        "四、数据结构与设计原则",
+        "五、开始使用",
+        "六、隐私、安全与控制权",
+        "七、当前建设状态与适用范围",
+        "八、文档导航与长期方向",
     )
     headings = tuple(re.findall(r"^## (.+)$", chinese, flags=re.M))
     if headings != chapters:
-        failures.append("README.md: must match eight-part private-hub structure")
+        failures.append("README.md: must match eight-part product overview")
     english = (ROOT / "docs/i18n/README.en.md").read_text(encoding="utf-8")
-    if len(re.findall(r"^## ", english, flags=re.M)) != 8:
-        failures.append("README.en.md: English guide must have eight main sections")
+    english_chapters = tuple(re.findall(r"^## (.+)$", english, flags=re.M))
+    if english_chapters != (
+        "I. Main capabilities",
+        "II. Information categories",
+        "III. Common use cases",
+        "IV. Information architecture and design",
+        "V. Getting started",
+        "VI. Privacy, security and ownership",
+        "VII. Current implementation and scope",
+        "VIII. Documentation and direction",
+    ):
+        failures.append("README.en.md: must match product-first eight sections")
     for new_path in ("docs/agent-onboarding.md", "docs/agent-onboarding.zh-CN.md"):
         if not (ROOT / new_path).is_file():
             failures.append(f"Missing Agent first-run guide: {new_path}")
@@ -134,6 +147,6 @@ def main():
     if failures:
         print("\n".join(failures))
         raise SystemExit(1)
-    print("Validated nine READMEs, language navigation, professional Chinese guide, L0-L3 tables, links and V2.4 examples.")
+    print("Validated nine READMEs, language navigation, eight product sections, Agent setup prompt, L0-L3 tables, and links.")
 if __name__ == "__main__":
     main()
