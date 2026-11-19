@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Proposed memory envelope",
+  "allOf": [
+    {
+      "$ref": "protocol.schema.json#/$defs/memory"
+    },
+    {
+      "properties": {
+        "data": {
+          "properties": {
+            "status": {
+              "const": "candidate"
+            }
+          },
+          "required": [
+            "status"
+          ]
+        }
+      }
+    }
+  ]
+}

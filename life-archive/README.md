@@ -1,0 +1,9 @@
+# Life archive
+
+The [blank profile](profile.json) covers twelve categories, all initially `unknown`. It includes the available subdomain IDs without values. The [taxonomy](taxonomy.md) labels all 52 subdomains. The [field registry](field-registry.json) defines 134 categorized field slots and the subdomains each slot can describe. The [timeline](timeline.json) keeps dated evidence separate while preserving the same field contracts and cross-record lineage.
+
+For a structured entry, choose its `category` and `domain`. In `extensions`, key each value by the field ID within that domain. Every filled slot needs a typed `value`, actual `source`, `source_type`, time-zone-qualified `observed_at`, `valid_from` and `valid_to` (nullable ISO dates), and its own `sensitivity`. Field sensitivity respects the registry minimum and the containing record and workspace boundaries. An index-only value describes presence and may carry an opaque ID. Use the [profile and timeline schema](../schemas/life-archive.schema.json) and [registered-field contracts](../schemas/life-fields.schema.json).
+
+Run `workspace check --path WORKSPACE` to validate the profile, timeline, registry and lineage. The output lists each domain's coverage, unfilled slots and expected fields that still need evidence. A hypothesis or superseded record cannot satisfy reviewed coverage. Validity ranges are checked for ordering. Historical observations can still supply historical coverage. Legacy notes without structured fields remain readable and do not satisfy domain or field coverage.
+
+Keep exact personal originals in separately approved storage. The optional [health extension](health/README.md) only validates de-identified aggregates supplied with explicit consent. Its registry entries can point to an independently authorized storage index. Device ingestion, raw health synchronization and production scheduling are outside this extension.

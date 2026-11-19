@@ -1,0 +1,154 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Optional workspace indexes",
+  "oneOf": [
+    {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.1"
+        },
+        "facts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "schema_version": {
+                "const": "2.1"
+              },
+              "kind": {
+                "const": "memory"
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+              },
+              "sensitivity": {
+                "enum": [
+                  "public",
+                  "internal",
+                  "private",
+                  "restricted"
+                ]
+              },
+              "source": {
+                "$ref": "protocol.schema.json#/$defs/source"
+              },
+              "data": {
+                "allOf": [
+                  {
+                    "$ref": "protocol.schema.json#/$defs/memory/properties/data"
+                  },
+                  {
+                    "properties": {
+                      "status": {
+                        "const": "accepted"
+                      }
+                    }
+                  }
+                ]
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "record_digest": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            },
+            "required": [
+              "schema_version",
+              "kind",
+              "id",
+              "sensitivity",
+              "source",
+              "data",
+              "revision",
+              "created_at",
+              "record_digest"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "facts"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.1"
+        },
+        "sessions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "id",
+              "revision"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "sessions"
+      ],
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "properties": {
+        "schema_version": {
+          "const": "2.1"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+              },
+              "version": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "id",
+              "version"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "schema_version",
+        "assets"
+      ],
+      "additionalProperties": false
+    }
+  ]
+}

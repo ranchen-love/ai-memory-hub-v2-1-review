@@ -1,7 +1,7 @@
 # AI Memory Hub — KI-Erinnerungen unter eigener Kontrolle
 **Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **Dein Kontext. Deine Dateien. Deine Entscheidung.** Eine lokale, plattformneutrale Grundlage für langfristige KI-Erinnerungen, nachvollziehbare Projektarbeit und autorisierte Übergaben zwischen KI-Agenten.
-**Version 2.2.0 · Python 3.11+ · MIT-Lizenz · Kommandozeile (CLI)**
+**Version 2.3.0 · Python 3.11+ · MIT-Lizenz · Kommandozeile (CLI)**
 Ein Chatverlauf ist noch kein verlässliches Langzeitgedächtnis. Entscheidungen verschwinden in langen Gesprächen, Anhänge verlieren ihren Zusammenhang und bei einem Wechsel des KI-Assistenten muss alles erneut erklärt werden. **AI Memory Hub** speichert ausdrücklich freigegebene Informationen, Herkunftsnachweise, Projektstände und **echte Dateiinhalte** in einem lokalen Vault – unabhängig von einzelnen KI-Anbietern.
 ## Welche Probleme löst das Projekt?
 - **Kontinuität:** Ziele, Einschränkungen, Beschlüsse, überprüfte Ergebnisse, offene Fragen und nächste Schritte bleiben erhalten.
@@ -9,7 +9,7 @@ Ein Chatverlauf ist noch kein verlässliches Langzeitgedächtnis. Entscheidungen
 - **Verlässliche Dateien:** Hochgeladene Dateien und KI-Ergebnisse werden mitsamt ihren Versionen gespeichert – nicht bloß als möglicherweise ungültige Links.
 - **Wechsel zwischen Agenten:** Geprüfter Kontext und ausdrücklich ausgewählte Dateiversionen lassen sich weitergeben.
 - **Nutzerkontrolle:** Quellen und Schutzstufen werden separat freigegeben; wörtliche L3-Nachrichten benötigen zusätzliche Zustimmung.
-## Was V2.2 tatsächlich kann
+## Was V2.3 tatsächlich kann
 | Bereich | Implementierte Funktion |
 | --- | --- |
 | Langzeit-Erinnerungen | Kandidaten für Fakten, Vorlieben und Entscheidungen mit Prüfung; Chattext wird nicht automatisch als wahr übernommen |
@@ -21,6 +21,26 @@ Ein Chatverlauf ist noch kein verlässliches Langzeitgedächtnis. Entscheidungen
 | Synchronisierung | Fünf unabhängige Schalter für wöchentlich, vollständig, ereignisbasiert, täglich und Übergabe |
 | Wiederherstellung | Idempotente Wiederholungen, Versionshistorie, Sicherung, Restore und getesteter Rollback |
 **Wichtig:** Die Funktionen wurden mit synthetischen Daten unter Windows und Ubuntu getestet. Die Software überwacht **nicht automatisch alle KI-Chats**, richtet keine Zeitplanung ein und bietet standardmäßig keine Cloud-Echtzeitsynchronisation.
+## V2.3: vollständiger, wiederverwendbarer persönlicher Speicherbereich
+V2.3 verbindet die **getestete lokale Engine** mit einem **vom Eigentümer initialisierten Gedächtnis-Arbeitsbereich** – nicht nur einer Python-Bibliothek. Die neutralen Vorlagen decken alle 19 Organisationsmodule ab, darunter `AGENTS.md`, `core/`, `memory/`, `candidates/`, `projects/`, `sessions/`, `assets/`, `life-archive/`, `integrations/` und `workflows/`, ohne persönliche Bestandsdaten.
+Das Lebensarchiv bietet **12 Kategorien, 52 Unterbereiche und 134 registrierte Felder** samt Quellen-, Gültigkeits- und Schutzstufenprüfung. Alle Bereiche beginnen mit `unknown`. Erinnerungsvorschläge durchlaufen Validierung, Duplikat-/Konfliktprüfung, belegte Freigabe und **gesonderte Aktivierung**; Rücknahme und Versionshistorie bleiben nachvollziehbar.
+### Eigenen Arbeitsbereich anlegen
+Mit Python 3.11+ im V2.3-Quellverzeichnis ausführen. Es entstehen **zwei getrennte Verzeichnisse** außerhalb von Git: Arbeitsbereich und Vault. Das Kopieren synthetischer Beispieldaten erteilt noch keine Zugriffsrechte; erst ein ausdrückliches `source grant` autorisiert die Quelle.
+```sh
+python -m pip install .
+ai-memory-hub workspace init --path ../workspace-demo-v23 --demo
+ai-memory-hub workspace check --path ../workspace-demo-v23
+ai-memory-hub --root ../workspace-demo-v23-vault source grant sample normalized --path ../workspace-demo-v23/demo-inbox --consent
+ai-memory-hub --root ../workspace-demo-v23-vault local run --source sample
+ai-memory-hub --root ../workspace-demo-v23-vault memory review
+ai-memory-hub --root ../workspace-demo-v23-vault project list
+ai-memory-hub --root ../workspace-demo-v23-vault local status
+```
+Vorschläge werden nicht automatisch als bestätigte Fakten übernommen. Siehe [Einrichtung](../workspace.md), [19-Modul-Abgleich](../workspace-parity.md), [Agent-Einstieg](../../AGENTS.md) und [Feldregister](../../life-archive/field-registry.json).
+### Agentübergreifende Versionen und Erinnerungspflege
+Ausdrücklich freigegebene Erinnerungen können in einem lokalen Snapshot bereitgestellt werden. Auf der Empfängerseite erkennt `version check` Änderungen; `version reload` gibt betroffene Bereiche und eine einmalige Quittung zurück; `version confirm` setzt `synced_sha` **erst nach ausdrücklicher Bestätigung**. `detected_sha` bedeutet nicht synchronisiert; nicht lesbare Quellen liefern `unknown`. Die Quittung beweist weder das Verständnis des Agenten noch eine automatische Verbindung zu sämtlichen KI-Diensten. Siehe [Bootstrap und Versionsabgleich](../../integrations/memory-bootstrap.md).
+`candidate suggest`, `candidate advance` und `candidate history` ermöglichen eine dokumentierte, autorisierte Prüfung und Aktivierung. Siehe [Lebenszyklus](../../workflows/memory-lifecycle.md). Das optionale Gesundheitsmodul **prüft nur de-identifizierte Aggregate**, keine Rohdaten-Synchronisierung. Software **2.3.0**, Vault-Schema **2.1**, Arbeitsbereichsformat **1.0**.
+
 ## Architektur
 ```mermaid
 flowchart LR
@@ -75,8 +95,8 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 Mit `config set FEATURE on|off` ändern. `local run --source ID` verwendet normalerweise `full`. Lokale wöchentliche Archivierung und cloudseitige Erinnerungsverwaltung sind unterschiedliche Ausführungsumgebungen. Ein eingeschalteter Schalter beweist keine tatsächlich aktive Zeitplanung.
 ## Datenschutz, Grenzen und Kompatibilität
 Der Vault wird nicht von der Anwendung verschlüsselt. Betriebssystemrechte, Festplattenverschlüsselung und Backups müssen gesondert eingerichtet werden. Das Entziehen einer Quellenfreigabe stoppt zukünftiges Lesen, löscht aber keine gespeicherten Revisionen. Transfer-ZIPs sind unverschlüsselt und dürfen nur über einen freigegebenen Kanal an berechtigte Empfänger gehen. Ein externer Link ist kein bereits gespeicherter Dateiinhalt.
-Die Anwendung ist V2.2.0 und unterstützt weiterhin das Datensatzschema `2.1`; das Offline-Transferformat trägt die Version 2.2. Vor Updates eine Sicherung erstellen und das Upgrade an einer wiederhergestellten Kopie prüfen.
+Die Anwendung ist V2.3.0 und unterstützt weiterhin das Datensatzschema `2.1`; das Offline-Transferformat trägt die Version 2.2. Vor Updates eine Sicherung erstellen und das Upgrade an einer wiederhergestellten Kopie prüfen.
 ## Dokumentation und Mitwirkung
 [Einrichtung, Backup und Transfer](../deployment.md) · [Benutzerhandbuch](../guide.md) · [Adapter](../adapters.md) · [Protokoll](../protocol.md) · [Sicherheit](../../SECURITY.md) · [MIT-Lizenz](../../LICENSE)
 Für Beiträge ausschließlich synthetische Daten verwenden, keine privaten Exporte oder Anhänge veröffentlichen. Tests: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` und `python scripts/smoke_v22.py`.
-**Veröffentlichungsstand:** Der V2.2-Kern ist implementiert und synthetisch getestet. Die öffentliche Freigabe des GitHub-Repositories und ein offizielles Release 2.2.0 sind eigenständige Veröffentlichungsschritte.
+**Veröffentlichungsstand:** Der V2.3-Kern ist implementiert und synthetisch getestet. Die öffentliche Freigabe des GitHub-Repositories und ein offizielles Release 2.3.0 sind eigenständige Veröffentlichungsschritte.

@@ -1,7 +1,7 @@
 # AI Memory Hub — Memoria de IA bajo tu control
 **Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **Tu contexto, tus archivos, tus decisiones.** Una base local y neutral respecto a las plataformas para la memoria a largo plazo, la continuidad de proyectos y las transferencias autorizadas entre agentes de IA.
-**Versión 2.2.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**
+**Versión 2.3.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**
 El historial de un chat no es necesariamente una memoria fiable. Las decisiones importantes quedan enterradas, los adjuntos pierden su contexto y cambiar de asistente implica volver a explicar el proyecto. **AI Memory Hub** conserva el contexto autorizado, su procedencia, el estado del proyecto y los **bytes reales** de archivos seleccionados en un Vault local e independiente de cualquier proveedor.
 ## ¿Qué problema resuelve?
 - **Continuidad:** Guarda objetivos, restricciones, decisiones, resultados verificados, dudas y próximos pasos.
@@ -9,7 +9,7 @@ El historial de un chat no es necesariamente una memoria fiable. Las decisiones 
 - **Archivos recuperables:** Conserva versiones de archivos subidos y resultados generados por IA, no solo enlaces.
 - **Portabilidad entre agentes:** Comparte paquetes revisados y únicamente las versiones de archivos expresamente aprobadas.
 - **Control del usuario:** Elige fuentes y niveles de sensibilidad; los mensajes literales de L3 requieren autorización adicional.
-## Funcionalidades disponibles en V2.2
+## Funcionalidades disponibles en V2.3
 | Área | Capacidad real |
 | --- | --- |
 | Memoria duradera | Candidatos de hechos, preferencias y decisiones sujetos a revisión; un chat no se convierte automáticamente en verdad aceptada |
@@ -21,6 +21,26 @@ El historial de un chat no es necesariamente una memoria fiable. Las decisiones 
 | Sincronización | Cinco interruptores independientes: semanal, completa, eventos, diaria y entrega |
 | Recuperación | Reintentos idempotentes, historial conservado, copias de seguridad, restauración y pruebas de reversión |
 **Alcance real:** el código se ha probado con datos sintéticos en Windows y Ubuntu. **No** vigila automáticamente todos los chats, no instala tareas programadas ni ofrece sincronización en la nube en tiempo real.
+## V2.3: un espacio de memoria personal completo y reutilizable
+V2.3 combina el **motor local probado** con un **espacio personal que cada usuario inicializa**, no solo una biblioteca Python. Sus plantillas neutrales abarcan los 19 módulos organizativos, incluidos `AGENTS.md`, `core/`, `memory/`, `candidates/`, `projects/`, `sessions/`, `assets/`, `life-archive/`, `integrations/` y `workflows/`, sin datos personales reales.
+El archivo de vida dispone de **12 categorías, 52 subáreas y 134 campos registrados**, con validación de procedencia, vigencia y sensibilidad. Todos comienzan como `unknown`. La memoria duradera requiere validar candidatos, revisar duplicados y conflictos, aprobar con evidencias y **activarlos por separado**; permite revocación e historial.
+### Inicializar tu espacio personal
+Con Python 3.11+ ejecuta estos comandos desde el código fuente V2.3. Se crean **dos directorios separados** fuera de Git: el espacio de trabajo y el Vault. Copiar datos ficticios no concede acceso a fuentes; `source grant` lo hace de manera explícita.
+```sh
+python -m pip install .
+ai-memory-hub workspace init --path ../workspace-demo-v23 --demo
+ai-memory-hub workspace check --path ../workspace-demo-v23
+ai-memory-hub --root ../workspace-demo-v23-vault source grant sample normalized --path ../workspace-demo-v23/demo-inbox --consent
+ai-memory-hub --root ../workspace-demo-v23-vault local run --source sample
+ai-memory-hub --root ../workspace-demo-v23-vault memory review
+ai-memory-hub --root ../workspace-demo-v23-vault project list
+ai-memory-hub --root ../workspace-demo-v23-vault local status
+```
+Los candidatos no se convierten automáticamente en hechos aceptados. Consulta [instalación del espacio](../workspace.md), [cobertura de 19 módulos](../workspace-parity.md), [entrada para agentes](../../AGENTS.md) y [registro de campos personales](../../life-archive/field-registry.json).
+### Versiones compartidas y gestión de candidatos
+Solo la memoria seleccionada y autorizada puede exportarse como instantánea local. En el Vault receptor, `version check` detecta cambios, `version reload` devuelve el contenido modificado y un recibo de un solo uso, y `version confirm` actualiza `synced_sha` **tras la confirmación explícita**. `detected_sha` no significa sincronizado; un origen inaccesible produce `unknown`. El recibo no acredita comprensión ni implica conexión automática a todas las IA. Consulta [versiones e integración](../../integrations/memory-bootstrap.md).
+`candidate suggest`, `candidate advance` y `candidate history` permiten revisar, decidir y rastrear revisiones con consentimiento. Más detalles en [ciclo de memoria](../../workflows/memory-lifecycle.md). La extensión de salud **solo valida agregados desidentificados**, no sincroniza historiales originales. Versión **2.3.0**, esquema de Vault **2.1**, formato de espacio personal **1.0**.
+
 ## Arquitectura
 ```mermaid
 flowchart LR
@@ -75,8 +95,8 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 Modifica un control con `config set FEATURE on|off`. `local run --source ID` utiliza `full` de forma predeterminada. El archivado semanal local y la gestión de memoria en la nube son ejecutores distintos. Un interruptor activado no demuestra que exista una programación operativa.
 ## Privacidad, límites y compatibilidad
 El Vault no dispone de cifrado incorporado: configura permisos del sistema, cifrado de disco y copias de seguridad. Revocar una fuente detiene futuras lecturas, pero no borra automáticamente los registros existentes. Los ZIP de transferencia carecen de cifrado y requieren un canal confiable y la autorización del destinatario. Un enlace externo sigue siendo una referencia hasta que se almacenen los bytes.
-La aplicación es V2.2.0, compatible con el esquema de registros `2.1`, y usa una envoltura independiente 2.2 para transferencias. Haz copias de seguridad y prueba actualizaciones en una restauración antes de cambiar la instancia real.
+La aplicación es V2.3.0, compatible con el esquema de registros `2.1`, y usa una envoltura independiente 2.2 para transferencias. Haz copias de seguridad y prueba actualizaciones en una restauración antes de cambiar la instancia real.
 ## Documentación y contribuciones
 [Despliegue y recuperación](../deployment.md) · [Guía completa](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Seguridad](../../SECURITY.md) · [Licencia MIT](../../LICENSE)
 Usa datos sintéticos en pruebas y contribuciones; nunca subas exportaciones personales. Pruebas: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` y `python scripts/smoke_v22.py`.
-**Estado de publicación:** el núcleo ya funciona y está validado con datos sintéticos; hacer público el repositorio y crear una Release oficial 2.2.0 son pasos separados.
+**Estado de publicación:** el núcleo ya funciona y está validado con datos sintéticos; hacer público el repositorio y crear una Release oficial 2.3.0 son pasos separados.

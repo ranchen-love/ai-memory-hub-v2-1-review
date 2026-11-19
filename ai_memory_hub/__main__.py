@@ -12,11 +12,15 @@ from .adapters import ADAPTERS, describe, grant, list_sources, local_input, revo
 from .assets import (
     LINK_STATES, LocalVault, availability, export_public_text, observe_link, put_file, put_link, references, retrieve_blob,
 )
+from . import candidates, shared_version
 from .handoff import create_handoff
-from .model import FEATURES, LEVELS, PRESETS, Denied, HubError, Missing, read_json
+from .life import health_coverage
+from .model import FEATURES, LEVELS, PRESETS, Denied, HubError, Missing, ident, read_json, revision
 from .store import Store, memory_review, view_session
 from .sync import dispatch, failure, run_batch, status
 from .transfer import inspect_transfer, pack_transfer, receive_transfer, retrieve_transfer
+from .workspace import check_workspace, facts_projection, init_workspace
+
 
 ORIGINS = ("user_upload", "ai_generated", "workspace_artifact")
 
@@ -144,6 +148,55 @@ def parser():
         if action == "file":
             read.add_argument("asset", metavar="ID@REV")
         permit(read)
+    candidate = sub(commands.add_parser("candidate", help="validate and review revision-pinned memory proposals"))
+    for operation in ("suggest", "history", "advance"):
+        action = candidate.add_parser(operation)
+        action.add_argument("id")
+        permit(action)
+        if operation == "advance":
+            action.add_argument("state", choices=sorted({state for targets in candidates.TRANSITIONS.values() for state in targets}))
+            action.add_argument("--base", type=int, required=True, help="expected lifecycle revision, or 0")
+            action.add_argument("--record-revision", type=int, help="exact draft revision at validation")
+            action.add_argument("--actor", required=True)
+            action.add_argument("--reason", required=True)
+            action.add_argument("--evidence-verified", action="store_true", help="attest to reviewed evidence")
+            action.add_argument("--ack-peer", action="append", metavar="ID@REV")
+            action.add_argument("--supersede", action="append", metavar="ID@REV")
+            action.add_argument("--pr-ref", help="URL of an externally reviewed PR")
+
+    version = sub(commands.add_parser("version", help="detect and acknowledge shared memory revisions"))
+    snapshot = version.add_parser("snapshot")
+    snapshot.add_argument("--name", required=True)
+    selection = snapshot.add_mutually_exclusive_group(required=True)
+    selection.add_argument("--include", action="append", metavar="SCOPE=ID")
+    selection.add_argument("--empty", action="store_true")
+    permit(snapshot)
+    for operation in ("check", "reload", "confirm"):
+        action = version.add_parser(operation)
+        action.add_argument("--channel", required=True)
+        action.add_argument("--agent", required=True)
+        permit(action)
+        if operation == "check":
+            action.add_argument("--snapshot", type=Path, required=True)
+        elif operation == "reload":
+            action.add_argument("--scope", action="append", default=[])
+        else:
+            action.add_argument("--sha", required=True)
+            action.add_argument("--receipt", required=True)
+
+    workspace = sub(commands.add_parser("workspace", help="initialize or verify a portable memory workspace"))
+    initialize = workspace.add_parser("init")
+    initialize.add_argument("--path", required=True, type=Path)
+    initialize.add_argument("--vault", type=Path)
+    initialize.add_argument("--sensitivity", choices=LEVELS, default="private")
+    initialize.add_argument("--demo", action="store_true", help="include synthetic inputs without authorizing them")
+    workspace.add_parser("check").add_argument("--path", required=True, type=Path)
+    facts = workspace.add_parser("facts")
+    facts.add_argument("--path", required=True, type=Path)
+    permit(facts)
+    health = workspace.add_parser("health-check")
+    health.add_argument("--input", required=True, type=Path)
+    permit(health)
     return cli
 
 
@@ -232,7 +285,59 @@ def setup_wizard(root):
     return root, {"": "ordinary", "1": "ordinary", "2": "archive", "3": "collaboration"}[option]
 
 
+def revision_choices(values):
+    if values is None:
+        return None
+    choices = {}
+    for entry in values:
+        key, separator, number = entry.rpartition("@")
+        if not separator or not number.isascii() or not number.isdecimal() or len(number) > 19:
+            raise HubError("expected ID@REV")
+        ident(key)
+        if key in choices:
+            raise HubError("duplicate review record ID")
+        choices[key] = revision(int(number))
+    return choices
+
+
+def candidate_command(store, args):
+    consent(args)
+    if args.action == "suggest":
+        return candidates.suggestions(store, args.id)
+    if args.action == "history":
+        return candidates.history(store, args.id)
+    return candidates.step(
+        store, args.id, args.state, base=args.base, record_revision=args.record_revision,
+        actor=args.actor, reason=args.reason, consent=True, attest=args.evidence_verified,
+        peers=revision_choices(args.ack_peer), supersede=revision_choices(args.supersede), pr_ref=args.pr_ref,
+    )
+
+
+def version_command(store, args):
+    consent(args)
+    if args.action == "snapshot":
+        selected = {}
+        for entry in args.include or ():
+            scope, _, key = entry.partition("=")
+            selected.setdefault(ident(scope), []).append(ident(key))
+        return shared_version.snapshot(store, args.name, selected, consent=True)
+    if args.action == "check":
+        return shared_version.check(store, args.channel, args.agent, args.snapshot, consent=True)
+    if args.action == "reload":
+        return shared_version.reload(store, args.channel, args.agent, args.scope, consent=True)
+    return shared_version.confirm(store, args.channel, args.agent, args.sha, args.receipt, consent=True)
+
+
 def execute(args, governance=None, initial_switches=None):
+    if args.command == "workspace":
+        if args.action == "init":
+            return init_workspace(args.path, args.vault, args.sensitivity, args.demo)
+        if args.action == "check":
+            return check_workspace(args.path)
+        consent(args)
+        if args.action == "facts":
+            return facts_projection(args.path)
+        return health_coverage(read_json(local_input(args.input.expanduser().absolute())))
     if args.command == "init" and args.wizard:
         args.root, args.preset = setup_wizard(args.root)
         initial_switches = None
@@ -242,6 +347,10 @@ def execute(args, governance=None, initial_switches=None):
         switches = initial_switches if initial_switches is not None else dict(zip(FEATURES, PRESETS[args.preset]))
         return Store(args.root, initialize=args.sensitivity, switches=switches).settings()
     store = Store(args.root)
+    if args.command == "candidate":
+        return candidate_command(store, args)
+    if args.command == "version":
+        return version_command(store, args)
     blobs = LocalVault(store.root)
     if args.command == "config":
         if args.action == "preset":

@@ -633,6 +633,14 @@
                 "rejected",
                 "retired"
               ]
+            },
+            "classification": {
+              "enum": [
+                "fact",
+                "rule",
+                "preference",
+                "inference"
+              ]
             }
           },
           "required": [

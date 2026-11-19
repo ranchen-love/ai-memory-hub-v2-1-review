@@ -267,7 +267,9 @@ def document(data, level, allow_raw=False, allow_review=False):
         for entry in seq(fields.get("file_refs", [])):
             file_ref(entry)
     elif kind == "memory":
-        shape(fields, ("key", "claim", "status"))
+        shape(fields, ("key", "claim", "status"), ("classification",))
+        if "classification" in fields:
+            one_of(fields["classification"], ("fact", "rule", "preference", "inference"))
         text(fields["key"], 120)
         text(fields["claim"])
         one_of(fields["status"], ("candidate", "accepted", "rejected", "retired"))

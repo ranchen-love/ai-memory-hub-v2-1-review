@@ -1,7 +1,7 @@
 # AI Memory Hub — 自分で管理できる AI メモリ基盤
 **Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **会話の文脈も、ファイルも、管理権限もあなたのもの。** AI サービスに依存しない、ローカル優先の長期メモリ・プロジェクト継続・AI エージェント間引き継ぎのための基盤です。
-**バージョン 2.2.0 · Python 3.11 以上 · MIT ライセンス · CLI**
+**バージョン 2.3.0 · Python 3.11 以上 · MIT ライセンス · CLI**
 長い AI チャットには、重要な判断や試行錯誤が埋もれます。添付ファイルと生成物は文脈から切り離され、別の AI に作業を渡すと同じ説明を繰り返すことになります。**AI Memory Hub** は、明示的に許可した会話の文脈、証拠、プロジェクト状態、実ファイルのバイト列を、特定の AI 事業者から独立したローカル Vault に記録します。
 ## 解決したい課題
 - **作業を再開しやすくする：** 目的、制約、決定、検証結果、未解決事項、次の手順を保存します。
@@ -9,7 +9,7 @@
 - **リンクだけでなく実ファイルを保存する：** ユーザーの添付物と AI の成果物をバージョン管理します。
 - **エージェントを切り替えられる：** 承認した情報と特定バージョンのファイルだけを引き継ぎます。
 - **取得範囲を選べる：** ソースと機密レベルを明示し、原文（L3）は別途承認します。
-## V2.2 で利用できる機能
+## V2.3 で利用できる機能
 | 機能 | 内容 |
 | --- | --- |
 | 長期メモリ候補 | 事実、好み、決定の候補とレビュー。チャット本文を自動的に確定済み事実へ昇格させません |
@@ -21,6 +21,26 @@
 | 同期ポリシー | 週次・手動全量・イベント・日次・引き継ぎの 5 つの独立スイッチ |
 | 障害復旧 | 重複しない再実行、出典と履歴の保存、バックアップ、復元、ロールバック検証 |
 **実装済みと自動運用は別です。** Windows と Ubuntu の合成データテストを通過していますが、すべての AI のチャットを自動監視したり、クラウド同期や定期実行を勝手に設定する製品ではありません。
+## V2.3：再利用できる完全な個人メモリワークスペース
+V2.3 は Python エンジンだけではありません。**検証済みローカルエンジンと、利用者ごとに初期化できるワークスペース**を一体化しました。19 の組織モジュールに対応する中立的なテンプレートには `AGENTS.md`、`core/`、`memory/`、`candidates/`、`projects/`、`sessions/`、`assets/`、`life-archive/`、`integrations/`、`workflows/` などが含まれ、個人の実データは含みません。
+人生記録は **12 分類・52 の下位領域・134 の登録フィールド**を備え、出典、期間、機密性を検証します。開始時の状態はすべて `unknown` です。長期メモリの候補は検証、重複・矛盾の確認、根拠付きの承認、**別操作による有効化**、取り消しと履歴管理を経ます。
+### 自分のワークスペースを作る
+Python 3.11 以上で V2.3 のソースディレクトリから実行します。Git 外に**独立したワークスペースと Vault**を作り、合成デモだけを配置します。デモのコピーだけではソースのアクセス権は付与されず、`source grant` が必要です。
+```sh
+python -m pip install .
+ai-memory-hub workspace init --path ../workspace-demo-v23 --demo
+ai-memory-hub workspace check --path ../workspace-demo-v23
+ai-memory-hub --root ../workspace-demo-v23-vault source grant sample normalized --path ../workspace-demo-v23/demo-inbox --consent
+ai-memory-hub --root ../workspace-demo-v23-vault local run --source sample
+ai-memory-hub --root ../workspace-demo-v23-vault memory review
+ai-memory-hub --root ../workspace-demo-v23-vault project list
+ai-memory-hub --root ../workspace-demo-v23-vault local status
+```
+候補は自動的には確定済みの事実になりません。[ワークスペース導入](../workspace.md)、[19 モジュールの対応表](../workspace-parity.md)、[Agent 入口](../../AGENTS.md)、[人生記録フィールド](../../life-archive/field-registry.json)を参照してください。
+### Agent 間のバージョン確認と候補管理
+承認された記憶をローカルのスナップショットとして渡せます。受信側では `version check` が変更を検出し、`version reload` が変更範囲と一回限りの確認票を返し、`version confirm` で明示的に確認した後だけ `synced_sha` が更新されます。**検出した `detected_sha` は同期済みとは限りません**。読み取りできなければ `unknown` です。確認票は Agent の理解を証明せず、全 AI サービスへの自動接続も行いません。[接続とバージョン確認](../../integrations/memory-bootstrap.md)を参照してください。
+`candidate suggest`、`candidate advance`、`candidate history` は根拠と許可を要する候補管理機能です。[メモリのライフサイクル](../../workflows/memory-lifecycle.md)も参照してください。健康拡張は**匿名化した集計の形式検証のみ**で、端末の原データ同期ではありません。ソフトウェアは **2.3.0**、既存 Vault の記録形式は **2.1**、新しいワークスペース形式は **1.0** です。
+
 ## アーキテクチャ
 ```mermaid
 flowchart LR
@@ -76,8 +96,8 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 `config set FEATURE on|off` で変更します。`local run --source ID` は初期状態で `full` を使用します。クラウド側のメモリ管理タスクとローカルのアーカイブ実行は別です。スイッチが ON でも本番の定期実行が確認されたことにはなりません。
 ## プライバシー、制限、更新
 Vault 自体にはアプリ内暗号化がなく、OS 権限・ディスク暗号化・バックアップ管理を利用者が設定します。ソースの許可を取り消すと今後の読み取りを止めますが、保存済み履歴は自動削除されません。オフライン ZIP は暗号化されないため、安全な転送手段と受信者の承認が必要です。URL 参照と、バイト列を実際に保存したファイルは別物です。
-ソフトウェアの版は 2.2.0、既存レコードのスキーマは互換性のため `2.1` のままです。引き継ぎには別途 2.2 形式を使用します。アップグレード前にバックアップし、復元したコピーで試してください。
+ソフトウェアの版は 2.3.0、既存レコードのスキーマは互換性のため `2.1` のままです。引き継ぎには別途 2.2 形式を使用します。アップグレード前にバックアップし、復元したコピーで試してください。
 ## ドキュメントと貢献
 [導入・バックアップ・転送](../deployment.md) · [利用ガイド](../guide.md) · [アダプター](../adapters.md) · [データ仕様](../protocol.md) · [セキュリティ](../../SECURITY.md) · [MIT ライセンス](../../LICENSE)
 開発や不具合報告には合成データを使い、個人のエクスポートや添付ファイルをコミットしないでください。テストは `python -m unittest discover -s tests -v`、`python scripts/smoke_release.py`、`python scripts/smoke_v22.py` で実行できます（必要に応じて `python -m pip install jsonschema`）。
-**公開状況：** V2.2 のコアは実装・合成テスト済みですが、GitHub リポジトリの一般公開と正式な 2.2.0 Release は別の手続きです。
+**公開状況：** V2.3 のコアは実装・合成テスト済みですが、GitHub リポジトリの一般公開と正式な 2.3.0 Release は別の手続きです。

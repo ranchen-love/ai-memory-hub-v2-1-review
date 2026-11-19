@@ -181,7 +181,7 @@ def record(row):
 
 
 class Store:
-    def __init__(self, root, initialize=None, switches=None):
+    def __init__(self, root, initialize=None, switches=None, *, require_fresh=False):
         self.root = instance_path(root)
         if initialize is not None:
             one_of(initialize, LEVELS)
@@ -218,6 +218,8 @@ class Store:
                         ("level", canonical(initialize)), ("schema_version", canonical(SCHEMA)),
                         ("core_version", canonical(VERSION)), ("switches", canonical(switches)),
                     ))
+                elif require_fresh:
+                    raise Conflict("the Vault was initialized by another process")
                 elif current != 210:
                     raise HubError("unsupported database version; use the pinned core or a documented migration")
                 if self.setting(db, "schema_version") != SCHEMA:
@@ -344,7 +346,7 @@ class Store:
                 if asset:
                     ref["version"] = asset["revision"]
 
-    def ingest(self, db, data, allow_raw=False, allow_review=False):
+    def ingest(self, db, data, allow_raw=False, allow_review=False, *, lifecycle_decision=False):
         document(data, self.level, allow_raw, allow_review)
         kind, entry_id = data["kind"], data["id"]
         previous = self.get(db, kind, entry_id)
@@ -357,6 +359,10 @@ class Store:
                 return {"status": "unchanged", "kind": kind, "id": entry_id, "revision": replay["revision"]}
         if base != current:
             raise Conflict("base revision differs from the current revision")
+        if kind == "memory" and not lifecycle_decision:
+            lifecycle = self.get(db, "memory_lifecycle", entry_id)
+            if lifecycle and (allow_review or lifecycle["state"] != "candidate"):
+                raise Denied("this candidate is managed by its review lifecycle")
         if kind == "memory" and previous and previous["data"]["status"] != "candidate" and not allow_review:
             raise Denied("a reviewed memory needs a confirmed review transition or a separate candidate ID")
         fields = strict_json(canonical(data["data"]))
@@ -389,6 +395,8 @@ class Store:
             result["checkpoint_sources"] = origins
         elif kind == "project":
             self.resolve_refs(db, fields.get("file_refs", []))
+        if kind == "memory" and previous and "classification" in previous["data"]:
+            fields.setdefault("classification", previous["data"]["classification"])
         result["data"] = fields
         return self.append(db, kind, entry_id, result, fingerprint, previous)
 

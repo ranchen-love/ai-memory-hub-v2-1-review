@@ -1,0 +1,19 @@
+{
+  "schema_version": "1.0",
+  "kind": "health_aggregate",
+  "source": {
+    "provider": "synthetic_fixture",
+    "kind": "user_checkpoint",
+    "locator": "fixture:aggregate-demo"
+  },
+  "period_from": "2000-01-01",
+  "period_to": "2000-01-07",
+  "observations": [
+    {
+      "metric": "sample-count",
+      "unit": "sample",
+      "value": 7,
+      "samples": 7
+    }
+  ]
+}

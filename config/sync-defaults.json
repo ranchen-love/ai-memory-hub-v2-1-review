@@ -1,0 +1,13 @@
+{
+  "schema_version": "2.1",
+  "preset": "ordinary",
+  "switches": {
+    "weekly": true,
+    "full": true,
+    "event": false,
+    "daily": false,
+    "handoff": false
+  },
+  "source_grants": [],
+  "scheduler": "not_verified"
+}
