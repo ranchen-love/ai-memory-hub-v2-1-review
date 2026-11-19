@@ -45,6 +45,16 @@ Los candidatos no se convierten automáticamente en hechos aceptados. Consulta [
 Solo la memoria seleccionada y autorizada puede exportarse como instantánea local. En el Vault receptor, `version check` detecta cambios, `version reload` devuelve el contenido modificado y un recibo de un solo uso, y `version confirm` actualiza `synced_sha` **tras la confirmación explícita**. `detected_sha` no significa sincronizado; un origen inaccesible produce `unknown`. El recibo no acredita comprensión ni implica conexión automática a todas las IA. Consulta [versiones e integración](../../integrations/memory-bootstrap.md).
 `candidate suggest`, `candidate advance` y `candidate history` permiten revisar, decidir y rastrear revisiones con consentimiento. Más detalles en [ciclo de memoria](../../workflows/memory-lifecycle.md). La extensión de salud **solo valida agregados desidentificados**, no sincroniza historiales originales. Versión **2.3.0**, esquema de Vault **2.1**, formato de espacio personal **1.0**.
 
+### L0–L3: leer una conversación solo hasta la profundidad necesaria
+| Nivel | Información disponible | Cuándo conviene usarlo |
+| --- | --- | --- |
+| **L0 · Índice** | Título, ID, proyecto asociado y revisión | Localizar conversaciones relacionadas |
+| **L1 · Resumen** | L0 y un resumen proporcionado | Determinar si hace falta profundizar |
+| **L2 · Punto de control** | Objetivos, restricciones, decisiones, opciones descartadas y motivos, verificaciones, próximos pasos y archivos | Reanudar proyectos sin releer todo el chat |
+| **L3 · Texto original opcional** | Mensajes visibles realmente archivados, con fuente y revisión | Verificar palabras exactas solo con consentimiento adicional |
+No son cuatro resúmenes generados automáticamente, sino **vistas progresivas de distinta profundidad**. El sistema no inventa capas que no se hayan suministrado. L3 exige un Vault `private` o `restricted` y permiso separado; cambiar L2 no reescribe el historial L3.
+**Detalles deliberados:** aprobar un candidato no lo activa como hecho; una URL no equivale a bytes almacenados. Cada agente distingue `detected_sha` de `synced_sha`; los reintentos utilizan comprobantes por elemento para evitar duplicaciones innecesarias.
+
 ## Arquitectura
 ```mermaid
 flowchart LR

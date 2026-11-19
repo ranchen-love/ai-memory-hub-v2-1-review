@@ -45,6 +45,16 @@ Candidatos não viram fatos aceitos automaticamente. Consulte [inicialização](
 Memórias escolhidas e aprovadas podem ser exportadas em snapshot local. No Vault receptor, `version check` detecta mudanças, `version reload` devolve os escopos alterados com recibo único, e `version confirm` atualiza `synced_sha` **somente após confirmação explícita**. `detected_sha` não significa sincronizado; origem indisponível retorna `unknown`. O recibo não comprova que o Agent compreendeu o conteúdo, nem conecta todos os serviços de IA automaticamente. Veja [integração e versão](../../integrations/memory-bootstrap.md).
 `candidate suggest`, `candidate advance` e `candidate history` oferecem revisão, decisão e histórico com autorização. Veja [ciclo da memória](../../workflows/memory-lifecycle.md). O módulo de saúde **apenas valida agregados desidentificados**, não sincroniza dados brutos. Software **2.3.0**, esquema Vault **2.1**, formato de espaço pessoal **1.0**.
 
+### L0–L3: leia somente a profundidade necessária
+| Camada | Conteúdo | Quando usar |
+| --- | --- | --- |
+| **L0 · Índice** | Título, ID da sessão, projeto e revisão | Encontrar uma conversa relevante |
+| **L1 · Resumo** | Índice e resumo informado | Decidir se é necessário aprofundar |
+| **L2 · Checkpoint** | Objetivos, restrições, decisões, alternativas rejeitadas e motivos, validações, próximos passos e arquivos | Retomar um projeto sem reler todo o chat |
+| **L3 · Original opcional** | Mensagens visíveis efetivamente arquivadas, com origem e revisão | Conferir o texto exato com autorização extra |
+As quatro camadas são **visões progressivas**, não quatro resumos gerados automaticamente. O sistema não inventa L1/L2/L3 ausentes. L3 requer Vault `private` ou `restricted` e consentimento próprio; atualizar L2 não altera o histórico L3.
+**Cuidados de design:** aprovação de candidato não significa ativação como fato. URL não é o mesmo que bytes arquivados. Cada agente mantém `detected_sha` separado de `synced_sha`; recibos por item permitem repetir importações sem duplicações.
+
 ## Como funciona
 ```mermaid
 flowchart LR

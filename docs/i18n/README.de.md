@@ -45,6 +45,16 @@ Vorschläge werden nicht automatisch als bestätigte Fakten übernommen. Siehe [
 Ausdrücklich freigegebene Erinnerungen können in einem lokalen Snapshot bereitgestellt werden. Auf der Empfängerseite erkennt `version check` Änderungen; `version reload` gibt betroffene Bereiche und eine einmalige Quittung zurück; `version confirm` setzt `synced_sha` **erst nach ausdrücklicher Bestätigung**. `detected_sha` bedeutet nicht synchronisiert; nicht lesbare Quellen liefern `unknown`. Die Quittung beweist weder das Verständnis des Agenten noch eine automatische Verbindung zu sämtlichen KI-Diensten. Siehe [Bootstrap und Versionsabgleich](../../integrations/memory-bootstrap.md).
 `candidate suggest`, `candidate advance` und `candidate history` ermöglichen eine dokumentierte, autorisierte Prüfung und Aktivierung. Siehe [Lebenszyklus](../../workflows/memory-lifecycle.md). Das optionale Gesundheitsmodul **prüft nur de-identifizierte Aggregate**, keine Rohdaten-Synchronisierung. Software **2.3.0**, Vault-Schema **2.1**, Arbeitsbereichsformat **1.0**.
 
+### L0–L3: Gespräche nur so tief lesen wie nötig
+| Ebene | Enthaltene Daten | Zweck |
+| --- | --- | --- |
+| **L0 · Index** | Titel, Sitzungs-ID, Projektbezug und Revision | Passende Unterhaltung finden |
+| **L1 · Zusammenfassung** | Index und ausdrücklich bereitgestellter Überblick | Relevanz vor dem Weiterlesen beurteilen |
+| **L2 · Checkpoint** | Ziele, Einschränkungen, Entscheidungen, verworfene Optionen mit Gründen, Verifizierung, nächste Aktionen und Dateiverweise | Projekt ohne vollständiges Chatprotokoll fortsetzen |
+| **L3 · Optionaler Originaltext** | Tatsächlich archivierte sichtbare Nachrichten mit Quelle und Revision | Originalwortlaut nur nach zusätzlicher Freigabe prüfen |
+Dies sind **Ansichten mit steigender Detailtiefe**, keine automatisch erzeugten vier Zusammenfassungen. Fehlende L1/L2/L3-Daten werden nicht erfunden. L3 benötigt einen `private` oder `restricted` Vault und gesonderte Zustimmung; spätere L2-Änderungen überschreiben nicht die alten L3-Nachrichten.
+**Bewusste Details:** Eine genehmigte Erinnerung ist noch nicht aktiviert. Eine URL ist kein archivierter Dateiinhalt. Jeder Agent trennt `detected_sha` und `synced_sha`; Wiederholungen nutzen einzelne Importbelege und vermeiden unnötige Duplikate.
+
 ## Architektur
 ```mermaid
 flowchart LR

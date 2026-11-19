@@ -45,6 +45,16 @@ Les candidats ne deviennent jamais automatiquement des faits acceptés. Consulte
 Les souvenirs explicitement sélectionnés et approuvés peuvent former une instantanée locale. Dans le Vault récepteur, `version check` détecte une modification, `version reload` renvoie les domaines modifiés avec un reçu unique, et `version confirm` ne met à jour `synced_sha` **qu’après confirmation**. `detected_sha` ne veut pas dire synchronisé ; une source indisponible renvoie `unknown`. Le reçu ne prouve pas la compréhension d’un agent et ne connecte pas automatiquement tous les services d’IA. Voir [connexion et versions](../../integrations/memory-bootstrap.md).
 `candidate suggest`, `candidate advance` et `candidate history` permettent d’examiner, d’approuver et de tracer les propositions avec consentement. Voir [le cycle de mémoire](../../workflows/memory-lifecycle.md). L’extension santé **vérifie seulement des agrégats désidentifiés** et non les données brutes des appareils. Version **2.3.0**, schéma Vault existant **2.1**, format d’espace **1.0**.
 
+### L0–L3 : lire une conversation à la profondeur nécessaire
+| Couche | Contenu | Utilisation |
+| --- | --- | --- |
+| **L0 · Index** | Titre, identifiant, projet associé et révision | Retrouver la bonne conversation |
+| **L1 · Résumé** | Index et résumé explicitement fourni | Décider si la conversation est pertinente |
+| **L2 · Point de suivi** | Objectifs, contraintes, décisions, options écartées et raisons, vérifications, prochaines étapes et fichiers | Reprendre un projet sans relire tout l'échange |
+| **L3 · Original facultatif** | Véritables messages visibles, origine et révisions | Vérifier les formulations exactes après consentement supplémentaire |
+Ces couches sont des **vues progressivement plus détaillées**, pas quatre résumés générés automatiquement. Aucune donnée L1/L2/L3 manquante n'est inventée. L3 exige un Vault `private` ou `restricted` et une autorisation distincte ; une mise à jour L2 ne réécrit pas l'historique L3.
+**Choix utiles :** l'approbation d'une proposition ne l'active pas comme fait ; une URL n'est pas un fichier effectivement archivé. Chaque agent sépare `detected_sha` et `synced_sha` ; des reçus par élément rendent les reprises idempotentes.
+
 ## Architecture
 ```mermaid
 flowchart LR
