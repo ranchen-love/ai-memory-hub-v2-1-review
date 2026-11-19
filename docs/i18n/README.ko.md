@@ -160,4 +160,4 @@ Vault에는 애플리케이션 자체 암호화가 없으며 OS 권한과 디스
 [배포·복구·전송](../deployment.md) · [사용자 안내](../guide.md) · [소스 어댑터](../adapters.md) · [프로토콜](../protocol.md) · [보안](../../SECURITY.md) · [MIT 라이선스](../../LICENSE)
 개발과 버그 제보에는 합성 자료만 사용하고 개인 내보내기나 파일을 커밋하지 마세요. 테스트 명령: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py`, `python scripts/smoke_v22.py`.
 
-**배포 상태:** 핵심 코드는 합성 데이터로 검증되었지만 저장소의 공개 전환과 공식 2.4.0 GitHub Release는 별도 단계입니다.
+**배포 상태:** 핵심 코드는 합성 데이터로 검증되었습니다. 공식 2.4.0 GitHub Release는 별도 단계입니다.
