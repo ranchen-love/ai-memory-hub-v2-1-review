@@ -159,4 +159,4 @@ Die Anwendung ist V2.4.0 und unterstützt weiterhin das Datensatzschema `2.1`; d
 [Einrichtung, Backup und Transfer](../deployment.md) · [Benutzerhandbuch](../guide.md) · [Adapter](../adapters.md) · [Protokoll](../protocol.md) · [Sicherheit](../../SECURITY.md) · [MIT-Lizenz](../../LICENSE)
 Für Beiträge ausschließlich synthetische Daten verwenden, keine privaten Exporte oder Anhänge veröffentlichen. Tests: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` und `python scripts/smoke_v22.py`.
 
-**Veröffentlichungsstand:** Der V2.3-Kern ist implementiert und synthetisch getestet. Die öffentliche Freigabe des GitHub-Repositories und ein offizielles Release 2.4.0 sind eigenständige Veröffentlichungsschritte.
+**Veröffentlichungsstand:** Der V2.3-Kern ist implementiert und synthetisch getestet. Ein offizielles Release 2.4.0 ist ein eigenständiger Veröffentlichungsschritt.
