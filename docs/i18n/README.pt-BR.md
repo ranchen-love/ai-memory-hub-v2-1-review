@@ -4,6 +4,8 @@
 
 ---
 
+**Primeiro acesso?** Leia o [guia de configuração com ajuda de um Agent](../agent-onboarding.md). É possível inicializar Workspace e Vault locais, mas criar um repositório privado, ler conversas e arquivos reais, publicar no Git ou ativar tarefas agendadas depende de ferramentas disponíveis e autorizações específicas.
+
 > **Seu contexto. Seus arquivos. Seu controle.** Uma base local e independente de plataformas para memória de longo prazo, continuidade de projetos e transferência autorizada entre agentes de IA.
 
 **Versão 2.3.0 · Python 3.11+ · Licença MIT · Interface de linha de comando (CLI)**

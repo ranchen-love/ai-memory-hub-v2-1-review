@@ -4,6 +4,8 @@
 
 ---
 
+**Vous débutez ?** Suivez le [guide d’installation assistée par Agent](../agent-onboarding.md). L’initialisation du Workspace et du Vault est prise en charge ; créer votre dépôt privé, consulter des conversations ou fichiers réels, publier sur Git et planifier des tâches exigent des outils disponibles et des autorisations distinctes.
+
 > **Votre contexte, vos fichiers, votre contrôle.** Une infrastructure locale et indépendante des plateformes pour la mémoire à long terme, la continuité des projets et la transmission autorisée entre agents IA.
 
 **Version 2.3.0 · Python 3.11+ · Licence MIT · Interface en ligne de commande (CLI)**
