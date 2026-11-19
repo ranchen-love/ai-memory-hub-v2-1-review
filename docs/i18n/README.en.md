@@ -165,14 +165,16 @@ The 19 modules form a **complete navigable information skeleton**, not 19 automa
 
 ### Give the repository to your own AI / Agent
 
+**Setup flow: Share repository → Copy prompt → Initialize → Organize approved records → Review and publish Private repository → Receive results, information gaps, and sync plan.**
+
 A new user **does not need to start by learning Python, Git or database commands**. Copy the following message to an Agent with repository access and suitable file/command capabilities.
 
 ```text
+Help me create my own private AI memory hub.
 Project repository:
 https://github.com/ranchen-love/ai-memory-hub-v2-1-review
 Read README.md, AGENTS.md and docs/agent-onboarding.md.
 Check the actual implementation and your available permissions.
-My goal is to create an owner-controlled private AI memory hub.
 Within the tools and scopes you really have, please:
 1. Inventory execution tools, GitHub access, and legitimate
    accessible sources of conversations, memories and files.
