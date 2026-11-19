@@ -37,6 +37,14 @@ def main():
         if len(nav_lines) != 1:
             failures.append(f"{name}: expected one language selector")
         else:
+            source_lines = content.splitlines()
+            nav_index = source_lines.index(nav_lines[0])
+            if nav_index < 1 or nav_index + 1 >= len(source_lines):
+                failures.append(f"{name}: malformed language selector placement")
+            elif source_lines[nav_index - 1].strip() or source_lines[nav_index + 1].strip():
+                failures.append(f"{name}: language selector must be its own paragraph")
+            if nav_index + 2 >= len(source_lines) or source_lines[nav_index + 2].strip() != "---":
+                failures.append(f"{name}: language selector should have a visual separator")
             pairs = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", nav_lines[0])
             labels = tuple(label for label, _ in pairs)
             if len(pairs) != len(FILES) or len(set(labels)) != len(FILES):
@@ -70,6 +78,9 @@ def main():
                       "candidate advance", "version confirm"):
             if token not in content:
                 failures.append(f"{name}: required V2.3 capability missing {token}")
+        for level in ("L0", "L1", "L2", "L3"):
+            if f"| **{level}" not in content:
+                failures.append(f"{name}: missing detailed {level} layer explanation")
         if content.count("\n## ") < 7:
             failures.append(f"{name}: expected complete project overview")
     chinese = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -92,6 +103,6 @@ def main():
     if failures:
         print("\n".join(failures))
         raise SystemExit(1)
-    print("Validated all nine language pages, Chinese default, eight-part structure, links and V2.3 examples.")
+    print("Validated nine READMEs, standalone language navigation, eight-part Chinese guide, L0-L3 tables, links and V2.3 examples.")
 if __name__ == "__main__":
     main()
