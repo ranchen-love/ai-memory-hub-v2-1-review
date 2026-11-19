@@ -10,7 +10,7 @@ from pathlib import Path
 
 ALLOWED = {
     ".gitattributes", ".github/workflows/test.yml", ".gitignore", "LICENSE", "README.md", "SECURITY.md",
-    "docs/i18n/README.zh-CN.md", "docs/i18n/README.ja.md",
+    "docs/i18n/README.en.md", "docs/i18n/README.ja.md",
     "docs/i18n/README.ko.md", "docs/i18n/README.es.md",
     "docs/i18n/README.fr.md", "docs/i18n/README.de.md",
     "docs/i18n/README.pt-BR.md", "docs/i18n/README.ru.md",
@@ -48,6 +48,7 @@ ALLOWED = {
     "tests/test_candidate_lifecycle.py", "tests/test_life_registry.py", "tests/test_shared_version.py",
 }
 LEGACY_ALLOWED = {
+    "docs/i18n/README.zh-CN.md",
     "README.zh-CN.md", "README.ja.md", "README.ko.md", "README.es.md",
     "README.fr.md", "README.de.md", "README.pt-BR.md", "README.ru.md",
 }
