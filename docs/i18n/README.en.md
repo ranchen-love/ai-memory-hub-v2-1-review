@@ -87,7 +87,7 @@ Detecting a new version is **not** equivalent to completing a sync or updating a
 
 V2.4 implements a first-run orchestration workflow: inspect actual tool and data permissions, initialize a full owner Workspace and Vault, archive authorized inputs, prepare reviewable material and report missing information.
 
-With separate owner approval, it can create an owner's **Private GitHub repository**, generate a navigable **19-module structure**, and place reviewed, redacted memories, project summaries and conversation indexes under their respective directories. Raw conversations, unapproved attachments, Vault databases and credentials stay out of the default Git projection.
+With separate owner approval, it can **create a new Private GitHub repository owned by the user** and publish the navigable **19-module structure** with reviewed, redacted memories, project summaries and session indexes. This is **not a fork or a copy of the generic project's entire source and Git history**. Raw conversations, unapproved attachments, Vault databases and credentials stay out of the default Git projection.
 
 **Practical limit:** The agent needs working external tools and permissions. Real-account GitHub creation and publication have not yet been validated in an authorized end-to-end sandbox.
 
@@ -157,7 +157,7 @@ flowchart LR
 | **Review and validation** | `candidates/`, `schemas/`, `scripts/`, `tests/`, `.github/` |
 | **Examples and guides** | `examples/`, `docs/`, `vendor/` |
 
-The 19 modules form a **complete navigable information skeleton**, not 19 automatically authorized account integrations. Reviewable Git records remain separate from sensitive original messages and asset bytes in the local Vault.
+The 19 modules form a **complete navigable information skeleton**, not 19 automatically authorized account integrations. The generic repository supplies the program and templates; a personal Workspace and Vault are initialized locally; the user's new Private Git repository has independent history and contains reviewed shareable views only. Sensitive originals and asset bytes remain in the local Vault. **Restoring everything on another device also requires a separate protected Vault backup and migration**; GitHub alone is insufficient.
 
 [Full module mapping](../workspace-parity.md) · [Task navigation](../../core/INDEX.md)
 
@@ -165,7 +165,7 @@ The 19 modules form a **complete navigable information skeleton**, not 19 automa
 
 ### Give the repository to your own AI / Agent
 
-**Setup flow: Share repository → Copy prompt → Initialize → Organize approved records → Review and publish Private repository → Receive results, information gaps, and sync plan.**
+**Setup flow: Share the generic repository → Copy prompt → Initialize personal Workspace / Vault → Organize authorized records → Review and create the user's own Private repository → Receive results and a sync plan.**
 
 A new user **does not need to start by learning Python, Git or database commands**. Copy the following message to an Agent with repository access and suitable file/command capabilities.
 
@@ -178,16 +178,22 @@ Check the actual implementation and your available permissions.
 Within the tools and scopes you really have, please:
 1. Inventory execution tools, GitHub access, and legitimate
    accessible sources of conversations, memories and files.
-2. Set up a new 19-module personal Workspace and separate
-   Vault, then verify installation with synthetic data.
+2. Use the generic project's templates and program to
+   initialize a separate 19-module personal Workspace
+   and local Vault. Verify installation, and plan my
+   own Private repository. Do not fork or copy the
+   generic repository's Git history.
 3. Organize authorized, actually accessible information
    into rules, memories, life fields, L0-L3 sessions,
    project checkpoints, and versioned files.
 4. Verify provenance and flag duplicates, conflicts,
    uncertain claims and gaps; do not activate guesses.
-5. Prepare a separate Private GitHub repository and
-   publish only individually reviewed redacted indexes
-   under the appropriate module directories.
+5. With my explicit authorization, create a new
+   Private GitHub repository in my own account.
+   Publish all 19 navigable modules plus individually
+   reviewed, redacted memories, project and session
+   indexes. Do not upload the full generic source,
+   raw chats, private attachments or local Vault.
 6. Verify available sync strategies, source coverage,
    agent versions, and separately approved scheduling.
 Complete routine low-risk actions independently.
@@ -200,9 +206,9 @@ source coverage, missing information, required approvals,
 sync status, remaining limitations and acceptance evidence.
 ```
 
-**Access requirement:** This distribution repository is currently **Private**. A user or Agent without access cannot open the source merely by following the URL. A supported read permission or future authorized public release is necessary.
+**Access requirement:** The Agent must actually be able to read the generic repository above. If it is not visible to the current user, legitimate read permission is needed; an Agent must not claim to have inspected inaccessible source. **Making the generic repository public does not expose the user's new Private memory repository.**
 
-Afterward, the owner should review the collected permission requests, proposed redactions, and final report. Users do not have to execute the low-level installation commands in the README. If an Agent lacks a command runner or GitHub write capability, it should report that limitation and continue the safe parts of the work.
+Afterward, the owner should review the collected permission requests, proposed redactions, and final report. Users do not have to execute the low-level installation commands in the README. If an Agent lacks a command runner or GitHub write capability, it should report that limitation and continue the safe parts of the work. **The Private Git repository is not a full Vault backup**; preserving raw sessions and original files requires a separate, protected Vault backup.
 
 [Agent setup guide](../agent-onboarding.md) · [Installation details](../workspace.md)
 
@@ -224,7 +230,7 @@ Afterward, the owner should review the collected permission requests, proposed r
 
 **Not a generic delivered feature:** Universal access to hidden AI memories or every provider's conversations and attachments, unapproved background collection, or full raw-health-device ingestion from the private instance.
 
-The source distribution remains Private with no official public Release. Mocked GitHub workflows do not establish live-account acceptance.
+The generic project has no official Release; its current visibility is shown on GitHub. Publishing the generic project does not change the user's Private repository visibility. Mocked GitHub workflows do not establish live-account acceptance.
 
 ## VIII. Documentation and direction
 
