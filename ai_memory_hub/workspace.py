@@ -243,7 +243,7 @@ def bound_workspace(path, *, expected_vault=None, expected_level=None):
             or not Path(binding["vault"]).is_absolute() or type(binding["demo"]) is not bool):
         raise HubError("invalid workspace binding")
     bound_path = Path(os.path.abspath(binding["vault"]))
-    if ((expected_vault is not None and bound_path != Path(expected_vault))
+    if ((expected_vault is not None and bound_path != instance_path(expected_vault))
             or (expected_level is not None and binding["sensitivity"] != expected_level)):
         raise Conflict("request differs from the existing workspace binding")
     vault = instance_path(bound_path)

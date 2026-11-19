@@ -119,6 +119,27 @@ def windows_file_path(fd):
     return Path(buffer.value.removeprefix("\\\\?\\"))
 
 
+def windows_long_path(path):
+    from ctypes import WinDLL, create_unicode_buffer, get_last_error, WinError
+    from ctypes.wintypes import DWORD, LPCWSTR, LPWSTR
+
+    # Check the named components without following a reparse point first.
+    for entry in reversed((path, *path.parents)):
+        if entry.lstat().st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+            raise Denied("source path contains a Windows reparse point")
+    expand = WinDLL("Kernel32", use_last_error=True).GetLongPathNameW
+    expand.argtypes = LPCWSTR, LPWSTR, DWORD
+    expand.restype = DWORD
+    size = expand(str(path), None, 0)
+    if not size:
+        raise WinError(get_last_error())
+    buffer = create_unicode_buffer(size)
+    written = expand(str(path), buffer, size)
+    if not 0 < written < size:
+        raise WinError(get_last_error())
+    return Path(buffer.value.removeprefix("\\\\?\\"))
+
+
 def open_unix_path(path):
     parent = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
     try:
@@ -137,12 +158,13 @@ def open_source(path):
     path = Path(os.path.abspath(path))
     if not path.name:
         raise Denied("source must be an approved regular file")
+    expected = windows_long_path(path) if os.name == "nt" else path
     fd = os.open(path, os.O_RDONLY | os.O_BINARY) if os.name == "nt" else open_unix_path(path)
     with os.fdopen(fd, "rb") as stream:
         info = os.fstat(fd)
         if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
             raise Denied("source must be a regular file with a single filesystem link")
-        if os.name == "nt" and windows_file_path(fd) != path:
+        if os.name == "nt" and windows_file_path(fd) != expected:
             raise Denied("opened source resolves outside its approved path")
         yield stream
 
