@@ -1,24 +1,21 @@
-# README 的章节、语言与能力维护规则
-## 默认语言及信息架构
-根目录 `README.md` 使用**简体中文**，其它八种语言放在 `docs/i18n/`。语言导航必须独立成段，并且所有相对链接可解析。
-主 README 的八章围绕用户完成任务的顺序组织：
-1. 产品定位和适合谁；
-2. Agent 首次使用与授权；
-3. 能力机制和设计理由（尤其是 L0–L3、文件字节、候选治理、逐 Agent 版本确认）；
-4. 工作区、Vault 和 Git 仓库的存放边界；
-5. 可执行的初始化与合成演示；
-6. 同步开关、权限与运维；
-7. 已实现、需要授权和待开发的能力；
-8. 长期目标。
-英文首页遵循相同的八章顺序；其他语言保留实际能力和边界，并引导新用户阅读 `docs/agent-onboarding.md`。
-## Agent 首次部署入口
-[Agent 首次部署指南](agent-onboarding.md)和[中文版本](agent-onboarding.zh-CN.md)记录 `onboarding plan/apply/report`、授权导入、Git 投影及可选的私有仓库命令。平台数据取决于实际获准来源，计划任务需单独部署和验收。
-`AGENTS.md` 必须包含第一次搭建时的入口；所有 Agent 要报告真实工具、来源权限、合成测试结果、Workspace/Vault、可选用户私有 Git 仓库、数据覆盖、待审批与待补信息，以及同步策略与真实运行证据。
-GitHub 远端写入与创建私人仓库必须经过用户批准。生成的 Workspace 默认 `.gitignore` 忽略全部个人内容，不能用 `git add -f .` 回避安全界限；Git 只使用经审核的最小化投影。
-## 产品版本与测试
-- V2.4.0 软件沿用 Vault `2.1` 协议、Workspace `1.0` 格式和离线传输 `2.2`。
-- [初始化](workspace.md)、[能力差异](workspace-parity.md)、[来源适配器](adapters.md)、[会话协议](protocol.md)、[候选治理](../workflows/memory-lifecycle.md)、[Agent 版本确认](../integrations/memory-bootstrap.md)。
-- [人生档案字段注册表](../life-archive/field-registry.json)包括 12 类、52 个二级领域和 134 字段，但无真实个人内容。
-- 健康功能当前仅校验去标识化汇总；原始健康平台自动同步、所有 AI 账户会话自动获取、远端 Git 私有资料全自动推送以及持续生产调度均不是已完成的通用能力。
-执行 `python scripts/check_readme_i18n.py` 核验语言导航、章节、关键能力、L0–L3 和本地链接；Windows/Ubuntu CI 与发布审计还需核实。
-发行清单严格枚举当前文件，历史遗留白名单与当前发布清单分开管理；所有真实个人资料和 Vault 字节都不得加入通用仓库。
+# README 多语言维护与验收约定
+## 默认语言与文档结构
+根目录 `README.md` 使用简体中文；英文与其他七种语言统一位于 `docs/i18n/`。九个入口应保留独立的语言导航段落，所有站内链接必须有效。
+中文与英文主 README 采用以下统一结构：
+1. 项目概述：定位、适用范围、基本原则；
+2. 系统架构与数据组织：产品仓库、个人 Workspace、本地 Vault、可审阅 Private Git 投影；
+3. 核心能力与设计机制：L0–L3、长期记忆治理、12/52/134 人生档案、文件字节与版本、逐 Agent 重读确认；
+4. Agent 首次初始化与资料交付：授权、规划、执行、投影、结果报告；
+5. 安装与使用示例：集中展示 CLI 命令、合成数据、离线交接；
+6. 数据安全与同步机制：权限、五类策略、实际调度/提交/回执；
+7. 实现状态与适用边界：已测试、待实际环境验证、未提供能力；
+8. 技术文档与项目维护：集中索引，避免在多个章节重复放置同一套说明。
+一级标题使用**正式、简洁的书面表达**，不采用疑问式、口语化或营销式标题。每项机制在核心能力章节集中解释，详细命令放到安装示例，安全限制集中说明。
+## Agent 引导与当前能力
+[Agent 首次部署指南](agent-onboarding.md)及[中文版本](agent-onboarding.zh-CN.md)给出 `onboarding plan/apply/report`、实际获准来源导入、受审 Git 投影、Private 远端操作及交付报告的完整参数。`AGENTS.md` 是 Agent 的执行入口。
+V2.4.0 已实现 19 模块初始化、Private Vault 逐项获审投影及模拟 GitHub 远端发布；未实测真实 GitHub 账号发布。软件保留 Vault `2.1`、Workspace `1.0` 和离线交接 `2.2` 协议。
+不得宣称任何 Agent 可以仅凭仓库链接访问其他 AI 平台的全部历史会话或文件。未经单独授权，不安装定时任务、不读取 L3 原文、不将 Vault/附件/敏感内容提交 Git。工作区的 `.gitignore` 默认拒绝追踪全部内容；Git 仅发布经审核的独立投影。
+## 验收与发行
+执行 `python scripts/check_readme_i18n.py` 检查默认中文、九语言链接、八章结构、L0–L3 与操作示例。自动化回归在 Windows/Ubuntu 运行，并审查 ZIP、Bundle、历史秘密与精确文件白名单。
+[初始化](workspace.md) · [来源适配器](adapters.md) · [会话协议](protocol.md) · [字段注册表](../life-archive/field-registry.json) · [功能覆盖](workspace-parity.md) · [版本确认](../integrations/memory-bootstrap.md)
+其它七种语言的扩展说明以现有译文为基础独立维护，V2.4 的新增工作流程应引用 Agent 入门指南；不得删除已验证的语言入口。

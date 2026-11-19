@@ -1,4 +1,4 @@
-"""Validate nine README languages, default Chinese, layout and V2.3 onboarding."""
+"""Validate nine README languages, professional Chinese structure and V2.4 onboarding."""
 from pathlib import Path
 import re
 ROOT = Path(__file__).resolve().parents[1]
@@ -70,14 +70,14 @@ def main():
             failures.append(f"{name}: blank line inside code fence")
         demos = [body for kind, body in blocks if kind == "sh" and all(term in body for term in CORE_DEMO)]
         if len(demos) != 1:
-            failures.append(f"{name}: V2.3 synthetic onboarding missing or duplicated")
+            failures.append(f"{name}: synthetic onboarding missing or duplicated")
         for command in TRANSFER:
             if not any(kind == "sh" and command in body for kind, body in blocks):
                 failures.append(f"{name}: transfer example missing {command}")
-        for token in ("2.3.0", "12", "52", "134", "synced_sha", "detected_sha",
+        for token in ("2.4.0", "12", "52", "134", "synced_sha", "detected_sha",
                       "candidate advance", "version confirm"):
             if token not in content:
-                failures.append(f"{name}: required V2.3 capability missing {token}")
+                failures.append(f"{name}: required capability missing {token}")
         for level in ("L0", "L1", "L2", "L3"):
             if f"| **{level}" not in content:
                 failures.append(f"{name}: missing detailed {level} layer explanation")
@@ -85,14 +85,14 @@ def main():
             failures.append(f"{name}: expected complete project overview")
     chinese = (ROOT / "README.md").read_text(encoding="utf-8")
     chapters = (
-        "一、这是什么？适合谁？",
-        "二、首次使用：让你的 AI 帮你搭建",
-        "三、关键能力：为什么这样设计？",
-        "四、资料分别放在哪里？",
-        "五、安装与快速体验",
-        "六、同步、权限与运行维护",
-        "七、当前已实现什么？还缺什么？",
-        "八、长期目标",
+        "一、项目概述",
+        "二、系统架构与数据组织",
+        "三、核心能力与设计机制",
+        "四、Agent 首次初始化与资料交付",
+        "五、安装与使用示例",
+        "六、数据安全与同步机制",
+        "七、实现状态与适用边界",
+        "八、技术文档与项目维护",
     )
     headings = tuple(re.findall(r"^## (.+)$", chinese, flags=re.M))
     if headings != chapters:
@@ -105,6 +105,8 @@ def main():
             failures.append(f"Missing Agent first-run guide: {new_path}")
     if "为什么不直接保存一堆聊天记录？" in chinese:
         failures.append("Removed sales comparison table reappeared in Chinese README")
+    if any("？" in title or "?" in title for title in headings):
+        failures.append("README.md: conversational/question-style chapter heading")
     if "docs/agent-onboarding.zh-CN.md" not in chinese:
         failures.append("Chinese README must link the Agent first-run protocol")
     agent_entry = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
@@ -113,6 +115,6 @@ def main():
     if failures:
         print("\n".join(failures))
         raise SystemExit(1)
-    print("Validated nine READMEs, standalone language navigation, eight-part Chinese guide, L0-L3 tables, links and V2.3 examples.")
+    print("Validated nine READMEs, language navigation, professional Chinese guide, L0-L3 tables, links and V2.4 examples.")
 if __name__ == "__main__":
     main()
