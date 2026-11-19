@@ -16,10 +16,13 @@ class ProtocolSchemaTests(unittest.TestCase):
         Draft202012Validator.check_schema(schema)
         validator = Draft202012Validator(schema, format_checker=Draft202012Validator.FORMAT_CHECKER)
         fixtures = sorted((root / "examples").glob("*.json"))
-        self.assertEqual(len(fixtures), 6)
+        plan_schema = json.loads((root / "schemas/onboarding.schema.json").read_text(encoding="utf-8"))
+        plan_validator = Draft202012Validator(plan_schema)
+        self.assertEqual(sum(path.name != "onboarding-request.json" for path in fixtures), 6)
         for path in fixtures:
             with self.subTest(example=path.name):
                 value = json.loads(path.read_text(encoding="utf-8"))
-                validator.validate(value)
+                fixture_validator = plan_validator if path.name == "onboarding-request.json" else validator
+                fixture_validator.validate(value)
                 value["unexpected"] = True
-                self.assertFalse(validator.is_valid(value))
+                self.assertFalse(fixture_validator.is_valid(value))

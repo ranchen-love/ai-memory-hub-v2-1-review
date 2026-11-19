@@ -3,9 +3,12 @@
 import hashlib
 import json
 import math
+import os
 import stat
 import re
+from contextlib import contextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from urllib.parse import urlsplit
 
 from . import SCHEMA
@@ -97,10 +100,77 @@ def strict_json(value):
         raise HubError("JSON number is out of range") from exc
 
 
+def windows_file_path(fd):
+    from ctypes import WinDLL, create_unicode_buffer, get_last_error, WinError
+    from ctypes.wintypes import DWORD, HANDLE, LPWSTR
+    from msvcrt import get_osfhandle
+
+    resolve = WinDLL("Kernel32", use_last_error=True).GetFinalPathNameByHandleW
+    resolve.argtypes = HANDLE, LPWSTR, DWORD, DWORD
+    resolve.restype = DWORD
+    handle = get_osfhandle(fd)
+    size = resolve(handle, None, 0, 0)
+    if not size:
+        raise WinError(get_last_error())
+    buffer = create_unicode_buffer(size)
+    written = resolve(handle, buffer, size, 0)
+    if not 0 < written < size:
+        raise WinError(get_last_error())
+    return Path(buffer.value.removeprefix("\\\\?\\"))
+
+
+def windows_long_path(path):
+    from ctypes import WinDLL, create_unicode_buffer, get_last_error, WinError
+    from ctypes.wintypes import DWORD, LPCWSTR, LPWSTR
+
+    # Check the named components without following a reparse point first.
+    for entry in reversed((path, *path.parents)):
+        if entry.lstat().st_file_attributes & stat.FILE_ATTRIBUTE_REPARSE_POINT:
+            raise Denied("source path contains a Windows reparse point")
+    expand = WinDLL("Kernel32", use_last_error=True).GetLongPathNameW
+    expand.argtypes = LPCWSTR, LPWSTR, DWORD
+    expand.restype = DWORD
+    size = expand(str(path), None, 0)
+    if not size:
+        raise WinError(get_last_error())
+    buffer = create_unicode_buffer(size)
+    written = expand(str(path), buffer, size)
+    if not 0 < written < size:
+        raise WinError(get_last_error())
+    return Path(buffer.value.removeprefix("\\\\?\\"))
+
+
+def open_unix_path(path):
+    parent = os.open(path.anchor, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        for name in path.parts[1:-1]:
+            child = os.open(name, os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW, dir_fd=parent)
+            os.close(parent)
+            parent = child
+        return os.open(path.name, os.O_RDONLY | os.O_NONBLOCK | os.O_NOFOLLOW, dir_fd=parent)
+    finally:
+        os.close(parent)
+
+
+@contextmanager
+def open_source(path):
+    """Verify the opened object before consuming bytes from an approved path."""
+    path = Path(os.path.abspath(path))
+    if not path.name:
+        raise Denied("source must be an approved regular file")
+    expected = windows_long_path(path) if os.name == "nt" else path
+    fd = os.open(path, os.O_RDONLY | os.O_BINARY) if os.name == "nt" else open_unix_path(path)
+    with os.fdopen(fd, "rb") as stream:
+        info = os.fstat(fd)
+        if not stat.S_ISREG(info.st_mode) or info.st_nlink != 1:
+            raise Denied("source must be a regular file with a single filesystem link")
+        if os.name == "nt" and windows_file_path(fd) != expected:
+            raise Denied("opened source resolves outside its approved path")
+        yield stream
+
+
 def read_json(path):
-    if not stat.S_ISREG(path.stat().st_mode):
-        raise HubError("JSON input must be a regular file")
-    with path.open("rb") as stream:
+    with open_source(path) as stream:
         data = stream.read(128 * 1024 * 1024 + 1)
     if len(data) > 128 * 1024 * 1024:
         raise HubError("JSON input exceeds 128 MiB")

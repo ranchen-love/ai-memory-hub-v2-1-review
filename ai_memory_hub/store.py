@@ -39,6 +39,9 @@ $path = $env:AI_MEMORY_HUB_ACL_PATH
 $sid = [Security.Principal.WindowsIdentity]::GetCurrent().User
 $acl = Get-Acl -LiteralPath $path
 if ($env:AI_MEMORY_HUB_ACL_CREATE -eq '1') {
+    if ($env:AI_MEMORY_HUB_ACL_RECOVER_EMPTY -eq '1' -and
+        ($acl.GetOwner([Security.Principal.SecurityIdentifier]) -ne $sid -or
+         @([IO.Directory]::EnumerateFileSystemEntries($path)).Count -ne 0)) { exit 1 }
     $acl.SetAccessRuleProtection($true, $false)
     foreach ($rule in $acl.GetAccessRules($true,$false,[Security.Principal.SecurityIdentifier])) {
         $acl.RemoveAccessRuleSpecific($rule)
@@ -47,7 +50,7 @@ if ($env:AI_MEMORY_HUB_ACL_CREATE -eq '1') {
     $rule = [Security.AccessControl.FileSystemAccessRule]::new(
         $sid, 'FullControl', 'ContainerInherit,ObjectInherit', 'None', 'Allow')
     $acl.AddAccessRule($rule)
-    Set-Acl -LiteralPath $path -AclObject $acl
+    [IO.Directory]::SetAccessControl($path, $acl)
     $acl = Get-Acl -LiteralPath $path
 }
 $rules = $acl.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier])
@@ -91,12 +94,13 @@ Test-VaultChildren $path
 """
 
 
-def protect_root(path, create=False):
+def protect_root(path, create=False, *, recover_empty=False):
     if os.name == "nt":
         encoded = base64.b64encode(WINDOWS_ACL.encode("utf-16-le")).decode("ascii")
         system_root = Path(os.environ.get("SystemRoot", r"C:\Windows"))
         shell = system_root / "System32" / "WindowsPowerShell" / "v1.0" / "powershell.exe"
-        env = {**os.environ, "AI_MEMORY_HUB_ACL_PATH": str(path), "AI_MEMORY_HUB_ACL_CREATE": str(int(create))}
+        env = {**os.environ, "AI_MEMORY_HUB_ACL_PATH": str(path), "AI_MEMORY_HUB_ACL_CREATE": str(int(create)),
+               "AI_MEMORY_HUB_ACL_RECOVER_EMPTY": str(int(recover_empty))}
         env.pop("PSMODULEPATH", None)
         try:
             run = subprocess.run(
@@ -138,7 +142,7 @@ def checked_relative(root, filename):
         path = path / part
         if reparse(path):
             raise Denied("symbolic links and reparse points are outside the source grant")
-    if not path.resolve().is_relative_to(root):
+    if not path.resolve().is_relative_to(root.resolve()):
         raise Denied("source path escapes its authorized directory")
     return path
 
@@ -181,7 +185,7 @@ def record(row):
 
 
 class Store:
-    def __init__(self, root, initialize=None, switches=None, *, require_fresh=False):
+    def __init__(self, root, initialize=None, switches=None, *, require_fresh=False, initial_entries=()):
         self.root = instance_path(root)
         if initialize is not None:
             one_of(initialize, LEVELS)
@@ -203,7 +207,8 @@ class Store:
             raise Denied("instance database cannot be a symbolic link")
         if initialize is None and not self.path.is_file():
             raise Missing("instance database does not exist; run init")
-        if initialize is not None and not self.path.exists() and any(self.root.iterdir()):
+        if (initialize is not None and not self.path.exists()
+                and any(item.name not in initial_entries for item in self.root.iterdir())):
             raise Denied("initialization requires an empty directory")
         try:
             with self.transaction(write=initialize is not None, create=initialize is not None) as db:
@@ -265,7 +270,7 @@ class Store:
                 db.execute("UPDATE settings SET value=? WHERE key='switches'", (canonical(switches),))
         return {
             "schema_version": SCHEMA, "core_version": VERSION, "sensitivity": self.level,
-            "switches": switches, "weekly_preference": {"day": "SU", "time": "23:00", "timezone": "Asia/Shanghai"},
+            "switches": switches, "weekly_preference": None,
             "scheduler": "not_verified",
         }
 

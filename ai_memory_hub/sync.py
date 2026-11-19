@@ -38,8 +38,8 @@ def failure(exc, source_id, item=None, kind=None):
 
 
 @contextmanager
-def batch_lock(root):
-    path = root / "sync.lock"
+def batch_lock(root, filename="sync.lock"):
+    path = root / filename
     if os.path.lexists(path) and reparse(path):
         raise Denied("sync lock must stay inside the instance boundary")
     with path.open("a+b") as handle:
@@ -110,7 +110,22 @@ def run_item(store, db, blobs, grant, base, item, event=None):
         ).fetchone()
         if not event and previous and previous["digest"] == key:
             kind = "asset" if item.kind == "link" else record["kind"]
-            return {"status": "unchanged", "kind": kind}
+            entry_id = managed_asset(grant, item)[0] if kind == "asset" else record["id"]
+            if kind == "asset":
+                source = item_source(grant, item)
+                expected = {"storage": "external", "address": opts["url"], "name": opts["name"],
+                            "project_id": opts.get("project_id"), "session_id": opts.get("session_id"),
+                            "expires_at": iso_date(opts["expires_at"]) if opts.get("expires_at") else None}
+                versions = reversed(store.history(db, kind, entry_id))
+                edition = next((entry["revision"] for entry in versions if entry["source"] == source
+                                and all(entry["data"].get(key) == val for key, val in expected.items())), None)
+            else:
+                row = db.execute(
+                    "SELECT revision FROM revisions WHERE kind=? AND id=? AND fingerprint=? ORDER BY revision DESC LIMIT 1",
+                    (kind, entry_id, document_digest(record)),
+                ).fetchone()
+                edition = row["revision"] if row else None
+            return {"status": "unchanged", "kind": kind, "id": entry_id, "revision": edition}
         if item.kind == "link":
             asset_id, owner = managed_asset(grant, item)
             result = put_link(
@@ -157,7 +172,8 @@ def already_event(db, event, payload_digest):
     return old is not None
 
 
-def run_batch(store, blobs, feature, source_id=None, governance=None, archive_only=False):
+def run_batch(store, blobs, feature, source_id=None, governance=None, archive_only=False, *,
+              trace_items=False, expected_grant=None):
     one_of(feature, ("full", "daily", "weekly"))
     with store.transaction() as db:
         store.require(db, feature)
@@ -170,6 +186,8 @@ def run_batch(store, blobs, feature, source_id=None, governance=None, archive_on
                 sources = [source for source in sources if source["id"] == ident(source_id)]
                 if not sources:
                     raise Denied("source has no active grant")
+                if expected_grant is not None and sources[0]["grant_id"] != expected_grant:
+                    raise Denied("source grant changed before the approved archive started")
             db.execute("INSERT INTO runs VALUES (?,?,?,NULL,'started',NULL)", (run_id, feature, now()))
         report = {
             "run_id": run_id, "feature": feature, "scope": "granted_local_sources", "sources": [],
@@ -178,6 +196,8 @@ def run_batch(store, blobs, feature, source_id=None, governance=None, archive_on
                           "entrypoint": "local_archive" if archive_only else "sync",
                           "scheduler": "not_verified"},
         }
+        if trace_items:
+            report["records"] = []
         items_by_kind = dict.fromkeys(("session", "project", "memory", "asset"), 0)
         for grant in sources:
             totals = {"source_id": grant["id"], "grant_id": grant["grant_id"],
@@ -200,9 +220,21 @@ def run_batch(store, blobs, feature, source_id=None, governance=None, archive_on
                             except StopIteration:
                                 break
                             result = run_item(store, db, blobs, grant, base, item)
+                            if trace_items:
+                                row = db.execute(
+                                    """SELECT json_extract(content, '$.source.observed_at') AS observed_at
+                                    FROM revisions WHERE kind=? AND id=? AND revision=?""",
+                                    (result["kind"], result.get("id"), result.get("revision")),
+                                ).fetchone()
                         totals[result["status"]] += 1
                         report[result["status"]] += 1
                         items_by_kind[result["kind"]] += 1
+                        if trace_items:
+                            report["records"].append({
+                                "source_id": grant["id"], "item": item.key,
+                                "observed_at": row["observed_at"] if row else None,
+                                **{key: result.get(key) for key in ("status", "kind", "id", "revision")},
+                            })
                     except RECOVERABLE as exc:
                         if item is None:
                             raise
@@ -299,7 +331,7 @@ def dispatch(store, blobs, source_id, event_path):
     return {"event_id": event["id"], **result}
 
 
-def status(store):
+def status(store, *, probe_sources=True):
     with store.transaction() as db:
         sources = list_sources(db)
         events = db.execute("SELECT count(*) FROM events").fetchone()[0]
@@ -338,7 +370,10 @@ def status(store):
     return {
         "settings": store.settings(),
         "execution": {"runtime": "local_cli", "vault": "opened", "scheduler": "not_verified"},
-        "sources": [{**describe(source), "last_scan": covered.get(source["id"], "not_run"),
+        "sources": [{**(describe(source) if probe_sources else {
+                         "id": source["id"], "adapter": source["adapter"], "state": "not_checked",
+                         "authorization": "granted", "raw_grant": bool(source["allow_raw"]),
+                     }), "last_scan": covered.get(source["id"], "not_run"),
                      "last_archive_success": source_success.get(source["id"])} for source in sources],
         "latest_runs": recent, "last_success": last_success, "pending": pending,
         "last_archive_success": last_archive, "last_governance_success": last_governance,

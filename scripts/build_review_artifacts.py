@@ -47,6 +47,10 @@ ALLOWED = {
     "ai_memory_hub/candidates.py", "ai_memory_hub/shared_version.py",
     "life-archive/field-registry.json", "schemas/life-fields.schema.json", "schemas/shared-memory.schema.json",
     "tests/test_candidate_lifecycle.py", "tests/test_life_registry.py", "tests/test_shared_version.py",
+    "ai_memory_hub/github_publish.py", "ai_memory_hub/onboarding.py", "ai_memory_hub/projection.py",
+    "ai_memory_hub/projection_review.py",
+    "examples/onboarding-request.json", "schemas/onboarding.schema.json", "scripts/smoke_v24.py",
+    "tests/test_github_publish.py", "tests/test_onboarding.py", "tests/test_projection.py",
 }
 LEGACY_ALLOWED = {
     "docs/i18n/README.zh-CN.md",

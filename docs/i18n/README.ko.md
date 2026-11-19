@@ -6,9 +6,11 @@
 
 **처음 사용하는 경우:** [Agent 초기 설정 안내](../agent-onboarding.md)를 참고하세요. 로컬 Workspace와 Vault는 초기화할 수 있지만, 개인 GitHub 저장소 생성, 실제 대화·파일 읽기, 원격 업로드와 정기 실행에는 해당 도구와 별도 승인이 필요합니다.
 
+**V2.4.0:** [초기 설정 안내](../agent-onboarding.md)에 `onboarding plan`, `apply`, `report`의 실행 절차가 있습니다. 아래 로컬 엔진 예제는 V2.3.0에 기반합니다.
+
 > **대화 맥락도, 파일도, 통제권도 사용자에게.** 로컬 우선·플랫폼 중립 방식으로 장기 기억, 프로젝트 이어 하기, AI 에이전트 간 승인된 인계를 지원하는 기반입니다.
 
-**버전 2.3.0 · Python 3.11 이상 · MIT 라이선스 · CLI**
+**버전 2.4.0 · Python 3.11 이상 · MIT 라이선스 · CLI**
 
 대화 기록만으로는 장기 프로젝트를 안정적으로 이어가기 어렵습니다. 중요한 결정은 긴 대화 속에 묻히고 첨부 파일이나 AI 결과물은 생성 당시의 맥락에서 분리됩니다. 다른 AI로 옮기면 설명부터 다시 해야 하죠. **AI Memory Hub**는 명시적으로 허용한 대화 맥락, 증거, 프로젝트 상태, 실제 파일 바이트를 특정 AI 서비스와 독립된 로컬 Vault에 저장합니다.
 
@@ -60,7 +62,7 @@ ai-memory-hub --root ../workspace-demo-v23-vault local status
 ### Agent 간 버전 확인과 기억 관리
 
 명시적으로 승인한 기억만 로컬 스냅샷으로 전달합니다. 수신측의 `version check`는 변경을 감지하고, `version reload`는 변경 범위와 일회용 확인표를 반환하며, `version confirm` 이후에만 `synced_sha`가 갱신됩니다. **`detected_sha`는 동기화 완료를 뜻하지 않습니다.** 읽을 수 없으면 `unknown`을 표시합니다. 확인표는 Agent의 이해를 증명하지 않으며 전체 AI 서비스 자동 연결을 의미하지 않습니다. [접속 및 버전 안내](../../integrations/memory-bootstrap.md)를 참고하세요.
-`candidate suggest`, `candidate advance`, `candidate history`로 후보를 검토하고 명시적 승인 후 활성화합니다. [기억 수명 주기](../../workflows/memory-lifecycle.md)를 참고하세요. 건강 확장은 **비식별 집계 검증만** 지원하며 원시 건강 데이터 동기화는 지원하지 않습니다. 제품은 **2.3.0**, 기존 Vault 기록 스키마는 **2.1**, 새 작업 공간 형식은 **1.0**입니다.
+`candidate suggest`, `candidate advance`, `candidate history`로 후보를 검토하고 명시적 승인 후 활성화합니다. [기억 수명 주기](../../workflows/memory-lifecycle.md)를 참고하세요. 건강 확장은 **비식별 집계 검증만** 지원하며 원시 건강 데이터 동기화는 지원하지 않습니다. 제품은 **2.4.0**, 기존 Vault 기록 스키마는 **2.1**, 새 작업 공간 형식은 **1.0**입니다.
 
 ### L0–L3: 필요한 깊이까지만 대화 읽기
 
@@ -151,11 +153,11 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 ## 보안, 한계와 버전
 
 Vault에는 애플리케이션 자체 암호화가 없으며 OS 권한과 디스크 암호화 및 백업을 별도로 관리해야 합니다. 소스 권한 취소는 미래의 읽기를 중지하지만 기존 기록을 자동 삭제하지는 않습니다. 오프라인 ZIP도 암호화되지 않으므로 승인된 수신자와 안전한 전달 채널이 필요합니다. 외부 링크는 참조일 뿐, 실제 바이트 저장을 뜻하지 않습니다.
-프로그램 버전 2.3.0은 기존 기록 스키마 `2.1`과 호환되며 오프라인 전송에 별도의 2.2 형식을 사용합니다. 업그레이드 전에는 백업하고 복원한 사본에서 테스트하세요.
+프로그램 버전 2.4.0은 기존 기록 스키마 `2.1`과 호환되며 오프라인 전송에 별도의 2.2 형식을 사용합니다. 업그레이드 전에는 백업하고 복원한 사본에서 테스트하세요.
 
 ## 문서와 기여
 
 [배포·복구·전송](../deployment.md) · [사용자 안내](../guide.md) · [소스 어댑터](../adapters.md) · [프로토콜](../protocol.md) · [보안](../../SECURITY.md) · [MIT 라이선스](../../LICENSE)
 개발과 버그 제보에는 합성 자료만 사용하고 개인 내보내기나 파일을 커밋하지 마세요. 테스트 명령: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py`, `python scripts/smoke_v22.py`.
 
-**배포 상태:** 핵심 코드는 합성 데이터로 검증되었지만 저장소의 공개 전환과 공식 2.3.0 GitHub Release는 별도 단계입니다.
+**배포 상태:** 핵심 코드는 합성 데이터로 검증되었지만 저장소의 공개 전환과 공식 2.4.0 GitHub Release는 별도 단계입니다.

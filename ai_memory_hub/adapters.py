@@ -10,7 +10,7 @@ from typing import Iterator, Protocol
 from uuid import NAMESPACE_URL, uuid4, uuid5
 
 from . import SCHEMA
-from .model import Denied, HubError, Missing, ident, now, one_of, read_json, seq, shape, strict_json, text
+from .model import Denied, HubError, Missing, ident, now, one_of, open_source, read_json, seq, shape, strict_json, text
 from .store import checked_relative, reparse, require_local_path
 
 
@@ -131,7 +131,7 @@ def chatgpt_conversations(path):
         yield from ((counts, entry) for entry in entries)
         return
     try:
-        with zipfile.ZipFile(path) as archive:
+        with open_source(path) as stream, zipfile.ZipFile(stream) as archive:
             shards = [member for member in archive.infolist() if CHATGPT_SHARD.fullmatch(member.filename)]
             if not shards:
                 raise HubError("no supported conversation JSON at the ZIP root; select an extracted JSON file")
@@ -218,7 +218,7 @@ ADAPTERS = {
 }
 
 
-def grant(store, source_id, adapter, path, allow_raw):
+def grant(store, source_id, adapter, path, allow_raw, *, capture_id=False):
     ident(source_id)
     one_of(adapter, ADAPTERS)
     if allow_raw and store.level not in ("private", "restricted"):
@@ -235,12 +235,14 @@ def grant(store, source_id, adapter, path, allow_raw):
         old = db.execute("SELECT * FROM sources WHERE id=?", (source_id,)).fetchone()
         if old and (old["adapter"], old["path"], old["allow_raw"]) != (adapter, str(path), int(allow_raw)):
             raise Denied("revoke the existing source grant before changing its scope")
+        grant_id = old["grant_id"] if old else uuid4().hex
         if not old:
             db.execute(
                 "INSERT INTO sources VALUES (?,?,?,?,?,?)",
-                (source_id, adapter, str(path), int(allow_raw), uuid4().hex, now()),
+                (source_id, adapter, str(path), int(allow_raw), grant_id, now()),
             )
-    return {"status": "unchanged" if old else "granted", "source_id": source_id, "adapter": adapter}
+    info = {"status": "unchanged" if old else "granted", "source_id": source_id, "adapter": adapter}
+    return {**info, "grant_id": grant_id} if capture_id else info
 
 
 def revoke(store, source_id):
@@ -261,7 +263,7 @@ def describe(source):
             path = checked_relative(path, MANIFEST)
         if not path.is_file():
             raise Missing("source file is missing or invalid")
-        with path.open("rb"):
+        with open_source(path):
             pass
         status = "readable"
     except (PermissionError, Denied):

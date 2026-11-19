@@ -6,9 +6,11 @@
 
 **Vous débutez ?** Suivez le [guide d’installation assistée par Agent](../agent-onboarding.md). L’initialisation du Workspace et du Vault est prise en charge ; créer votre dépôt privé, consulter des conversations ou fichiers réels, publier sur Git et planifier des tâches exigent des outils disponibles et des autorisations distinctes.
 
+**V2.4.0 :** le [guide d’installation](../agent-onboarding.md) explique comment exécuter `onboarding plan`, `apply` et `report`. Les exemples du moteur local s’appuient sur V2.3.0.
+
 > **Votre contexte, vos fichiers, votre contrôle.** Une infrastructure locale et indépendante des plateformes pour la mémoire à long terme, la continuité des projets et la transmission autorisée entre agents IA.
 
-**Version 2.3.0 · Python 3.11+ · Licence MIT · Interface en ligne de commande (CLI)**
+**Version 2.4.0 · Python 3.11+ · Licence MIT · Interface en ligne de commande (CLI)**
 
 Un historique de conversation ne constitue pas à lui seul une mémoire fiable. Les décisions se perdent dans les échanges, les pièces jointes se détachent de leur contexte et changer d’assistant impose de tout réexpliquer. **AI Memory Hub** conserve les informations **explicitement autorisées**, leur provenance, l’état des projets et les octets réels des fichiers sélectionnés dans un Vault local, indépendant des fournisseurs d’IA.
 
@@ -60,7 +62,7 @@ Les candidats ne deviennent jamais automatiquement des faits acceptés. Consulte
 ### Versions partagées et validation des souvenirs
 
 Les souvenirs explicitement sélectionnés et approuvés peuvent former une instantanée locale. Dans le Vault récepteur, `version check` détecte une modification, `version reload` renvoie les domaines modifiés avec un reçu unique, et `version confirm` ne met à jour `synced_sha` **qu’après confirmation**. `detected_sha` ne veut pas dire synchronisé ; une source indisponible renvoie `unknown`. Le reçu ne prouve pas la compréhension d’un agent et ne connecte pas automatiquement tous les services d’IA. Voir [connexion et versions](../../integrations/memory-bootstrap.md).
-`candidate suggest`, `candidate advance` et `candidate history` permettent d’examiner, d’approuver et de tracer les propositions avec consentement. Voir [le cycle de mémoire](../../workflows/memory-lifecycle.md). L’extension santé **vérifie seulement des agrégats désidentifiés** et non les données brutes des appareils. Version **2.3.0**, schéma Vault existant **2.1**, format d’espace **1.0**.
+`candidate suggest`, `candidate advance` et `candidate history` permettent d’examiner, d’approuver et de tracer les propositions avec consentement. Voir [le cycle de mémoire](../../workflows/memory-lifecycle.md). L’extension santé **vérifie seulement des agrégats désidentifiés** et non les données brutes des appareils. Version **2.4.0**, schéma Vault existant **2.1**, format d’espace **1.0**.
 
 ### L0–L3 : lire une conversation à la profondeur nécessaire
 
@@ -150,11 +152,11 @@ Modifiez-les avec `config set FEATURE on|off`. `local run --source ID` utilise `
 ## Confidentialité, limites et compatibilité
 
 Le Vault n’est pas chiffré par l’application : configurez droits OS, chiffrement du disque et sauvegardes. Retirer une autorisation empêche les lectures futures, sans effacer automatiquement les révisions déjà conservées. Les archives ZIP de transfert ne sont pas chiffrées et nécessitent un destinataire et un canal approuvés. Une URL externe reste une référence tant que les octets ne sont pas stockés.
-La version logicielle est 2.3.0, avec compatibilité du schéma des enregistrements `2.1` et une enveloppe de transfert 2.2. Sauvegardez le Vault et testez toute mise à jour sur une copie restaurée.
+La version logicielle est 2.4.0, avec compatibilité du schéma des enregistrements `2.1` et une enveloppe de transfert 2.2. Sauvegardez le Vault et testez toute mise à jour sur une copie restaurée.
 
 ## Documentation et contribution
 
 [Déploiement et récupération](../deployment.md) · [Guide complet](../guide.md) · [Adaptateurs](../adapters.md) · [Protocole](../protocol.md) · [Sécurité](../../SECURITY.md) · [Licence MIT](../../LICENSE)
 Pour contribuer, utilisez des données fictives et ne publiez jamais d’exports personnels. Vérifications : `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` et `python scripts/smoke_v22.py`.
 
-**Publication :** le noyau V2.3 a été implémenté et validé avec des données synthétiques. La mise en public du dépôt et la création d’une Release officielle 2.3.0 restent deux opérations distinctes.
+**Publication :** le noyau V2.3 a été implémenté et validé avec des données synthétiques. La mise en public du dépôt et la création d’une Release officielle 2.4.0 restent deux opérations distinctes.

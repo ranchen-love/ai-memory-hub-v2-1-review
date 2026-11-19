@@ -6,9 +6,11 @@
 
 **Primeiro acesso?** Leia o [guia de configuração com ajuda de um Agent](../agent-onboarding.md). É possível inicializar Workspace e Vault locais, mas criar um repositório privado, ler conversas e arquivos reais, publicar no Git ou ativar tarefas agendadas depende de ferramentas disponíveis e autorizações específicas.
 
+**V2.4.0:** o [guia de configuração](../agent-onboarding.md) explica como executar `onboarding plan`, `apply` e `report`. Os exemplos do mecanismo local têm como base a V2.3.0.
+
 > **Seu contexto. Seus arquivos. Seu controle.** Uma base local e independente de plataformas para memória de longo prazo, continuidade de projetos e transferência autorizada entre agentes de IA.
 
-**Versão 2.3.0 · Python 3.11+ · Licença MIT · Interface de linha de comando (CLI)**
+**Versão 2.4.0 · Python 3.11+ · Licença MIT · Interface de linha de comando (CLI)**
 
 Um histórico de conversa não é necessariamente uma memória confiável. Decisões importantes se perdem em diálogos longos; anexos e arquivos gerados deixam de estar ligados ao contexto; mudar de assistente pode exigir repetir tudo. O **AI Memory Hub** mantém contexto autorizado, evidências, estado dos projetos e **bytes reais de arquivos** em um Vault local, sem depender da memória interna de um único serviço de IA.
 
@@ -60,7 +62,7 @@ Candidatos não viram fatos aceitos automaticamente. Consulte [inicialização](
 ### Versões compartilhadas e gestão de candidatos
 
 Memórias escolhidas e aprovadas podem ser exportadas em snapshot local. No Vault receptor, `version check` detecta mudanças, `version reload` devolve os escopos alterados com recibo único, e `version confirm` atualiza `synced_sha` **somente após confirmação explícita**. `detected_sha` não significa sincronizado; origem indisponível retorna `unknown`. O recibo não comprova que o Agent compreendeu o conteúdo, nem conecta todos os serviços de IA automaticamente. Veja [integração e versão](../../integrations/memory-bootstrap.md).
-`candidate suggest`, `candidate advance` e `candidate history` oferecem revisão, decisão e histórico com autorização. Veja [ciclo da memória](../../workflows/memory-lifecycle.md). O módulo de saúde **apenas valida agregados desidentificados**, não sincroniza dados brutos. Software **2.3.0**, esquema Vault **2.1**, formato de espaço pessoal **1.0**.
+`candidate suggest`, `candidate advance` e `candidate history` oferecem revisão, decisão e histórico com autorização. Veja [ciclo da memória](../../workflows/memory-lifecycle.md). O módulo de saúde **apenas valida agregados desidentificados**, não sincroniza dados brutos. Software **2.4.0**, esquema Vault **2.1**, formato de espaço pessoal **1.0**.
 
 ### L0–L3: leia somente a profundidade necessária
 
@@ -150,11 +152,11 @@ Altere com `config set FEATURE on|off`. `local run --source ID` usa `full` por p
 ## Privacidade, limites e compatibilidade
 
 O aplicativo não criptografa o Vault internamente: configure permissões do sistema, criptografia de disco e backups. Revogar uma fonte interrompe leituras futuras, mas não elimina automaticamente revisões já armazenadas. Pacotes ZIP offline não são criptografados: escolha um destinatário e um canal aprovados. Um URL externo é apenas uma referência até os bytes estarem efetivamente armazenados.
-O software é V2.3.0 e mantém compatibilidade com o esquema de registros `2.1`; o envelope de transferência offline é 2.2. Faça backup e teste atualizações em uma cópia restaurada antes da mudança definitiva.
+O software é V2.4.0 e mantém compatibilidade com o esquema de registros `2.1`; o envelope de transferência offline é 2.2. Faça backup e teste atualizações em uma cópia restaurada antes da mudança definitiva.
 
 ## Documentação e contribuições
 
 [Implantação, recuperação e transferência](../deployment.md) · [Guia completo](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Segurança](../../SECURITY.md) · [Licença MIT](../../LICENSE)
 Use somente dados sintéticos em contribuições, nunca exportações privadas. Testes: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` e `python scripts/smoke_v22.py`.
 
-**Situação do lançamento:** o núcleo V2.3 já foi implementado e validado sinteticamente. Tornar o repositório público e criar uma Release oficial 2.3.0 são etapas separadas.
+**Situação do lançamento:** o núcleo V2.3 já foi implementado e validado sinteticamente. Tornar o repositório público e criar uma Release oficial 2.4.0 são etapas separadas.

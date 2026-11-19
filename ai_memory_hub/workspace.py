@@ -2,12 +2,14 @@
 
 import os
 from pathlib import Path, PurePosixPath
+from tempfile import NamedTemporaryFile
 from uuid import uuid4
 
 from . import SCHEMA, VERSION
 from .life import REGISTRY, archive_coverage, field_registry, validate_registry
-from .model import LEVELS, Conflict, Denied, HubError, canonical, one_of, read_json, seq, shape
+from .model import LEVELS, Conflict, Denied, HubError, Missing, canonical, digest, one_of, read_json, seq, shape
 from .store import Store, checked_relative, instance_path, protect_root, reparse
+from .sync import batch_lock
 
 WORKSPACE_FORMAT = "1.0"
 TEMPLATE_MAP = Path(__file__).with_name("workspace-files.json")
@@ -15,6 +17,8 @@ CONFIG = "config/workspace.json"
 IGNORE_TEMPLATE = "config/workspace.gitignore"
 PROFILE = "life-archive/profile.json"
 TIMELINE = "life-archive/timeline.json"
+BOOTSTRAP_PREFIX = ".onboarding-init-"
+BOOTSTRAP_LOCK = ".onboarding.lock"
 
 
 def get_templates():
@@ -50,6 +54,20 @@ def write_exclusive(path, contents):
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("xb") as file:
         file.write(contents)
+
+
+def write_atomic(path, contents):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with NamedTemporaryFile(dir=path.parent, prefix=".hub-tmp-", delete=False) as output:
+        temporary = Path(output.name)
+        try:
+            output.write(contents)
+            output.flush()
+            os.fsync(output.fileno())
+            output.close()
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
 
 
 def reserve(path, owned):
@@ -125,7 +143,96 @@ def init_workspace(path, vault_path=None, sensitivity="private", demo=False):
             "switches": store.settings()["switches"], "scheduler": "not_verified"}
 
 
-def bound_workspace(path):
+def bootstrap_root(root):
+    try:
+        root.mkdir(mode=0o700)
+    except FileExistsError:
+        try:
+            protect_root(root)
+        except Denied:
+            if os.name != "nt":
+                raise
+            # Recover an approved empty directory interrupted before Windows applied its ACL.
+            protect_root(root, create=True, recover_empty=True)
+    else:
+        protect_root(root, create=True)
+
+
+def bootstrap_target(root, target):
+    *parents, name = target.split("/")
+    for parent in parents:
+        root = root / parent
+        root.mkdir(exist_ok=True)
+        if reparse(root) or not root.is_dir():
+            raise Denied("template paths must stay in the workspace")
+    return root / name
+
+
+def claim_bootstrap(root, marker, allowed=()):
+    marker_path = root / marker
+    if os.path.lexists(marker_path):
+        if reparse(marker_path) or not marker_path.is_dir() or any(marker_path.iterdir()):
+            raise Conflict("bootstrap directory belongs to a different workspace or Vault")
+        return
+    if any(item.name not in allowed for item in root.iterdir()):
+        raise Conflict("bootstrap will not adopt a nonempty unbound directory")
+    marker_path.mkdir()
+
+
+def checked_bootstrap_binding(root, vault, sensitivity):
+    return bound_workspace(root, expected_vault=vault, expected_level=sensitivity)
+
+
+def bootstrap_workspace(path, vault_path, sensitivity):
+    """Resume a V2.4 initialization without overwriting prior workspace data."""
+    root, vault = instance_path(path), instance_path(vault_path)
+    private_pair(root, vault)
+    one_of(sensitivity, LEVELS)
+    if any(not target.parent.is_dir() or not target.name for target in (root, vault)):
+        raise Missing("workspace and Vault parent directories must already exist")
+    fingerprint = digest({"workspace": str(root), "vault": str(vault), "sensitivity": sensitivity})
+    marker = BOOTSTRAP_PREFIX + fingerprint
+    identity = fingerprint[:32]
+    if os.path.lexists(root / CONFIG):
+        return checked_bootstrap_binding(root, vault, sensitivity)
+    bootstrap_root(root)
+    if not any(os.path.lexists(root / name) for name in (CONFIG, marker)):
+        if any(item.name != BOOTSTRAP_LOCK for item in root.iterdir()):
+            raise Conflict("bootstrap will not adopt a nonempty unbound workspace")
+    with batch_lock(root, filename=BOOTSTRAP_LOCK):
+        if os.path.lexists(root / CONFIG):
+            return checked_bootstrap_binding(root, vault, sensitivity)
+        claim_bootstrap(root, marker, allowed=(BOOTSTRAP_LOCK,))
+        bootstrap_root(vault)
+        if not os.path.lexists(vault / marker) and any(item.name != BOOTSTRAP_LOCK for item in vault.iterdir()):
+            raise Conflict("bootstrap will not adopt a nonempty unbound Vault")
+        with batch_lock(vault, filename=BOOTSTRAP_LOCK):
+            claim_bootstrap(vault, marker, allowed=(BOOTSTRAP_LOCK,))
+            store = Store(vault, initialize=sensitivity, initial_entries=(marker, BOOTSTRAP_LOCK))
+            with store.transaction(write=True) as db:
+                row = db.execute("SELECT value FROM settings WHERE key='workspace_identity'").fetchone()
+                if row is not None and row["value"] != canonical(identity):
+                    raise Conflict("bootstrap Vault identity does not match the request")
+                if row is None:
+                    db.execute("INSERT INTO settings VALUES (?,?)", ("workspace_identity", canonical(identity)))
+        source = template_root()
+        for relative in get_templates()["files"]:
+            if relative == CONFIG:
+                raise HubError("the template map must exclude local binding")
+            target = ".gitignore" if relative == IGNORE_TEMPLATE else relative
+            contents = checked_relative(source, relative).read_bytes()
+            if os.path.lexists(root / target):
+                if checked_relative(root, target).read_bytes() != contents:
+                    raise Conflict("an interrupted workspace contains a different template file")
+            else:
+                write_atomic(bootstrap_target(root, target), contents)
+        binding = {"format": WORKSPACE_FORMAT, "template_version": VERSION, "sensitivity": sensitivity,
+                   "vault": str(vault), "vault_identity": identity, "demo": False}
+        write_atomic(root / CONFIG, (canonical(binding) + "\n").encode("utf-8"))
+    return root, binding, store
+
+
+def bound_workspace(path, *, expected_vault=None, expected_level=None):
     root = instance_path(path)
     protect_root(root)
     binding = read_json(checked_relative(root, CONFIG))
@@ -135,7 +242,11 @@ def bound_workspace(path):
     if (not isinstance(binding["template_version"], str) or not isinstance(binding["vault"], str)
             or not Path(binding["vault"]).is_absolute() or type(binding["demo"]) is not bool):
         raise HubError("invalid workspace binding")
-    vault = instance_path(binding["vault"])
+    bound_path = Path(os.path.abspath(binding["vault"]))
+    if ((expected_vault is not None and bound_path != instance_path(expected_vault))
+            or (expected_level is not None and binding["sensitivity"] != expected_level)):
+        raise Conflict("request differs from the existing workspace binding")
+    vault = instance_path(bound_path)
     private_pair(root, vault)
     store = Store(vault)
     if store.level != binding["sensitivity"]:
@@ -149,6 +260,10 @@ def bound_workspace(path):
 
 def check_workspace(path):
     root, binding, store = bound_workspace(path)
+    return check_bound_workspace(root, binding, store)
+
+
+def check_bound_workspace(root, binding, store):
     for required in ("AGENTS.md", "core/INDEX.md", "memory/README.md", "projects/README.md",
                      "sessions/README.md", "life-archive/README.md"):
         if not checked_relative(root, required).is_file():
