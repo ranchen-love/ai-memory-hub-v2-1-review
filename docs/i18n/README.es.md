@@ -159,4 +159,4 @@ La aplicación es V2.4.0, compatible con el esquema de registros `2.1`, y usa un
 [Despliegue y recuperación](../deployment.md) · [Guía completa](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Seguridad](../../SECURITY.md) · [Licencia MIT](../../LICENSE)
 Usa datos sintéticos en pruebas y contribuciones; nunca subas exportaciones personales. Pruebas: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` y `python scripts/smoke_v22.py`.
 
-**Estado de publicación:** consulta en GitHub la visibilidad actual del repositorio. Crear una Release oficial 2.4.0 requiere un proceso independiente.
+**Estado de publicación:** el núcleo ya funciona y está validado con datos sintéticos; hacer público el repositorio y crear una Release oficial 2.4.0 son pasos separados.
