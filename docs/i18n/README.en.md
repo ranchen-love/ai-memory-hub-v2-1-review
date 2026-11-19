@@ -92,7 +92,8 @@ The result is an independent Workspace plus sibling Vault. **No data sources are
 ```sh
 ai-memory-hub workspace init --path ../hub-demo --demo
 ai-memory-hub workspace check --path ../hub-demo
-ai-memory-hub --root ../hub-demo-vault source grant sample normalized --path ../hub-demo/demo-inbox --consent
+ai-memory-hub --root ../hub-demo-vault source grant sample normalized \
+  --path ../hub-demo/demo-inbox --consent
 ai-memory-hub --root ../hub-demo-vault local run --source sample
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L0
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L1
@@ -103,14 +104,23 @@ ai-memory-hub --root ../hub-demo-vault local status
 ```
 The demo is synthetic; copying it does not authorize reading. L2 shows the evidence and decisions actually recorded, not an invented L3 transcript. Real provider exports require an authorized supported format and separate consent for raw messages.
 ### Candidate, shared version, and handoff commands
+
+The multiline examples use POSIX shell `\` continuation. In Windows PowerShell, combine each command on one line or use PowerShell backtick continuation.
 ```sh
 ai-memory-hub --root VAULT candidate suggest CANDIDATE_ID --consent
-ai-memory-hub --root VAULT candidate advance CANDIDATE_ID validated --base 0 --record-revision 1 --actor reviewer --reason "Source checked" --consent
+ai-memory-hub --root VAULT candidate advance CANDIDATE_ID validated \
+  --base 0 --record-revision 1 --actor reviewer \
+  --reason "Source checked" --consent
 ai-memory-hub --root VAULT candidate history CANDIDATE_ID --consent
-ai-memory-hub --root RECEIVER_VAULT version check --channel shared --agent agent-b --snapshot APPROVED_JSON --consent
-ai-memory-hub --root RECEIVER_VAULT version reload --channel shared --agent agent-b --scope rules --consent
-ai-memory-hub --root RECEIVER_VAULT version confirm --channel shared --agent agent-b --sha DETECTED_SHA --receipt READ_RECEIPT --consent
-ai-memory-hub --root OWNER_VAULT transfer pack --project greenhouse-demo --asset calibration-notes@1 --consent
+ai-memory-hub --root RECEIVER_VAULT version check --channel shared \
+  --agent agent-b --snapshot APPROVED_JSON --consent
+ai-memory-hub --root RECEIVER_VAULT version reload --channel shared \
+  --agent agent-b --scope rules --consent
+ai-memory-hub --root RECEIVER_VAULT version confirm --channel shared \
+  --agent agent-b --sha DETECTED_SHA \
+  --receipt READ_RECEIPT --consent
+ai-memory-hub --root OWNER_VAULT transfer pack --project greenhouse-demo \
+  --asset calibration-notes@1 --consent
 ai-memory-hub --root RECEIVER_VAULT transfer receive --input APPROVED_COPY.zip --consent
 ai-memory-hub --root RECEIVER_VAULT transfer inspect PACKAGE_ID --consent
 ai-memory-hub --root RECEIVER_VAULT transfer file PACKAGE_ID calibration-notes@1 --consent

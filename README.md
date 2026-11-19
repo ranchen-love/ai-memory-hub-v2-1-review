@@ -93,7 +93,8 @@ ai-memory-hub workspace check --path ../my-hub
 ```sh
 ai-memory-hub workspace init --path ../hub-demo --demo
 ai-memory-hub workspace check --path ../hub-demo
-ai-memory-hub --root ../hub-demo-vault source grant sample normalized --path ../hub-demo/demo-inbox --consent
+ai-memory-hub --root ../hub-demo-vault source grant sample normalized \
+  --path ../hub-demo/demo-inbox --consent
 ai-memory-hub --root ../hub-demo-vault local run --source sample
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L0
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L1
@@ -104,14 +105,23 @@ ai-memory-hub --root ../hub-demo-vault local status
 ```
 L2 中可看到**已记录**的取舍、验证和待办，系统不会自动生成不存在的 L3 原文。真实来源如 ChatGPT 导出或 Codex 工作区只能通过实际受支持的格式、获得访问权后导入；原始聊天 L3 需额外授权。
 ### 审批、跨 Agent 读取与文件交接
+
+以下多行示例使用 POSIX Shell 的 `\` 续行符；在 Windows PowerShell 中请将每条命令合并为一行，或使用 PowerShell 的反引号续行。
 ```sh
 ai-memory-hub --root VAULT candidate suggest CANDIDATE_ID --consent
-ai-memory-hub --root VAULT candidate advance CANDIDATE_ID validated --base 0 --record-revision 1 --actor reviewer --reason "Source checked" --consent
+ai-memory-hub --root VAULT candidate advance CANDIDATE_ID validated \
+  --base 0 --record-revision 1 --actor reviewer \
+  --reason "Source checked" --consent
 ai-memory-hub --root VAULT candidate history CANDIDATE_ID --consent
-ai-memory-hub --root RECEIVER_VAULT version check --channel shared --agent agent-b --snapshot APPROVED_JSON --consent
-ai-memory-hub --root RECEIVER_VAULT version reload --channel shared --agent agent-b --scope rules --consent
-ai-memory-hub --root RECEIVER_VAULT version confirm --channel shared --agent agent-b --sha DETECTED_SHA --receipt READ_RECEIPT --consent
-ai-memory-hub --root OWNER_VAULT transfer pack --project greenhouse-demo --asset calibration-notes@1 --consent
+ai-memory-hub --root RECEIVER_VAULT version check --channel shared \
+  --agent agent-b --snapshot APPROVED_JSON --consent
+ai-memory-hub --root RECEIVER_VAULT version reload --channel shared \
+  --agent agent-b --scope rules --consent
+ai-memory-hub --root RECEIVER_VAULT version confirm --channel shared \
+  --agent agent-b --sha DETECTED_SHA \
+  --receipt READ_RECEIPT --consent
+ai-memory-hub --root OWNER_VAULT transfer pack --project greenhouse-demo \
+  --asset calibration-notes@1 --consent
 ai-memory-hub --root RECEIVER_VAULT transfer receive --input APPROVED_COPY.zip --consent
 ai-memory-hub --root RECEIVER_VAULT transfer inspect PACKAGE_ID --consent
 ai-memory-hub --root RECEIVER_VAULT transfer file PACKAGE_ID calibration-notes@1 --consent
