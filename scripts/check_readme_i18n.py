@@ -107,6 +107,25 @@ def main():
         failures.append("Removed sales comparison table reappeared in Chinese README")
     if any("？" in title or "?" in title for title in headings):
         failures.append("README.md: conversational/question-style chapter heading")
+    for checked_file in ("README.md", "docs/i18n/README.en.md"):
+        body = (ROOT / checked_file).read_text(encoding="utf-8")
+        lines = body.splitlines()
+        inside_fence = False
+        for i, line in enumerate(lines):
+            if line.startswith("```"):
+                inside_fence = not inside_fence
+                continue
+            if inside_fence or i == 0 or not line.strip():
+                continue
+            prior = lines[i - 1]
+            if not prior.strip():
+                continue
+            same_table = line.startswith("|") and prior.startswith("|")
+            same_list = (line.startswith("- ") and prior.startswith("- "))
+            if not (same_table or same_list):
+                failures.append(
+                    f"{checked_file}: missing Markdown block separation at line {i + 1}"
+                )
     if "docs/agent-onboarding.zh-CN.md" not in chinese:
         failures.append("Chinese README must link the Agent first-run protocol")
     agent_entry = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
