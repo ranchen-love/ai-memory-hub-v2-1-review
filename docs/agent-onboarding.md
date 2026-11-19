@@ -1,7 +1,7 @@
 # Agent onboarding: create a user's own AI Memory Hub
 **Purpose:** an agent-assisted first-time setup protocol for a *new owner's* memory Workspace and Vault. This is **not** a built-in universal one-click deployer, and merely reading a repository does not grant access to the user's accounts or private files.
 ## 0. Read the operating rules
-Read [the root README](../README.md), [AGENTS.md](../AGENTS.md), [workspace instructions](workspace.md), [supported adapters](adapters.md), [memory governance](../workflows/memory-lifecycle.md), and [privacy boundaries](../core/boundaries.md). Treat unsupported provider actions as unavailable, not implicitly authorized.
+Read [workspace guide](workspace.md), [AGENTS.md](../AGENTS.md), [workspace instructions](workspace.md), [supported adapters](adapters.md), [memory governance](../workflows/memory-lifecycle.md), and [privacy boundaries](../core/boundaries.md). Treat unsupported provider actions as unavailable, not implicitly authorized.
 ## 1. Inventory real capabilities
 Before changing anything, check whether the agent actually has access to:
 | Capability | Evidence required |

@@ -40,6 +40,9 @@ class WorkspaceTests(unittest.TestCase):
             init_workspace(root, vault)
         self.assertEqual(originals, ((root / "AGENTS.md").read_bytes(), (vault / "index.sqlite").read_bytes()))
         self.check_links(root)
+        for entry in ("docs/agent-onboarding.md",
+                      "docs/agent-onboarding.zh-CN.md", "docs/adapters.md"):
+            self.assertTrue((root / entry).is_file(), entry)
 
     def test_rejects_targets_under_git_or_inside_each_other(self):
         git_tree = self.parent / "repo"

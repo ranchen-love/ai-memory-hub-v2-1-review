@@ -1,7 +1,7 @@
 # 给新用户的 Agent：第一次安装与交付协议
 **适用情境：** 用户把通用 AI Memory Hub 项目交给自己的 AI/Agent，希望创建独立的个人记忆中枢。**这是一份 Agent 操作流程规范，不是一个已实现的跨平台一键自动部署命令。**
 ## 0. 先读这些文件
-按顺序阅读 [产品 README](../README.md)、[Agent 入口](../AGENTS.md)、[工作区说明](workspace.md)、[来源适配器](adapters.md)、[记忆生命周期](../workflows/memory-lifecycle.md)、[数据与权限边界](../core/boundaries.md)。
+按顺序阅读 [工作区说明](workspace.md)、[Agent 入口](../AGENTS.md)、[工作区说明](workspace.md)、[来源适配器](adapters.md)、[记忆生命周期](../workflows/memory-lifecycle.md)、[数据与权限边界](../core/boundaries.md)。
 不要因文件标题包含 AI 或某个平台名称，就推定自己具备该平台的文件、聊天历史或仓库写入权限。把工具能否调用作为本次执行的事实，而不是先验条件。
 ## 1. 先盘点实际能力，不为常规工程任务反复确认
 记录并向用户一次性说明下列能力的实际状态：
