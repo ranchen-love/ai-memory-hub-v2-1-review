@@ -81,9 +81,13 @@ Each agent tracks `detected_sha` (observed snapshot) separately from `synced_sha
 [Session protocol](../protocol.md) · [Memory lifecycle](../../workflows/memory-lifecycle.md) · [Shared memory versions](../../integrations/memory-bootstrap.md)
 
 ## IV. Agent-assisted setup
+
 New users do not need to understand Python, Git, or internal memory formats before getting started. **Provide the project repository to an AI/Agent with the required tools, submit one setup request, and let it complete the verified steps autonomously within approved permissions.**
+
 **User journey: Share the repository → Copy the instruction → Agent verifies access and initializes → Import approved information → Review and create a Private repository → Receive deliverables, missing-information report, and sync plan.**
+
 ### 4.1 Copyable setup instruction
+
 ```text
 Help me set up my own private AI Memory Hub.
 Project repository:
@@ -110,12 +114,19 @@ Group necessary approval requests by purpose and scope.
 Finally report actual results, evidence, blockers, missing
 information I should provide, and verified sync status.
 ```
+
 ### 4.2 Deliverables and approvals
+
 The Agent can inspect available tools, initialize a blank Workspace/Vault, run synthetic checks, and process specifically authorized data. Creating a personal remote repository, reading sensitive sources, activating accepted memories, publishing redacted content, and installing recurring jobs require the owner's **separately scoped approval**.
+
 Expected deliverables include **the local Workspace and Vault, an optional approved Private repository, organized records with provenance, gaps needing owner input, and an accurate synchronization and backup report**. Unavailable or unverified steps must be reported rather than presented as completed.
+
 **The distribution repository remains Private.** A new user needs access to read it until it is formally made public. Actual execution and source access also depend on the Agent's tools and the owner's permissions.
+
 [Agent onboarding](../agent-onboarding.md) · [Agent entry](../../AGENTS.md) · [Supported sources](../adapters.md)
+
 ## V. Typical applications
+
 | Scenario | Supported outcome |
 | --- | --- |
 | **Changing AI providers** | Reuse approved preferences, standing rules, and relevant history |
@@ -124,16 +135,29 @@ Expected deliverables include **the local Workspace and Vault, an optional appro
 | **Maintaining a personal archive** | Fill 12/52/134 life-profile fields gradually with evidence and dates |
 | **Preserving files and deliverables** | Archive approved real bytes, references, and exact revisions |
 | **Correcting a long-term memory** | Review candidates, resolve conflicts, preserve revisions, and optionally update the owner's repository |
+
 The goal is **continuity of useful, verifiable context**, not unlimited retention of every conversation.
+
 ## VI. Privacy and synchronization
+
 **Owners control their information.** The local Vault holds authorized sources and revisions; an optional Private GitHub repository holds only selected, reviewed, redacted records. Raw conversations, attachments, credentials, and databases are not published by default. A Private repository is not encrypted storage.
+
 **Synchronization is a sequence of distinct events:** detect changed sources, archive and verify records, review shareable projections, publish approved updates, and let recipients reread and confirm changed scopes. Success at one stage does not prove another.
+
 The `weekly`, `full`, `event`, `daily`, and `handoff` policy switches do not install background schedulers on their own. An Agent should report actual source coverage, completed runs, scheduling status, blockers, and outstanding authorizations.
+
 [Security](../../SECURITY.md) · [Sync workflow](../../workflows/hybrid-sync.md) · [Recovery](../deployment.md)
+
 ## VII. Implementation status and operating requirements
+
 V2.4 implements Agent-led onboarding, 19-module Workspaces, a 12/52/134 life registry, L0–L3 sessions, governed candidate memories, file revisions, per-Agent read confirmation, and reviewed modular Private Git projection. Its Windows/Ubuntu and synthetic test workflows have passed.
+
 Actual use depends on executable tools, GitHub access, user authorization, and available provider exports. **Live GitHub account creation and publication have not been independently verified**. The product does not automatically access every provider's hidden history, nor does it enable production scheduling or raw-health ingestion by default.
+
 [Capability coverage](../workspace-parity.md)
+
 ## VIII. Documentation and maintenance
+
 This README introduces **the product, its design decisions, and the primary user workflow**. Command syntax and detailed engineering procedures are maintained separately.
+
 [Onboarding and Private publishing](../agent-onboarding.md) · [Workspace guide](../workspace.md) · [Session protocol](../protocol.md) · [Memory governance](../../workflows/memory-lifecycle.md) · [Agent versions](../../integrations/memory-bootstrap.md) · [README maintenance](../readme-sync.md)
