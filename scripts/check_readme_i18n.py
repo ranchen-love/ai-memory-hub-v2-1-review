@@ -69,11 +69,20 @@ def main():
         if any(re.search(r"\n[ \t]*\n", body) for _, body in blocks):
             failures.append(f"{name}: blank line inside code fence")
         demos = [body for kind, body in blocks if kind == "sh" and all(term in body for term in CORE_DEMO)]
-        if len(demos) != 1:
-            failures.append(f"{name}: synthetic onboarding missing or duplicated")
-        for command in TRANSFER:
-            if not any(kind == "sh" and command in body for kind, body in blocks):
-                failures.append(f"{name}: transfer example missing {command}")
+        if name in ("README.md", "docs/i18n/README.en.md"):
+            prompts = [body for kind, body in blocks if kind == "text"]
+            if len(prompts) != 1:
+                failures.append(f"{name}: expected one copyable setup prompt")
+            if "https://github.com/ranchen-love/ai-memory-hub-v2-1-review" not in content:
+                failures.append(f"{name}: setup prompt missing project URL")
+            if "agent-onboarding" not in content:
+                failures.append(f"{name}: missing detailed onboarding link")
+        else:
+            if len(demos) != 1:
+                failures.append(f"{name}: synthetic onboarding missing or duplicated")
+            for command in TRANSFER:
+                if not any(kind == "sh" and command in body for kind, body in blocks):
+                    failures.append(f"{name}: transfer example missing {command}")
         for token in ("2.4.0", "12", "52", "134", "synced_sha", "detected_sha",
                       "candidate advance", "version confirm"):
             if token not in content:
@@ -88,11 +97,11 @@ def main():
         "一、项目概述",
         "二、系统架构与数据组织",
         "三、核心能力与设计机制",
-        "四、Agent 首次初始化与资料交付",
-        "五、安装与使用示例",
-        "六、数据安全与同步机制",
-        "七、实现状态与适用边界",
-        "八、技术文档与项目维护",
+        "四、Agent 辅助初始化",
+        "五、主要应用场景",
+        "六、隐私与同步机制",
+        "七、实现状态与使用条件",
+        "八、文档与维护",
     )
     headings = tuple(re.findall(r"^## (.+)$", chinese, flags=re.M))
     if headings != chapters:

@@ -10,6 +10,8 @@ AI Memory Hub is a **user-controlled long-term memory management system for mult
 
 **Distribution:** This repository remains Private; no official public Release has been issued.
 
+**Getting started:** [Copy the Agent setup instruction](#41-copyable-setup-instruction) and let it carry out the permitted steps.
+
 [Agent onboarding](../agent-onboarding.md) · [Installation](../workspace.md) · [Agent entry](../../AGENTS.md)
 
 ## I. Project overview
@@ -78,130 +80,60 @@ Each agent tracks `detected_sha` (observed snapshot) separately from `synced_sha
 
 [Session protocol](../protocol.md) · [Memory lifecycle](../../workflows/memory-lifecycle.md) · [Shared memory versions](../../integrations/memory-bootstrap.md)
 
-## IV. Agent-led initialization and delivery
-
-V2.4 provides `onboarding plan / apply / report` so an appropriately equipped Agent can evaluate available inputs, establish separate local storage, ingest approved evidence, and report actual results and gaps.
-
-| Stage | Agent activity | Owner authorization and review |
-| --- | --- | --- |
-| **Assessment** | Check runtime, selected sources, adapters and local paths | Confirm intended sources, scope and destinations |
-| **Initialization** | Create Workspace/Vault and verify installed templates | Approve plan digest and local execution |
-| **Data organization** | Import accessible evidence; create session/project records and memory candidates | Review private inputs and accepted memories |
-| **Optional publication** | Build reviewed redacted modular projection and optionally create/update a Private repository | Independently approve redaction, destination and exact projection digest |
-| **Handover** | Produce JSON and readable reports of completion, gaps, exceptions and next steps | Confirm follow-up permissions and scheduling preferences |
-
-The Agent must have real tool access and permissions. **Reading a repository alone does not grant GitHub write access, provider exports or background scheduling privileges.**
-
-[Agent onboarding guide](../agent-onboarding.md) · [Supported adapters](../adapters.md)
-
-## V. Installation and usage examples
-
-### 5.1 Install and initialize a Workspace
-
-Use Python 3.11+ from an authorized checkout and choose fresh trusted directories:
-
-```sh
-python -m pip install .
-ai-memory-hub workspace init --path ../my-hub
-ai-memory-hub workspace check --path ../my-hub
+## IV. Agent-assisted setup
+New users do not need to understand Python, Git, or internal memory formats before getting started. **Provide the project repository to an AI/Agent with the required tools, submit one setup request, and let it complete the verified steps autonomously within approved permissions.**
+**User journey: Share the repository → Copy the instruction → Agent verifies access and initializes → Import approved information → Review and create a Private repository → Receive deliverables, missing-information report, and sync plan.**
+### 4.1 Copyable setup instruction
+```text
+Help me set up my own private AI Memory Hub.
+Project repository:
+https://github.com/ranchen-love/ai-memory-hub-v2-1-review
+First read README.md, AGENTS.md, and
+docs/agent-onboarding.md. Follow their existing rules.
+Verify your actual file, conversation, and GitHub access.
+Within your real tool capabilities:
+1. Initialize a full Workspace and separate local Vault.
+2. Organize memories, sessions, projects, files, and
+   life records that I authorize and you can actually read.
+3. Classify evidence, flag duplicates and conflicts,
+   and keep unverified details as candidates or unknown.
+4. After I approve the account, name, and destination,
+   create my own GitHub Private repository and module tree.
+5. Publish only explicitly reviewed, redacted records
+   to the correct module directories, then verify the result.
+   Never upload raw chats, attachments, or the full Vault
+   without a separate, specific authorization.
+6. Explain synchronization, backups, and Agent handoffs;
+   install ongoing schedules only after my approval.
+Complete safe verifiable steps without repeated check-ins.
+Group necessary approval requests by purpose and scope.
+Finally report actual results, evidence, blockers, missing
+information I should provide, and verified sync status.
 ```
-
-No source grants or scheduled jobs are established automatically.
-
-### 5.2 First-run orchestration
-
-Copy [the request template](../../examples/onboarding-request.json), configure owner-selected local paths and sources, then run the read-only plan. Apply the exact approved digest:
-
-```sh
-ai-memory-hub onboarding plan --request hub-request.json
-ai-memory-hub onboarding apply --request hub-request.json \
-  --approve-plan APPROVED_PLAN_DIGEST --consent
-ai-memory-hub onboarding report --request hub-request.json
-```
-
-The digest is a real value returned by the plan and confirmed by the owner. Source reads and remote publication require separately scoped permissions.
-
-### 5.3 Synthetic data trial
-
-The demonstration has no real personal history. Copying `--demo` files does not grant source access.
-
-```sh
-ai-memory-hub workspace init --path ../hub-demo --demo
-ai-memory-hub workspace check --path ../hub-demo
-ai-memory-hub --root ../hub-demo-vault source grant sample normalized \
-  --path ../hub-demo/demo-inbox --consent
-ai-memory-hub --root ../hub-demo-vault local run --source sample
-ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L0
-ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L2
-ai-memory-hub --root ../hub-demo-vault memory review
-ai-memory-hub --root ../hub-demo-vault local status
-```
-
-### 5.4 Reviewed Git records and offline transfer
-
-A Private Vault share requires separately approved **redacted content, a projection digest and an exact remote target**. The complete review and publication steps are in [the Agent guide](../agent-onboarding.md). Never substitute an unreviewed bulk Git add of the Workspace.
-
-Offline transfer requires authorization of both endpoints, handoff enabled, and actual package IDs and asset revisions:
-
-```sh
-ai-memory-hub --root OWNER_VAULT transfer pack \
-  --project greenhouse-demo --asset calibration-notes@1 --consent
-ai-memory-hub --root RECEIVER_VAULT transfer receive \
-  --input APPROVED_COPY.zip --consent
-ai-memory-hub --root RECEIVER_VAULT transfer inspect PACKAGE_ID --consent
-ai-memory-hub --root RECEIVER_VAULT transfer file \
-  PACKAGE_ID calibration-notes@1 --consent
-```
-
-Shell snippets use POSIX `\` continuation; PowerShell users should place each command on one line or use PowerShell continuation. Substitute the actual authorized values returned by the tools.
-
-[Agent setup and Git review](../agent-onboarding.md) · [Adapters](../adapters.md) · [Operations](../guide.md)
-
-## VI. Data security and synchronization
-
-### 6.1 Permission and publication controls
-
-- Reading personal sources, archiving L3, sharing private files, activating memories, remote writes and persistent scheduling require independently scoped permission.
-- The personal Workspace is deny-all for Git by default. Vault databases, raw messages, attachments, secrets and local bindings are excluded from default publication.
-- Redacted private records are bound to reviewed source revisions, approval digests and destination repository identity; changed inputs require fresh review.
-- Vault storage and offline ZIP transfers have **no built-in application-layer encryption**; use OS permissions, disk encryption and an appropriate transfer channel.
-- Revoking a grant stops future reads but does not automatically erase stored revisions or Git history.
-
-### 6.2 Synchronization policy and observed status
-
-| Switch | Ordinary default | Purpose |
-| --- | --- | --- |
-| `weekly` | On | Weekly archive/check entry |
-| `full` | On | Manual full or selected source import |
-| `event` | Off | Authorized event-based operation |
-| `daily` | Off | Optional daily catch-up |
-| `handoff` | Off | Explicit project and selected-version transfer |
-
-**An enabled switch, a source grant, an archive receipt, a Git commit, an Agent read acknowledgment and an installed OS scheduler are different states.** Verify each before claiming a successful automatic sync.
-
-[Sync workflow](../../workflows/hybrid-sync.md) · [Recovery](../deployment.md) · [Security](../../SECURITY.md)
-
-## VII. Implementation status and limitations
-
-**Implemented and synthetically validated:** V2.4 first-run orchestration, 19-module Workspaces, 12/52/134 archive structure, compatibility with Vault schema 2.1, L0–L3 records, candidate memory governance, versioned file storage, per-Agent shared-memory acknowledgments and reviewed modular Private Git projection with mocked remote publication.
-
-**Requires environment-specific verification:** Actual Agent execution permissions, provider export coverage, authenticated GitHub CLI, live Private repository creation/publishing, human assessment of redaction quality, recurring schedules and operational backups.
-
-**Not generally available:** Universal automatic access to all hidden AI memories, all provider chats and attachments, raw health-device ingestion, or unapproved background synchronization.
-
-Windows, Ubuntu and security-release checks validate the engineering workflows, but **mocked GitHub publication is not a real-account production acceptance test**. Public visibility and a formal Release require a separate decision.
-
-## VIII. Technical documentation and maintenance
-
-| Document | Purpose |
+### 4.2 Deliverables and approvals
+The Agent can inspect available tools, initialize a blank Workspace/Vault, run synthetic checks, and process specifically authorized data. Creating a personal remote repository, reading sensitive sources, activating accepted memories, publishing redacted content, and installing recurring jobs require the owner's **separately scoped approval**.
+Expected deliverables include **the local Workspace and Vault, an optional approved Private repository, organized records with provenance, gaps needing owner input, and an accurate synchronization and backup report**. Unavailable or unverified steps must be reported rather than presented as completed.
+**The distribution repository remains Private.** A new user needs access to read it until it is formally made public. Actual execution and source access also depend on the Agent's tools and the owner's permissions.
+[Agent onboarding](../agent-onboarding.md) · [Agent entry](../../AGENTS.md) · [Supported sources](../adapters.md)
+## V. Typical applications
+| Scenario | Supported outcome |
 | --- | --- |
-| [Agent entry](../../AGENTS.md) | Access, permissions and memory rules for a new Agent |
-| [Onboarding guide](../agent-onboarding.md) | Plan, import, review, Private publication and handover reporting |
-| [Workspace installation](../workspace.md) | Initialization, examples, recovery and checks |
-| [Conversation protocol](../protocol.md) | L0–L3, checkpoints, sources and revisions |
-| [Memory lifecycle](../../workflows/memory-lifecycle.md) | Validation, review, activation, revocation and history |
-| [Security boundaries](../../core/boundaries.md) | Sensitivity, storage isolation and authorization |
-| [Coverage matrix](../workspace-parity.md) | Functional and 19-module mapping |
-| [Agent version protocol](../../integrations/memory-bootstrap.md) | Detection, scoped reload and explicit confirmation |
-
-The project follows **user ownership, verifiable provenance, traceable revisions and explicit sharing consent**. Documentation claims should advance only alongside tested capabilities and clear limitations.
+| **Changing AI providers** | Reuse approved preferences, standing rules, and relevant history |
+| **Resuming a long-running project** | Continue from L2 checkpoints, decisions, verified outputs, and next actions |
+| **Working across agents** | Share reviewed context and confirm individual read versions |
+| **Maintaining a personal archive** | Fill 12/52/134 life-profile fields gradually with evidence and dates |
+| **Preserving files and deliverables** | Archive approved real bytes, references, and exact revisions |
+| **Correcting a long-term memory** | Review candidates, resolve conflicts, preserve revisions, and optionally update the owner's repository |
+The goal is **continuity of useful, verifiable context**, not unlimited retention of every conversation.
+## VI. Privacy and synchronization
+**Owners control their information.** The local Vault holds authorized sources and revisions; an optional Private GitHub repository holds only selected, reviewed, redacted records. Raw conversations, attachments, credentials, and databases are not published by default. A Private repository is not encrypted storage.
+**Synchronization is a sequence of distinct events:** detect changed sources, archive and verify records, review shareable projections, publish approved updates, and let recipients reread and confirm changed scopes. Success at one stage does not prove another.
+The `weekly`, `full`, `event`, `daily`, and `handoff` policy switches do not install background schedulers on their own. An Agent should report actual source coverage, completed runs, scheduling status, blockers, and outstanding authorizations.
+[Security](../../SECURITY.md) · [Sync workflow](../../workflows/hybrid-sync.md) · [Recovery](../deployment.md)
+## VII. Implementation status and operating requirements
+V2.4 implements Agent-led onboarding, 19-module Workspaces, a 12/52/134 life registry, L0–L3 sessions, governed candidate memories, file revisions, per-Agent read confirmation, and reviewed modular Private Git projection. Its Windows/Ubuntu and synthetic test workflows have passed.
+Actual use depends on executable tools, GitHub access, user authorization, and available provider exports. **Live GitHub account creation and publication have not been independently verified**. The product does not automatically access every provider's hidden history, nor does it enable production scheduling or raw-health ingestion by default.
+[Capability coverage](../workspace-parity.md)
+## VIII. Documentation and maintenance
+This README introduces **the product, its design decisions, and the primary user workflow**. Command syntax and detailed engineering procedures are maintained separately.
+[Onboarding and Private publishing](../agent-onboarding.md) · [Workspace guide](../workspace.md) · [Session protocol](../protocol.md) · [Memory governance](../../workflows/memory-lifecycle.md) · [Agent versions](../../integrations/memory-bootstrap.md) · [README maintenance](../readme-sync.md)

@@ -10,6 +10,8 @@ AI Memory Hub 是一套**用户自主掌控、面向多 Agent 协作的长期记
 
 **发布状态：** 项目仓库目前仍为 Private，尚未建立正式公开 Release。
 
+**新用户入口：** [复制 Agent 初始化指令](#41-可直接复制的初始化指令)，由 Agent 完成可执行的配置与资料整理。
+
 [Agent 初始化指南](docs/agent-onboarding.zh-CN.md) · [安装与演示](docs/workspace.md) · [Agent 接入规范](AGENTS.md)
 
 ## 一、项目概述
@@ -80,130 +82,59 @@ L0–L3 是**逐层增强的资料视图**，不是四份自动生成的摘要�
 
 [会话协议](docs/protocol.md) · [候选审核机制](workflows/memory-lifecycle.md) · [共享版本协议](integrations/memory-bootstrap.md)
 
-## 四、Agent 首次初始化与资料交付
-
-V2.4 提供 `onboarding plan / apply / report`，支持 Agent 在**实际工具权限及用户授权范围内**规划环境、初始化 Workspace/Vault、处理已获准资料并输出执行与缺口报告。
-
-| 阶段 | Agent 执行内容 | 用户参与及验收 |
-| --- | --- | --- |
-| **环境与来源评估** | 检查可用工具、路径、适配器及已选来源；生成计划摘要 | 确认来源、存储位置和操作范围 |
-| **工作区初始化** | 建立独立 Workspace/Vault，验证模板与数据协议 | 批准本地执行及计划摘要 |
-| **资料整理** | 归档实际可读取的会话、项目和文件，提出记忆候选，标记缺失证据 | 审核敏感来源和长期记忆 |
-| **共享与发布（可选）** | 生成脱敏审阅内容、19 模块 Git 投影，并可创建或更新 Private 仓库 | 分别批准脱敏文本、仓库目标及具体发布摘要 |
-| **结果交付** | 输出 JSON 与可读报告，列明成功、部分成功、阻断、未验证及待补资料 | 确认后续授权、备份与同步安排 |
-
-用户可让具有适当执行工具的 Agent 阅读本仓库的 `AGENTS.md` 与 [首次部署协议](docs/agent-onboarding.zh-CN.md)。**仅阅读仓库不会自动取得 GitHub 写权限、其他平台的聊天导出权限或系统定时任务权限。**
-
-完整流程会核对来源时间范围、会话层级、候选审批、资产版本、人生档案空缺、真实远端回执和下一步用户待办。
-
-## 五、安装与使用示例
-
-### 5.1 环境准备与工作区初始化
-
-在获得访问权限的源码根目录中使用 Python 3.11 或更高版本。所有示例均应在新建的、受信任的目录中执行。
-
-```sh
-python -m pip install .
-ai-memory-hub workspace init --path ../my-hub
-ai-memory-hub workspace check --path ../my-hub
+## 四、Agent 辅助初始化
+新用户无需先掌握 Python、Git 或记忆库内部的数据格式。**将项目仓库交给具备相应工具的 AI/Agent，发送一次初始化指令，即可从环境检查开始，尽可能自主完成个人记忆中枢的建立。**
+**推荐流程：提供仓库 → 复制指令 → Agent 检查环境并初始化 → 经授权整理资料 → 审核后建立私人仓库 → 交付成果、缺口报告与同步方案。**
+### 4.1 可直接复制的初始化指令
+```text
+请帮我建立一套属于自己的私人 AI 记忆中枢。
+通用项目仓库：
+https://github.com/ranchen-love/ai-memory-hub-v2-1-review
+请先阅读 README.md、AGENTS.md 和
+docs/agent-onboarding.zh-CN.md，遵循项目既有规范。
+先核实你实际拥有的文件、历史会话和 GitHub 工具权限。
+在可执行范围内自主完成：
+1. 安装并初始化完整 Workspace 和独立 Vault。
+2. 整理我已授权且你确实能访问的长期记忆、
+   会话、项目、文件与人生档案，并保留来源。
+3. 进行分类、去重、冲突检查与缺失信息梳理；
+   未证实的信息保留为候选，不编造成正式事实。
+4. 在我批准账号、仓库名和发布范围后，
+   创建我的 GitHub Private 仓库及完整模块结构。
+5. 将经我审核的脱敏资料归入对应目录，
+   核验提交结果；原文、附件和 Vault 不默认上传。
+6. 说明后续同步、备份与跨 Agent 使用方式；
+   只有我明确授权后才能启用持续调度。
+安全且可验证的步骤请连续完成，不必反复征询。
+需要真实数据读取、远端写入、敏感资料处理等权限时，
+集中说明用途、范围和影响，再请求我确认。
+最后提交已完成事项、真实证据、未完成原因、
+需要我补充的资料与确认事项，以及同步运行状态。
 ```
-
-初始化会生成独立的工作区与同级 Vault，默认**不授予任何数据来源读取权限，也不安装后台调度器**。
-
-### 5.2 Agent 首次部署
-
-复制 [首次部署请求模板](examples/onboarding-request.json)，配置本人选定的目录和来源。`plan` 仅作只读评估；获得计划摘要的明确批准后，才能执行 `apply`。
-
-```sh
-ai-memory-hub onboarding plan --request hub-request.json
-ai-memory-hub onboarding apply --request hub-request.json \
-  --approve-plan APPROVED_PLAN_DIGEST --consent
-ai-memory-hub onboarding report --request hub-request.json
-```
-
-`APPROVED_PLAN_DIGEST` 是运行计划时返回、经用户核实的实际摘要，不能使用示例文本直接执行。来源授权及远端创建、发布具有独立审批步骤。
-
-### 5.3 合成资料演示
-
-下列演示不接触真实用户历史；`--demo` 仅创建合成样例，数据源读取仍需显式 `grant`。
-
-```sh
-ai-memory-hub workspace init --path ../hub-demo --demo
-ai-memory-hub workspace check --path ../hub-demo
-ai-memory-hub --root ../hub-demo-vault source grant sample normalized \
-  --path ../hub-demo/demo-inbox --consent
-ai-memory-hub --root ../hub-demo-vault local run --source sample
-ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L0
-ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L2
-ai-memory-hub --root ../hub-demo-vault memory review
-ai-memory-hub --root ../hub-demo-vault local status
-```
-
-### 5.4 Git 投影与离线交接
-
-Private Vault 的可共享资料需**先逐条脱敏审阅，再批准投影摘要及远端目标**。新用户的完整操作步骤见[Git 投影、审批与发布](docs/agent-onboarding.zh-CN.md)；此处不以直接推送整份 Workspace 代替审阅。
-
-离线交接需要发送方与接收方分别授权、启用 `handoff`，并使用实际返回的包 ID 和文件版本：
-
-```sh
-ai-memory-hub --root OWNER_VAULT transfer pack \
-  --project greenhouse-demo --asset calibration-notes@1 --consent
-ai-memory-hub --root RECEIVER_VAULT transfer receive \
-  --input APPROVED_COPY.zip --consent
-ai-memory-hub --root RECEIVER_VAULT transfer inspect PACKAGE_ID --consent
-ai-memory-hub --root RECEIVER_VAULT transfer file \
-  PACKAGE_ID calibration-notes@1 --consent
-```
-
-上述 `sh` 示例采用 POSIX Shell 的续行符 `\`；在 Windows PowerShell 中请使用单行命令或 PowerShell 续行语法。详细参数、审批状态与恢复操作以对应操作文档为准。
-
-[Agent 部署与 Git 发布指南](docs/agent-onboarding.zh-CN.md) · [来源适配器](docs/adapters.md) · [安装与故障处理](docs/guide.md)
-
-## 六、数据安全与同步机制
-
-### 6.1 默认权限与发布边界
-
-- 实际来源读取、L3 原文、敏感文件、长期记忆激活、远端写入及计划任务均由用户分别授权。
-- 个人 Workspace 默认禁止将全部内容加入 Git；Vault、SQLite、L3 原文、原始附件、凭据和本地绑定配置不能被默认投影发布。
-- Private 仓库中的脱敏记录与本地源修订、审阅摘要和目标仓库身份绑定；来源或目标发生变化时需要重新核对并批准。
-- Vault 与离线传输 ZIP **不由程序提供应用层加密**，应由用户安排系统权限、磁盘加密、备份和安全传输。
-- 撤销数据源授权不意味着此前归档的版本或 Git 历史自动清除。
-
-### 6.2 同步策略与运行状态
-
-| 策略开关 | 普通模式默认值 | 职责 |
-| --- | --- | --- |
-| `weekly` | 启用 | 每周归档与来源覆盖检查入口 |
-| `full` | 启用 | 按需全量或指定来源导入 |
-| `event` | 关闭 | 明确触发的事件归档 |
-| `daily` | 关闭 | 可选的每日补录 |
-| `handoff` | 关闭 | 授权项目及指定文件版本交接 |
-
-**策略开关、数据源授权、实际归档回执、GitHub 提交、接收 Agent 的重读确认和操作系统调度是相互独立的状态。** 开关启用并不代表任务已经安装或执行；需要分别查看 `local status`、远端提交和调度器运行记录。
-
-[同步工作流](workflows/hybrid-sync.md) · [备份与恢复](docs/deployment.md) · [安全声明](SECURITY.md)
-
-## 七、实现状态与适用边界
-
-**已实现并通过合成环境测试：** V2.4.0 的 Agent 首次部署编排、19 模块初始化、12/52/134 档案结构、Vault 2.1 兼容、L0–L3 资料视图、候选记忆治理、版本文件归档、逐 Agent 共享确认，以及经审阅的分模块 Private Git 投影与模拟远端发布。
-
-**需基于实际环境验证：** 目标用户 Agent 的本地执行权限、AI 平台可导出的资料范围、GitHub CLI 与真实账号权限、真实 Private 仓库创建及发布、敏感文本的人工脱敏质量、长期任务与备份运行。
-
-**未作为通用能力提供：** 无差别读取所有 AI 平台隐藏记忆、自动获取全部聊天及附件、原始健康设备数据自动同步、无需授权的后台同步。
-
-当前代码的 Windows、Ubuntu 自动测试及发行安全审计已验证工程流程；**模拟远端结果不能替代真实 GitHub 账号的发布验收**。仓库公开与正式 Release 均需独立决策。
-
-## 八、技术文档与项目维护
-
-| 文档 | 内容 |
+### 4.2 交付内容与必要授权
+Agent 应优先完成环境识别、空白工作区创建、合成检查及获准资料的整理。涉及**个人 GitHub 仓库创建、敏感数据读取、正式记忆激活、脱敏内容发布、持续调度**等行为，需要用户对具体对象和范围分别批准。
+完成后应提供**本地工作区与 Vault、可选的 Private 仓库、已分类资料、来源与版本记录、待补信息清单，以及同步与备份说明**。没有执行或无法验证的步骤必须如实列明，不得报告为成功。
+**当前项目仓库仍为 Private**，陌生用户须先获得读取权限；未来仓库正式公开后，才能直接通过上述链接访问。Agent 也必须具备相应的执行和数据访问能力。
+[Agent 首次部署完整指南](docs/agent-onboarding.zh-CN.md) · [接入规范](AGENTS.md) · [支持的数据来源](docs/adapters.md)
+## 五、主要应用场景
+| 使用场景 | 系统提供的支持 |
 | --- | --- |
-| [Agent 接入入口](AGENTS.md) | 新 Agent 的访问、授权及记忆治理规则 |
-| [首次部署指南](docs/agent-onboarding.zh-CN.md) | 从计划、授权导入到私有仓库发布及交付报告 |
-| [工作区部署](docs/workspace.md) | 初始化、演示、恢复及版本检查 |
-| [会话数据协议](docs/protocol.md) | L0–L3、检查点、来源与版本字段 |
-| [候选记忆生命周期](workflows/memory-lifecycle.md) | 验证、审批、激活、撤销及历史 |
-| [安全与权限边界](core/boundaries.md) | 敏感度、数据隔离和授权要求 |
-| [功能覆盖矩阵](docs/workspace-parity.md) | 19 模块及通用能力映射 |
-| [跨 Agent 版本确认](integrations/memory-bootstrap.md) | 检测、按范围重读与显式确认 |
-
-项目遵循**用户所有、来源可核验、修订可追溯、共享须授权**的原则。后续工程扩展应先确保跨平台能力能够被实际验证，再更新文档状态及对应测试证据。
+| **迁移至新的 AI 工具** | 按授权范围读取长期偏好、规则和重要历史信息，减少重复介绍 |
+| **恢复中断的项目** | 通过 L2 检查点、决策依据、文件版本和待办事项接续任务 |
+| **多人或多 Agent 协作** | 以经审核的共享资料和版本确认机制减少上下文差异 |
+| **长期整理个人资料** | 以 12/52/134 人生档案体系逐步完善有来源的记录与时间线 |
+| **保存工作成果与附件** | 归档经过授权的真实文件字节、历史版本及相关项目 |
+| **更正或更新长期记忆** | 审查候选、识别冲突、保留替代记录，必要时同步到私人仓库 |
+系统的价值并非要求 AI 记住全部历史，而是让**重要信息能够持续积累、按需调用，并在工具变化时保留连续性**。
+## 六、隐私与同步机制
+**个人资料由用户掌控。** 本地 Vault 保存资料修订和获准文件；可选的私人 GitHub 仓库只接收用户审核过的脱敏索引与结构化内容。原始聊天、未经批准的附件、凭据和本地数据库不会被默认推送到 Git 历史。仓库标记为 Private 并不意味着资料已经加密。
+**同步分为不同环节**：发现来源变化、归档与校验、审阅可共享内容、更新私人仓库、由接收 Agent 重读确认。它们有不同的权限和完成回执，不能把某一步的成功等同于全部同步完成。
+系统支持 `weekly`、`full`、`event`、`daily`、`handoff` 五种策略入口；开关启用不等于安装了后台定时任务。Agent 应在交付时告知用户：哪些来源已接入、上次实际执行结果、是否配置了周期运行、失败时如何处理，以及需要用户继续授权的事项。
+[权限与安全](SECURITY.md) · [同步流程](workflows/hybrid-sync.md) · [备份与恢复](docs/deployment.md)
+## 七、实现状态与使用条件
+V2.4 已实现 **Agent 首次部署流程、19 模块个人工作区、12/52/134 人生档案、L0–L3 会话归档、记忆审核、文件版本、跨 Agent 版本确认，以及经审核的私人仓库分类投影**。相关程序在 Windows、Ubuntu 和合成数据场景下通过测试。
+实际部署效果取决于 Agent 的本地执行能力、GitHub 账号权限、用户授权及各 AI 平台可提供的数据。**真实 GitHub 账号建库和发布流程尚未完成独立实测**；无法自动访问所有 AI 平台隐藏的历史会话，也不默认启用生产调度或健康原始数据同步。
+[功能覆盖与验收范围](docs/workspace-parity.md)
+## 八、文档与维护
+本 README 负责说明**项目定位、能力设计与使用入口**，具体安装参数和技术协议交由独立文档维护。
+[首次部署与私人仓库发布](docs/agent-onboarding.zh-CN.md) · [本地部署手册](docs/workspace.md) · [会话协议](docs/protocol.md) · [记忆治理](workflows/memory-lifecycle.md) · [跨 Agent 版本确认](integrations/memory-bootstrap.md) · [项目维护约定](docs/readme-sync.md)
