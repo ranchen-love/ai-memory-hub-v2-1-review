@@ -1,5 +1,7 @@
 # AI Memory Hub
+
 **Languages:** [简体中文](../../README.md) · [English](README.en.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
+
 ---
 AI Memory Hub is a **user-controlled long-term memory management system for multi-agent workflows**. It provides reusable personal workspace templates, a versioned local Vault, governed memory records, and explicitly authorized cross-agent sharing and Private Git publication.
 **Version:** V2.4.0 · Python 3.11+ · MIT License · local-first
@@ -39,13 +41,13 @@ Conversation data is accessed according to the detail required for a task:
 | **L3 · Optional original messages** | Actually archived visible messages, source references and original revisions | Verify exact statements with extra consent |
 These are progressively richer **views**, not four generated summaries. Missing content is not fabricated. L3 requires separate consent and a `private` or `restricted` Vault; new L2 revisions do not overwrite historical L3 evidence.
 ### 3.2 Governed long-term memories
-Candidates pass through source validation, duplicate/conflict review and approval, followed by **separate activation** before entering accepted facts. Supersession and revocation retain traceable history; unsupported inferences are not promoted automatically.
+Candidates pass through source validation, duplicate/conflict review and approval, followed by **separate activation** before entering accepted facts. Supersession and revocation retain traceable history; unsupported inferences are not promoted automatically. The `candidate advance` operation validates the requested state transition and recorded revision.
 ### 3.3 Life archive and project continuity
 The life archive has **12 categories, 52 subdomains and 134 registered fields**, with provenance, time, validity and sensitivity validation. All begin `unknown`. Project checkpoints capture context, decisions, evidence, file versions and subsequent actions.
 ### 3.4 File assets and revision history
 Approved user uploads and generated artifacts can be archived as actual bytes with SHA-256, provenance and immutable version references. External URLs remain references unless their bytes have been stored.
 ### 3.5 Cross-agent read confirmation
-Each agent tracks `detected_sha` (observed snapshot) separately from `synced_sha` (scopes explicitly read and acknowledged). Receipts do not prove model comprehension or automatically update a provider's native memory.
+Each agent tracks `detected_sha` (observed snapshot) separately from `synced_sha` (scopes explicitly read and acknowledged). A recipient explicitly confirms completed scoped reads with `version confirm`. Receipts do not prove model comprehension or automatically update a provider's native memory.
 [Session protocol](../protocol.md) · [Memory lifecycle](../../workflows/memory-lifecycle.md) · [Shared memory versions](../../integrations/memory-bootstrap.md)
 ## IV. Agent-led initialization and delivery
 V2.4 provides `onboarding plan / apply / report` so an appropriately equipped Agent can evaluate available inputs, establish separate local storage, ingest approved evidence, and report actual results and gaps.
