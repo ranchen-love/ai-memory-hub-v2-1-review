@@ -1,492 +1,158 @@
 # AI Memory Hub
-
 **语言 / Languages：** [简体中文](README.md) · [English](docs/i18n/README.en.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Español](docs/i18n/README.es.md) · [Français](docs/i18n/README.fr.md) · [Deutsch](docs/i18n/README.de.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md) · [Русский](docs/i18n/README.ru.md)
-
 ---
-
-**一个由用户掌控、可自行初始化、面向长期积累的通用 AI 共享记忆中枢。**
-
-把分散在对话、项目、文件和不同 AI 工具中的长期信息，整理为**可查找、可理解、可更新、可追溯、可授权迁移**的个人资料体系。它关注的不只是“让 AI 记住”，更是：**应该保存哪些信息，怎样在未来重新使用，如何确保来源可靠，以及用户如何始终掌握控制权。**
-
-> **定位**：个人长期记忆库 · 人生档案体系 · 项目与决策知识库 · 跨 AI 协作上下文 · 会话与文件归档 · 可初始化的工作区
->
-> **设计原则**：用户拥有资料、模型中立、按需读取、来源可追溯、变更可审核、敏感数据最小授权。
->
-> **版本与状态**：V2.3.0 · Python 3.11+ · MIT License · 本地优先 · 当前仓库仍为 Private，尚未正式公开发布。
-
-本项目提供的是**去个人化的完整模板与本地引擎**，而不是作者私人记忆的公开副本。安装时不包含任何用户的真实经历、个人事实、健康记录或聊天导出，也不会自动获取 AI 平台账户权限。
-
-**为什么不直接保存一堆聊天记录？**
-
-| 常见困扰 | 这里的设计选择 |
-| --- | --- |
-| 聊天太长，新 AI 要从头读 | **L0–L3 分层读取**，先定位、再摘要、再检查点，必要时才核对原文 |
-| AI 把猜测或一句玩笑当成长期事实 | **候选 → 审核 → 单独激活**，来源与修订可追溯 |
-| 同一份资料在多个 Agent 中悄悄过期 | **检测版本 ≠ 已同步版本**，逐范围重读后确认 |
-| 文件链接失效，历史交付物找不回来 | **保存真实字节与 SHA-256**，每个版本都可独立校验 |
-| 导入失败后重试，担心资料被重复写入 | **按条目记录回执、幂等重试**，区分完成、部分完成与失败 |
-
-这些是有代码和测试支持的设计机制，并不意味着它们已经自动接入所有 AI 服务。
-
----
-
-## 一、这个仓库可以做什么？
-
-### 1. 为不同 AI 提供统一的长期背景
-
-不同 AI 工具在**具备实际访问权限并取得用户授权后**，可以使用同一套有来源、有版本的记忆资料，不再只依赖各平台彼此隔离的聊天摘要。一个新 Agent 可以按统一入口了解用户选择分享的稳定偏好、项目背景、协作规则和待完成任务。
-通用工作区提供 [Agent 统一入口](AGENTS.md)、[任务导航索引](core/INDEX.md)、[接入协议](integrations/memory-bootstrap.md) 与 [能力边界说明](integrations/capabilities.md)。
-
-**边界**：这些文件存在，不代表每个 AI 平台都能自动访问本机文件或 GitHub；自动读取、自动召回和账号连接均需要独立配置、授权及实际验证。
-
-### 2. 形成持续维护的人生档案
-
-以 **12 个一级类别、52 个二级领域、134 项注册字段**组织身份背景、成长、教育、职业、价值观、关系、健康生活、财务、目标、AI 协作、重大事件及资料维护。
-每条记录可标注来源、证据等级、发生时间、有效区间、敏感等级与历史替代关系。初始 12 类全部为 `unknown`，**有分类不代表系统已经知道用户的信息**；后续可按需逐步完善。
-[人生档案说明](life-archive/README.md) · [分类目录](life-archive/taxonomy.md) · [字段注册表](life-archive/field-registry.json) · [空白档案](life-archive/profile.json)
-
-### 3. 保存长期偏好与可复用的行为规则
-
-将长期适用的沟通习惯、任务方法、协作标准、执行边界和已确认的个人偏好，分类存入结构化资料。系统区分**事实、偏好、规则、决策、推断和待核实信息**，不把一句临时要求自动升级成永久规则。
-[通用规则入口](core/hard-rules.md) · [偏好模板](core/preferences.md) · [结构化记忆](memory/facts.yaml)
-
-### 4. 维持项目上下文与连续性
-
-为长期项目保存目标、范围、关键约束、已经验证的结论、方案取舍、交付资产、风险和下一步。中断数周后可以从项目检查点继续，也可以通过授权的交接包将上下文交给另一位 Agent。
-[项目模板](projects/TEMPLATE.md) · [项目入口](projects/README.md) · [交接协议](collaboration/handoff-protocol.md)
-
-**边界**：项目记忆是带来源和时间的背景资料，不能代替当前源码、最新工单或真实环境的重新验证。
-
-### 5. 沉淀经验、决策过程和复盘结论
-
-不仅保存最后的结论，还保留理由、参考证据、适用条件、已否决方案及重审条件。发生变更时记录新旧版本和替代关系，让未来的 AI 分清“当时为什么这样决定”和“现在是否仍然有效”。
-[决策索引](memory/decisions.md) · [变更记录](memory/changelog.md) · [待复核资料](memory/pending-review.md)
-
-### 6. 保存工具生态和可迁移的能力信息
-
-用平台中立的方式记录 AI 工具、Skills、插件、MCP（Model Context Protocol，模型上下文协议）及其他外部能力的用途、接入条件、实际验证结果和限制。
-严格区分**工具名称、可发现、已安装、已授权、能调用、实际调用成功**等不同状态；不会因为在一台设备或一个 AI 平台上可用，就断言其他 Agent 也具有同样的能力。
-[接入目录](integrations/README.md) · [平台能力矩阵](integrations/capabilities.md)
-
-### 7. 归档会话与真实文件，支持可选健康摘要
-
-会话按照 **L0 索引、L1 摘要、L2 详细检查点、可选 L3 有来源的可见原文**组织，原文必须额外获准。对于用户上传件和 AI 生成件，可以保存**实际文件字节**、SHA-256 校验值、资产版本与来源，而不只是一个可能过期的外部链接。
-
-#### L0–L3：为什么会话要分四层？
-
-| 层级 | 实际保存或返回的内容 | 适合什么时候读取 |
-| --- | --- | --- |
-| **L0 · 会话索引** | 标题、会话 ID、关联项目、版本等定位信息 | “这个问题以前在哪段对话讨论过？”先找到会话 |
-| **L1 · 会话摘要** | 在 L0 的基础上增加已提供的摘要 | “这段会话和当前问题有关吗？”快速筛选 |
-| **L2 · 结构化检查点** | 目标、需求、约束、讨论演变、决策、被否决方案及理由、成果、验证、待解决问题、下一步与文件引用 | “我们已经决定了什么？哪些测试做过？下一步干什么？”直接接续任务 |
-| **L3 · 可选的真实可见原文** | 已获准的用户、助手、工具消息，以及原始来源和修订证据 | “当时原话究竟怎么说？”必须额外授权才能查看 |
-
-**关键区别**：四层是可逐步补充、按需读取的**视图与资料深度**，而不是系统自动生成的四份摘要。没有实际保存的 L1/L2/L3 内容不会被凭空补齐；L3 只允许在 `private` 或 `restricted` 级别的 Vault 中按额外授权归档和读取。
-
-例如，换一个 Agent 继续虚构的温室校准项目：先用 L0 找到 `calibration-session`，用 L1 判断是否相关，再到 L2 查到“先校验再写入基准”的决策、被否决方案和下一步。只有需要核实原话且来源真正存在、权限获准时，才进入 L3。**L2 后续追加新检查点，不会改写历史 L3**；原文仍可通过原始修订号和摘要指纹追溯。
-[会话字段与修订协议](docs/protocol.md) · [会话模型](sessions/README.md) · [检索及原文授权说明](docs/guide.md)
-
-提供可选健康扩展，但目前**仅对明确授权的去标识化汇总做结构校验**；不包含私人版特有的健康设备原始记录同步、历史自动回填或生产定时采集能力。
-[会话说明](sessions/README.md) · [资产索引](assets/README.md) · [健康扩展边界](life-archive/health/README.md) · [来源适配器](docs/adapters.md)
-
-### 8. 管理记忆的新增、去重、更正和审核
-
-记忆不是直接覆盖旧文件。V2.3 的候选治理包含可执行的**验证、同键去重与冲突建议、审批、单独激活、撤销、替代和版本追溯**，其逻辑为：
-
+**把 AI 的长期记忆变成用户自己掌控、可以迁移和持续维护的资料体系。**
+AI Memory Hub 提供完整的**个人记忆工作区模板 + 本地 Vault 归档引擎**，用于组织长期事实、会话检查点、项目、文件、人生档案，以及不同 Agent 之间经授权的交接和版本确认。
+**V2.3.0** · Python 3.11+ · MIT · 本地优先 · 当前项目仓库仍为 **Private**，未正式公开发布。
+**新用户从这里开始：** [让你的 Agent 协助初始化（中文）](docs/agent-onboarding.zh-CN.md) · [English onboarding](docs/agent-onboarding.md) · [手动安装及命令](docs/workspace.md)
+## 一、这是什么？适合谁？
+你可以把它理解为一套**长期私人资料的组织方法、治理规则和实际可运行的存储程序**，而不是把所有聊天复制到一个大文件里。
+- **个人用户**：希望更换 AI 后仍能找回自己的偏好、项目进展、决策和文件版本。
+- **使用多个 Agent 的人**：希望让不同工具在获准范围内读取相同背景、接续任务并确认自己读到哪一版。
+- **开发者与长期项目维护者**：需要长期检查点、历史修订、来源与证据、文件真实字节归档。
+- **希望建立人生档案的人**：可以从 12 个类别、52 个二级领域、134 个字段逐渐补充，不必一次填写完整。
+**它不是什么？** 它不是能自动读取所有 AI 账号的服务、不是云端同步平台，也不是将原始聊天或健康记录默认上传至 GitHub 的程序。功能可用性取决于 Agent 的实际工具权限、数据来源和用户授权。
+## 二、首次使用：让你的 AI 帮你搭建
+这应当是普通用户最主要的入口。你可以把当前仓库交给有**仓库读取、必要的本地执行能力**的 Agent，让它按 [Agent 首次部署协议](docs/agent-onboarding.zh-CN.md) 完成已获准的步骤，并把不能完成的事项集中反馈。
+### 用户只需表达目标
 ```text
-发现具有长期价值的信息
-          ↓
-核对类型、来源、时间及敏感等级
-          ↓
-形成候选，验证格式并检查重复与冲突
-          ↓
-人工核实证据并明确批准或拒绝
-          ↓
-另行授权激活，或进入可选 PR 审核流程
-          ↓
-进入可读取的正式记忆并保留修订记录
-          ↓
-相关 Agent 按权限重读变更
+请阅读这个 AI Memory Hub 仓库的 README.md、AGENTS.md
+和 docs/agent-onboarding.zh-CN.md。
+我想建立属于自己的私人记忆中枢。
+先盘点你实际拥有的工具和可访问数据，再提出最少的
+必要授权；不要假定能读取所有历史聊天或文件。
+可自主完成安全的安装、空白初始化和合成测试。
+建立个人 GitHub 私有仓库、读取真实来源、写入远端、
+启用自动调度前，应获得我明确的权限及范围确认。
+按目录整理有来源的候选记忆、会话、项目和资产，
+不能把未核实的推断当成正式事实。
+结束时报告已完成事项、证据、资料缺口、待我补充的
+内容，以及五种同步开关和真实调度状态。
 ```
-
-**候选被批准不等于已经激活成正式事实**；可选 PR 流程也不会自动把私人信息推送到任何仓库。
-
-[记忆生命周期与命令](workflows/memory-lifecycle.md) · [候选入口](candidates/README.md)
-
-### 9. 检测共享版本变化，避免误报同步
-
-接收方可以检测经用户挑选、批准并交付的共享记忆快照，对变化的范围逐一重读。系统区分：
-- `detected_sha`：当前检测到的快照版本；
-- `synced_sha`：接收 Agent 已明确确认重读的版本；
-- `pending_reload` / `reload_scope`：仍待读取或确认的内容。
-原始来源不可访问时会报告 `unknown`；**检测到新的 SHA 不等于已经重读，更不等于 Agent 真正理解了内容**。
-[跨 Agent 版本确认](integrations/memory-bootstrap.md) · [共享快照格式](schemas/shared-memory.schema.json)
-
-### 10. 统一验证、权限边界与长期维护
-
-仓库包含 JSON Schema、自动化测试、明确的发行文件白名单、Windows/Ubuntu 回归以及 ZIP/Bundle 独立构建审计。真实工作区与本地 Vault 分开创建，默认**零来源授权**，由操作系统权限控制读取范围。
-[安全约定](SECURITY.md) · [权限边界](core/boundaries.md) · [部署与恢复](docs/deployment.md) · [CI 入口](.github/workflows/test.yml)
-
-### 设计巧思：一些不起眼但很关键的细节
-
-| 小设计 | 为什么值得保留 |
-| --- | --- |
-| **先检查点，后原文** | 大多数接续任务需要的是目标、验证和下一步，不是上万字聊天；仅在原文存在且获准时深入 L3，减少不必要的上下文输入 |
-| **旧原文不被新总结覆盖** | L2 可以增量追加并保留检查点来源；查询历史修订仍能定位当时的原始消息和来源，不会拿新摘要冒充旧原话 |
-| **批准与生效分为两步** | 候选即使通过证据审核，也必须另行激活；冲突的同键记录还要确认精确的对端修订，降低误写和重复事实 |
-| **每个 Agent 有自己的同步基线** | A 已重读不代表 B 已重读；只在确实完成所有变更范围的读取确认后推进 `synced_sha`，来源失联时明确返回 `unknown` |
-| **外部链接与本地文件不混为一谈** | 链接只能标记为引用及其观察状态；只有真实字节进入 Vault，才可以做 SHA-256 校验和指定版本恢复 |
-| **失败允许部分完成，不重头覆盖** | 每条来源记录有处理回执；重试未变更项返回 `unchanged`，缺失或损坏的条目单独报告 |
-| **开关不是后台任务** | `weekly` / `full` 等策略开关与操作系统定时器、来源授权、实际运行结果分别记录，避免“开启了就说已同步” |
-| **工作区与 Vault 分开** | Agent 导航和可复用模板不等于原始记录及附件；实际数据由独立本地存储和系统权限保护，方便有边界地迁移 |
-
-这些机制强调的是**证据、恢复与授权**，不是对“无感采集所有数据”或“让模型自动永久记住”的承诺。
-
----
-
-## 二、仓库保存哪些方向的内容？
-
-以下描述的是**可以保存的信息领域**，而不是任何人的实际个人档案。空白工作区不会自动填充个人事实。
-
-### A. 人生档案：12 大类信息领域
-
-| 一级领域 | 可保存的信息方向 |
-| --- | --- |
-| **01 · 基础身份** | 基本背景、地区与语言、身份资料的用途及隐私边界 |
-| **02 · 童年与成长** | 早年环境、家庭与成长轨迹、阶段变化、重要经历 |
-| **03 · 教育与学习** | 教育经历、学习方法、技能积累、成长目标 |
-| **04 · 职业与事业** | 职业履历、专业能力、项目实践、职业发展 |
-| **05 · 性格与价值观** | 自我认识、价值倾向、行为与沟通方式、决策原则 |
-| **06 · 人际与社会关系** | 家庭、朋友、社交与职业关系及相关边界 |
-| **07 · 健康与生活** | 健康背景、生活习惯、运动作息、资料来源 |
-| **08 · 财务与现实条件** | 收支、资产负债、生活成本、计划及现实约束 |
-| **09 · 目标与未来规划** | 长期愿景、近期目标、个人兴趣与计划演变 |
-| **10 · AI 协作与决策** | 工具、协作约定、任务分工、重要决策与复盘 |
-| **11 · 人生重大事件** | 人生里程碑、关键时间线、转折与阶段变化 |
-| **12 · 资料收集与维护** | 来源、可信度、敏感等级、冲突复核、归档及访问策略 |
-
-**覆盖度不等于事实完整度**。初始化后所有类别均标记为 `unknown`；52 个领域和 134 项字段是**待填写的结构**。实际数据需要逐条确认来源和权限。
-
-[分类与领域](life-archive/taxonomy.md) · [字段与约束](life-archive/field-registry.json) · [资料结构校验](schemas/life-fields.schema.json)
-
-### B. 长期记忆与协作规范
-
-| 信息领域 | 保存方向 |
-| --- | --- |
-| **稳定背景和偏好** | 持续适用的表达方式、沟通习惯、生活与任务偏好 |
-| **长期规则和授权边界** | 用户批准的行为规则、不可越权事项、风险处理原则 |
-| **来源与可信度** | 自述、正式证据、外部材料、推断和候选的区分 |
-| **决策及历史版本** | 决策依据、适用时间、变化原因、替代与归档 |
-| **多 Agent 协作** | 阅读范围、交接信息、验证标准及版本确认 |
-| **可复用工作流程** | 研究、研发、写作、项目交接和质量审核方法 |
-
-入口：[核心资料](core/INDEX.md) · [长期记忆](memory/README.md) · [协作协议](collaboration/workflows.md) · [工作流](workflows/memory-lifecycle.md)
-
-### C. 工作、技术与项目知识
-
-| 信息领域 | 保存方向 |
-| --- | --- |
-| **项目背景** | 业务目标、需求约束、参与角色、历史进度 |
-| **方案与取舍** | 设计方案、选型理由、可替代方案及其风险 |
-| **开发与验证** | 技术环境、接口、测试证据、完成与待验收事项 |
-| **问题和经验** | 故障现象、有效处理方法、避免重复踩坑的结论 |
-| **交付与连续性** | 原始文件、检查点、资产版本、后续任务与交接 |
-| **通用知识** | 可以跨项目使用的概念、工具经验和方法 |
-
-入口：[项目模板](projects/TEMPLATE.md) · [知识模板](knowledge/TOPIC.md) · [开发流程](workflows/development.md)
-
-### D. 工具、Skills 与 AI 接入知识
-
-| 信息领域 | 保存方向 |
-| --- | --- |
-| **AI 接入** | 平台授权、来源格式、是否可访问本地工作区或共享快照 |
-| **Skills 与插件** | 适用任务、调用条件、来源、验证状态 |
-| **MCP 与其他外部工具** | 可发现能力、连接条件、权限及实际使用结果 |
-| **Agent 分工** | 执行职责、协作限制、验收与交付流程 |
-| **环境兼容性** | 依赖版本、升级限制、终端及运行环境 |
-
-入口：[平台说明](integrations/capabilities.md) · [Agent 角色](collaboration/agent-roles.md)
-
-### E. 健康、生活与文件资产
-
-| 信息领域 | 保存方向 |
-| --- | --- |
-| **健康和生活背景** | 有来源且获得授权的历史记录、习惯及时间线 |
-| **去标识化健康汇总** | 选定统计周期、指标、单位与样本数的格式校验 |
-| **用户上传文件** | 原始字节、文件标识、版本、来源与 SHA-256 |
-| **AI 生成文件** | 生成件的真实归档版本、关联项目和会话 |
-| **会话上下文** | L0–L2 分层摘要和检查点，另行授权的 L3 原文 |
-| **派生分析** | 基于已归档资料产生的可追溯摘要与结论 |
-
-**能力边界**：健康汇总验证不是 Apple Health 或其他设备的原始数据自动同步；外链只有在真实字节保存后才属于本地文件资产。
-
-入口：[健康摘要说明](life-archive/health/README.md) · [资产说明](assets/README.md) · [文件归档指南](docs/guide.md)
-
----
-
-## 三、常见使用场景
-
-| 你想完成的事情 | 记忆中枢如何支持 |
-| --- | --- |
-| **刚开始使用新的 AI 工具** | 从 `AGENTS.md` 和分类索引读取获准的核心背景；不能访问时采用经批准的交接包 |
-| **重启中断已久的项目** | 根据项目检查点、历史决策、资产版本和遗留事项恢复上下文 |
-| **更换 Agent 接手工作** | 提供已审核项目背景，选择性传输确切版本文件并由接收 Vault 核对 |
-| **让 AI 按长期偏好工作** | 按需读取相关规则、沟通标准，不把一次性要求扩展为全局规则 |
-| **持续补全人生档案** | 在 12/52/134 分类下逐条标记来源、时间、可信度及覆盖缺口 |
-| **保存 AI 生成的报告或代码** | 将真实字节与项目/会话关联，保留历史版本而非只存链接 |
-| **补充、更正或撤销记忆** | 先建候选并审查冲突，批准后单独激活；原版本可追溯 |
-| **确认共享内容有无更新** | 比较快照 SHA，读取变化范围并显式确认，不把检测当同步 |
-| **检查某项健康汇总** | 对已授权、去标识化汇总做格式核验，不擅自访问设备原始数据 |
-| **确认定时同步有没有执行** | 分别查看开关、来源授权、运行回执和调度状态，不以开关代替执行证据 |
-
-这些场景需要**真实访问权限、实际数据覆盖和任务适配能力**。本项目提供可执行的底座，但不会替任意 AI 平台自动建立账户连接。
-
----
-
-## 四、数据如何组织？
-
-采用与私人记忆中枢一致的**统一入口 → 分类索引 → 具体资料 → 来源/历史版本**逻辑。公开的是模板与程序，真正的私人资料则放在用户自己初始化的工作区和 Vault。
-
+### Agent 应当遵循的顺序
+| 阶段 | 允许自主完成的部分 | 需要用户提供或批准的部分 |
+| --- | --- | --- |
+| **① 识别环境** | 阅读入口和规范，盘点 GitHub/文件/命令/数据导出能力 | 无法访问的账号、平台及数据范围 |
+| **② 初始化** | 安装程序，创建独立 Workspace 和 Vault，检查 19 个模块与空档案 | 合法本地路径；涉及实际系统的执行权限 |
+| **③ 整理来源** | 对已经获准、实际可读的数据生成 L0–L2、项目检查点、候选和文件清单 | 具体来源授权；L3 原文、敏感文件需另行许可 |
+| **④ 审核与发布** | 去重、冲突建议、生成待审核资料及 Git 提交计划 | 正式记忆激活、远端写入、共享范围和私有仓库创建批准 |
+| **⑤ 交付与维护** | 检查数据覆盖、来源回执、同步状态，列出资料缺口与操作说明 | 是否部署定时任务、备份策略及将来变更权限 |
+**当前版本的实际限制**：这是一套可执行的引擎加操作协议，尚**没有内置一键创建 GitHub 仓库、遍历任意 AI 账号历史、自动形成并推送完整个人仓库的通用编排器**。有足够权限和工具的 Agent 可以协助完成若干步骤，但“阅读 README”本身不会赋予它 GitHub 写权限或历史聊天访问权。
+[Agent 首次部署与交付清单](docs/agent-onboarding.zh-CN.md) · [真实数据来源支持范围](docs/adapters.md) · [当前能力对照](docs/workspace-parity.md)
+## 三、关键能力：为什么这样设计？
+### 会话采用 L0–L3，而不是只存一份全文
+| 层级 | 内容与目的 | 什么时候用 |
+| --- | --- | --- |
+| **L0 · 索引** | 会话标题、ID、关联项目和版本定位 | 找到曾经讨论过该问题的会话 |
+| **L1 · 摘要** | 在索引上增加实际提供的概括 | 快速确认是否相关 |
+| **L2 · 结构化检查点** | 目标、要求、约束、决策、否决方案与理由、验证、下一步、文件引用 | 长期项目换 Agent 后直接接续 |
+| **L3 · 可选原文** | 实际归档的可见消息、来源和原始修订证据 | 需要核实原话时额外授权读取 |
+四层是**按需深入的视图**，不是自动生成的四份摘要。不存在的内容不会被编造；L3 需要额外同意，只允许在 `private` 或 `restricted` Vault 中保存和读取。新 L2 检查点不会改写已经归档的历史 L3。
+[会话协议](docs/protocol.md) · [实际查询方式](docs/guide.md) · [会话索引](sessions/README.md)
+### 长期记忆要经过候选、审批、单独激活
+只把经验证的信息加入正式事实视图：候选提取 → 核对来源和时间 → 比较同键重复或冲突 → 明确审核 → **另行激活**。更新时保留前后版本和替代关系；没有证据的推断留在候选，不能因为 Agent 自称“确认过”就写成事实。
+[记忆治理流程](workflows/memory-lifecycle.md) · [候选入口](candidates/README.md)
+### 文件存真实字节，不把链接当成文件
+获准的用户上传和 AI 生成文件可进入本地内容寻址 Vault，使用 **SHA-256** 核对原始字节、记录文件版本并关联会话与项目；外部链接只作为引用与观察状态。交接时单独选择**具体文件版本**，而不是把整个 Vault 发出去。
+[文件操作](docs/guide.md) · [资产版本](assets/README.md) · [离线交接](docs/deployment.md)
+### 共享版本必须由每个 Agent 自行确认
+`detected_sha` 表示发现了哪个快照；`synced_sha` 表示该 Agent 已完成获准变更范围的读取确认。不同 Agent 的状态独立；读取失败返回 `unknown`。同步回执不能证明 Agent 真正理解了内容，也不等于第三方 AI 服务的内置记忆已更新。
+[版本检测与重读](integrations/memory-bootstrap.md)
+### 其他重要设计
+- **人生档案**：12 类、52 个领域、134 个带来源/有效期/敏感度的字段，初始化均为 `unknown`，按实际经历和证据逐步补全。
+- **幂等重试**：导入按来源与条目记录回执，未变化返回 `unchanged`；缺失和失败单独报告，不把一次部分成功说成全量完成。
+- **项目连续性**：目标、历史取舍、检查点、验证证据和下一步与资产版本关联。
+- **分离存储**：可复用模板、个人 Workspace 和本地 Vault 各有不同角色；共享 Git 仓库不等于敏感原始资料数据库。
+[人生档案与字段](life-archive/README.md) · [项目模板](projects/TEMPLATE.md) · [同步说明](workflows/hybrid-sync.md)
+## 四、资料分别放在哪里？
 ```mermaid
 flowchart LR
-    A["统一入口 AGENTS.md"] --> B["分类索引与任务资料"]
-    B --> C["经授权的个人 Workspace"]
-    C --> D["版本化本地 Vault"]
-    D --> E["经审核的跨 Agent 交接"]
+    A["通用项目仓库：程序和空白模板"] --> B["个人 Workspace：目录、规则和索引"]
+    B --> C["经授权的本地 Vault：修订与文件字节"]
+    C --> D["经过审核的共享资料或交接包"]
+    D --> E["接收 Agent：按范围重读确认"]
 ```
-
-```text
-AI Memory Hub
-├── README.md                    中文默认首页与使用导航
-├── AGENTS.md                    模型中立的 Agent 接入入口
-├── core/                        任务索引、规则、偏好、权限边界
-├── memory/                      结构化记忆、决策、变更与待审核
-├── projects/                    项目模板与长期检查点
-├── sessions/                    L0–L3 会话索引与说明
-├── life-archive/                12 类人生档案、52 领域、134 字段
-├── knowledge/                   可复用知识及主题模板
-├── assets/                      文件资产清单和版本引用
-├── candidates/                  新记忆候选与审核入口
-├── collaboration/               多 Agent 分工、交接和验收
-├── integrations/                平台接入、共享记忆与版本确认
-├── workflows/                   记忆治理、研究、研发、写作流程
-├── config/                      同步默认策略及工作区设置模板
-├── ai_memory_hub/               本地归档、Vault、CLI 与治理引擎
-├── schemas/                     数据格式与字段校验规则
-├── docs/                        安装、操作、协议与多语言文档
-│   └── i18n/                    英文及其他语言的 README
-├── examples/                     可公开的合成样例
-├── scripts/                      校验、测试和发行审计
-├── tests/                        Windows/Linux 自动化回归
-├── vendor/                       通用版依赖和来源关系说明
-└── .github/workflows/            CI 测试与安全发行检查
-```
-
-**注意区分三个层次：**
-- **产品仓库**：公开可复用的源码、空白模板、合成示例、测试和说明，不保存使用者的个人事实。
-- **个人工作区 Workspace**：使用者初始化出的目录，包含 Agent 导航、个性化规则、档案模板、工作流及工作区设置。
-- **本地 Vault**：独立的 SQLite 索引与按内容寻址的文件归档，存放经过授权的记忆修订和文件字节；与工作区分开，默认不进入 Git。
-[19 模块能力对照](docs/workspace-parity.md) · [工作区初始化](docs/workspace.md) · [Vault 数据协议](docs/protocol.md)
-
----
-
-## 五、如何接入和使用？
-
-这是通用版比私人实例 README 更详细的部分。以下命令针对**已获得源码访问权限的 V2.3.0 版本**，Windows 可在 PowerShell 中执行，Linux/macOS 可在终端执行。示例里的路径只是合成演示，不应直接用真实资料替代。
-
-### 1. 准备环境与安装
-
-准备 Python **3.11 或更高版本**和可信的本地文件系统。获得本项目源码并进入仓库根目录后执行：
-
+| 位置 | 主要用途 | 默认能否上传 GitHub？ |
+| --- | --- | --- |
+| **通用代码仓库** | `AGENTS.md`、`core/`、`memory/`、`projects/`、`sessions/`、`life-archive/`、`integrations/`、`workflows/`、程序和模板 | 公开产品文件经过发行审计 |
+| **用户 Workspace** | 个性化分类、身份/规则、人生档案、待审核项目与索引 | **默认全部忽略**；只允许另行审查后选取的资料 |
+| **用户 Vault** | SQLite 修订、授权来源、真实文件字节、原文与回执 | **不能默认上传**；使用本地权限与备份机制 |
+| **用户自己的私有仓库（可选）** | 经用户批准的非敏感结构化记忆、项目摘要、工作流和引用索引 | 需要独立授权创建、审查与提交；Private 不等于端到端加密 |
+默认工作区的 `.gitignore` 使用拒绝式规则。**不能为了“自动完成”直接运行 `git add -f .` 将所有个人资料推送远端。** 需要 Git 同步时，应建立专门的**经过审核的投影**，对 L3 原文、敏感字段和附件采用单独授权的存储路径。
+[19 模块完整覆盖](docs/workspace-parity.md) · [安全边界](core/boundaries.md) · [Agent 归档与提交规则](docs/agent-onboarding.zh-CN.md)
+## 五、安装与快速体验
+### 环境与初始化
+准备 Python 3.11+，在已经获准获取的源代码根目录执行。初始化会在仓库外建立个人工作区与独立 Vault，默认**零数据源授权、零后台定时任务**。
 ```sh
-python --version
 python -m pip install .
-ai-memory-hub --help
-```
-
-提示：当前仓库尚为 Private，需要实际仓库权限才能获取源码。CLI 名称是 `ai-memory-hub`；若可执行命令未加入 PATH，可使用 `python -m ai_memory_hub`。生产环境建议使用独立虚拟环境并固定代码版本。
-
-### 2. 初始化个人工作区和独立 Vault
-
-```sh
 ai-memory-hub workspace init --path ../my-hub
 ai-memory-hub workspace check --path ../my-hub
 ```
-
-这会在 Git 仓库外创建 `../my-hub/` 个人工作区及默认的同级 `../my-hub-vault/`。默认敏感级别为 `private`，**不授权任何数据源、不安装计划任务、不导入个人历史**。可选参数 `--vault PATH` 和 `--sensitivity LEVEL` 用于自定义目标目录和敏感等级。
-初始化器拒绝覆盖已存在目录。请在信任的本地目录下创建工作区，勿把真实 Vault 放进公开 Git 仓库。首次使用从新工作区的 `AGENTS.md` 和 `core/INDEX.md` 开始。
-
-### 3. 五分钟体验：完整合成数据闭环
-
-建议首次体验选择**全新目录**。以下演示将建立工作区、加载一个经显式授权的合成来源，然后查看项目、候选、会话和文件状态：
-
+### 合成示例：从导入到按层读取
+首次使用请选一个新的测试目录；`--demo` 只准备合成数据，**真正读取仍需明确授权**。
 ```sh
 ai-memory-hub workspace init --path ../hub-demo --demo
 ai-memory-hub workspace check --path ../hub-demo
 ai-memory-hub --root ../hub-demo-vault source grant sample normalized --path ../hub-demo/demo-inbox --consent
 ai-memory-hub --root ../hub-demo-vault local run --source sample
-ai-memory-hub --root ../hub-demo-vault local status
-ai-memory-hub --root ../hub-demo-vault memory review
-ai-memory-hub --root ../hub-demo-vault project list
-ai-memory-hub --root ../hub-demo-vault session list
-ai-memory-hub --root ../hub-demo-vault asset check calibration-notes
-```
-
-`--demo` 只复制合成输入材料；真正读取它们仍需 `source grant ... --consent`。重复执行 `local run` 时，相同内容应返回未变化状态，不会复制一份新的记忆修订。**候选默认仍是候选**，不是已经审核激活的正式事实。
-[合成入门及预期结果](docs/workspace.md#synthetic-onboarding)
-
-#### 按需读取同一段会话：L0 → L1 → L2
-
-导入合成示例后，可用同一个会话 ID 逐层查看：先问“是哪段会话”，再读“讨论了什么”，最后读取决策、验证和待办。L3 不包含在此合成示例中；没有被授权归档的原文不能凭命令生成。
-
-```sh
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L0
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L1
 ai-memory-hub --root ../hub-demo-vault session show calibration-session --layer L2
+ai-memory-hub --root ../hub-demo-vault memory review
+ai-memory-hub --root ../hub-demo-vault asset check calibration-notes
+ai-memory-hub --root ../hub-demo-vault local status
 ```
-
-L2 的 `rejected_options` 保存的是“否决了哪个方案，以及原因”，`verification` 是已提供的验证记录，`next_actions` 指向后续行动。**它们不应被 AI 自动编造成已验证结论。**
-
-### 4. 建立自己的资料结构
-
-初始化完成后，可按实际需要填写 `core/` 规则、`projects/` 模板和 `life-archive/profile.json`。人生档案的 12 个大类起初全是 `unknown`；使用 `workspace check` 检查字段覆盖、来源与敏感度等，不需要在初次安装时提供所有资料。
-保存敏感内容前先确定是否有必要、是否拥有读取来源的权限，以及它应该留在私有工作区还是限制访问的 Vault。
-
+L2 中可看到**已记录**的取舍、验证和待办，系统不会自动生成不存在的 L3 原文。真实来源如 ChatGPT 导出或 Codex 工作区只能通过实际受支持的格式、获得访问权后导入；原始聊天 L3 需额外授权。
+### 审批、跨 Agent 读取与文件交接
 ```sh
-ai-memory-hub workspace check --path ../my-hub
-ai-memory-hub workspace facts --path ../my-hub --consent
-```
-
-`workspace facts` 只投影当前已经**正式接受**的记忆，不会替用户自动创建 Git 提交或远端 Pull Request。
-
-### 5. 接入获准的数据源
-
-来源目录需要使用受支持的清单/导出格式，并且由使用者主动选择。对于一个包含 `memory-hub.json` 的本地目录，先授权再运行：
-
-```sh
-ai-memory-hub --root ../my-hub-vault source grant work normalized --path APPROVED_INBOX --consent
-ai-memory-hub --root ../my-hub-vault local run --source work
-ai-memory-hub --root ../my-hub-vault local status
-```
-
-`APPROVED_INBOX` 是需要替换的本地路径。ChatGPT 历史需先按官方流程**自行下载**兼容的 JSON/ZIP，再选择 `chatgpt_export` 适配器并授予本地路径；L3 可见原文必须另行使用显式原文授权，附件需单独登记。没有任何“自动监听所有 AI 对话”的默认功能。
-[数据源适配器](docs/adapters.md) · [本地部署](docs/deployment.md)
-
-### 6. 审核和激活一条长期记忆
-
-使用真实的候选 ID、当前修订和审批人替换下列示意值，先对照命令返回的审核建议及证据：
-
-```sh
-ai-memory-hub --root ../hub-demo-vault candidate suggest CANDIDATE_ID --consent
-ai-memory-hub --root ../hub-demo-vault candidate advance CANDIDATE_ID validated --base 0 --record-revision 1 --actor reviewer --reason "Source checked" --consent
-ai-memory-hub --root ../hub-demo-vault candidate advance CANDIDATE_ID review --base 1 --actor reviewer --reason "Peers checked" --consent
-ai-memory-hub --root ../hub-demo-vault candidate advance CANDIDATE_ID approved --base 2 --actor reviewer --reason "Owner approved" --evidence-verified --consent
-ai-memory-hub --root ../hub-demo-vault candidate advance CANDIDATE_ID active --base 3 --actor reviewer --reason "Activate approved memory" --consent
-ai-memory-hub --root ../hub-demo-vault candidate history CANDIDATE_ID --consent
-```
-
-这是**无重复或冲突的首次候选**的流程示例；实际审批如有同键记录，必须按建议补充准确的 `--ack-peer ID@REV`、`--supersede ID@REV`，否则会拒绝变更。审批与激活分开进行，不能因为模型自述“我认为已验证”就略过真实证据核查。
-[审核流程与所有分支状态](workflows/memory-lifecycle.md)
-
-### 7. 让另一个 Agent 检测并确认共享记忆版本
-
-先由拥有者从 Vault **仅选取已经正式接受并获准共享的记忆**生成本地快照，再经单独批准的渠道交给接收方。接收端使用自己持有的 Vault 和实际得到的快照路径：
-
-```sh
-ai-memory-hub --root OWNER_VAULT version snapshot --name checkpoint-01 --include rules=MEMORY_ID --consent
+ai-memory-hub --root VAULT candidate suggest CANDIDATE_ID --consent
+ai-memory-hub --root VAULT candidate advance CANDIDATE_ID validated --base 0 --record-revision 1 --actor reviewer --reason "Source checked" --consent
+ai-memory-hub --root VAULT candidate history CANDIDATE_ID --consent
 ai-memory-hub --root RECEIVER_VAULT version check --channel shared --agent agent-b --snapshot APPROVED_JSON --consent
 ai-memory-hub --root RECEIVER_VAULT version reload --channel shared --agent agent-b --scope rules --consent
 ai-memory-hub --root RECEIVER_VAULT version confirm --channel shared --agent agent-b --sha DETECTED_SHA --receipt READ_RECEIPT --consent
-```
-
-`OWNER_VAULT`、`RECEIVER_VAULT`、`MEMORY_ID`、`APPROVED_JSON`、`DETECTED_SHA` 和 `READ_RECEIPT` 均为需要替换的操作值。只在 Agent 实际阅读返回的范围后确认；所有变化范围被确认之前，`synced_sha` 不会推进。回执不等于跨平台原生记忆已自动同步。
-[完整版本检测协议](integrations/memory-bootstrap.md)
-
-### 8. 授权交接项目与指定文件版本
-
-交接是显式操作，`handoff` 开关默认关闭。发送方可生成包含项目上下文和**单独勾选的文件版本**的离线包；接收方应先审查范围、权限和传输渠道：
-
-```sh
-ai-memory-hub --root ../hub-demo-vault config set handoff on
-ai-memory-hub --root ../hub-demo-vault transfer pack --project greenhouse-demo --asset calibration-notes@1 --consent
-ai-memory-hub --root RECEIVER_VAULT config set handoff on
+ai-memory-hub --root OWNER_VAULT transfer pack --project greenhouse-demo --asset calibration-notes@1 --consent
 ai-memory-hub --root RECEIVER_VAULT transfer receive --input APPROVED_COPY.zip --consent
 ai-memory-hub --root RECEIVER_VAULT transfer inspect PACKAGE_ID --consent
 ai-memory-hub --root RECEIVER_VAULT transfer file PACKAGE_ID calibration-notes@1 --consent
 ```
-
-接收方 Vault 需先独立初始化，`APPROVED_COPY.zip` 指发送方实际生成、经审核后安全传递的文件，`PACKAGE_ID` 从 `receive` 结果获取。**交接 ZIP 不加密**，SHA-256 能检验字节完整性，不能证明发件人身份；L3 原文与未授权的文件默认不外发。
-[完整交接和恢复说明](docs/deployment.md)
-
-### 9. 五种同步开关、维护和恢复
-
-| 开关 | 普通模式默认 | 含义 |
+这部分为**命令形态示意**：大写 ID、Vault 路径、读取回执、审批修订号均需要替换成真实返回值；传输前要先开启并获准使用 `handoff`，接收端 Vault 要独立初始化。记忆审批需按完整状态机经过审查、批准和单独激活，不能仅执行上面三行就视为完成。
+[一步步安装](docs/workspace.md) · [候选完整审批](workflows/memory-lifecycle.md) · [跨 Agent 共享版本](integrations/memory-bootstrap.md) · [离线交接与恢复](docs/deployment.md)
+## 六、同步、权限与运行维护
+### 五种开关不是五个自动任务
+| 开关 | 普通模式初始值 | 实际含义 |
 | --- | --- | --- |
-| `weekly` | 开 | 每周归档入口，不自动安装系统定时任务 |
-| `full` | 开 | 用户主动触发的全量或指定来源导入 |
-| `event` | 关 | 明确触发且获准的事件 |
-| `daily` | 关 | 可选的每日补漏调用 |
-| `handoff` | 关 | 主动交接项目与文件版本 |
-
-可用 `config set FEATURE on|off` 管理；**开关打开不是“已经在后台运行”**。通过 `local status` 分别检查授权源、实际执行和 `scheduler` 状态。升级时先停止写入，再备份成对的工作区与 Vault、校验恢复副本后进行测试，不直接用新旧运行时同时打开同一数据库。
-[使用与故障排查](docs/guide.md) · [备份、恢复、升级](docs/deployment.md)
-
-### 10. 对开发者和维护者
-
-本项目保留 V2.2 的 Vault 记录协议 `2.1`，V2.3 工作区格式为 `1.0`，离线交接包采用 `2.2` 格式。代码和数据是分开的：贡献源码或提 PR 时，**不要提交真实个人档案、聊天导出、Vault 数据库、附件和访问令牌**。
-
-```sh
-python -m pip install jsonschema
-python -m unittest discover -s tests -v
-python scripts/smoke_release.py
-python scripts/smoke_v22.py
-python scripts/smoke_workspace.py --installed
-python scripts/check_readme_i18n.py
-```
-
-运行已安装 CLI 的冒烟脚本前，应先执行 `python -m pip install .`。CI 在 Windows、Ubuntu 复核程序及公开合成示例；它不能代替用户真实设备和外部平台的独立接入验收。
-
----
-
-## 六、隐私、安全和控制权
-
-- **用户决定存什么、让谁读、什么时候修改**。来源导入、L3 原文、外发文件和共享记忆均有独立边界。
-- **产品仓库不等于个人资料仓库**。本仓库模板仅包含结构与合成数据。个人工作区和 Vault 默认分离，不能因为将来开源就自动公开使用者资料。
-- **本地 Vault 依赖操作系统访问权限和磁盘加密**。程序自身不加密 Vault；跨设备交接 ZIP 也不加密。
-- **内容敏感度标签不等于文件系统 ACL**。对不同接收主体应使用独立 OS 权限、账号或存储边界。
-- **撤销来源授权只停止未来读取**。已经保存的历史修订不会因此自动删除；删除一个 Git 文件也不意味着清除整个 Git 历史。
-- **不能把推断当事实**。记录来源、日期和证据状态；正式记忆须经过验证、审批与单独激活。
-- **不假设跨平台能力**。任何 AI 能否读取本地文件、远端仓库和新快照，均要以真实权限和执行结果为准。
-- **不误报自动化**。没有部署的调度器、未执行的备份恢复、未覆盖的原始健康导入，不应写成已自动完成。
-[安全声明](SECURITY.md) · [授权与边界](core/boundaries.md) · [记忆治理](workflows/memory-lifecycle.md)
-
----
-
-## 七、当前建设状态与边界
-
-截至 **2026-11-19**，V2.3.0 已完成以下工程能力，并通过合成数据验收：
-
-| 模块或事项 | 当前状态 |
+| `weekly` | 开 | 每周归档入口；**不会自动建立计划任务** |
+| `full` | 开 | 用户主动执行的全量/指定来源读取 |
+| `event` | 关 | 已获准的事件触发入口 |
+| `daily` | 关 | 额外的每日补漏运行入口 |
+| `handoff` | 关 | 已授权的项目和文件版本交接 |
+**配置开启 ≠ 实际执行成功 ≠ 已读取所有来源 ≠ 已同步到 GitHub。** 调度安装、凭据作用域、来源读取、运行结果和备份恢复都需要分别验证。可用 `config show`、`local status` 查看已有的记录；没有运行证据时应报告 `not_verified`。
+### 数据和安全边界
+- 只对**实际可访问且用户明确授权**的来源进行导入；不要让一位 Agent 冒充拥有所有历史会话、平台记忆或文件。
+- L3 原文、健康/财务等高敏信息、私有附件、仓库写入以及长期自动化，均需要单独说明范围和许可。
+- 撤销来源授权只停止后续读取，不自动清除此前已经归档的历史修订；Git 提交历史中的内容也不会因删除现行文件而消失。
+- Vault 和传输 ZIP **本身不提供应用层加密**，需要依靠操作系统权限、磁盘加密与用户认可的安全传输方式。
+- 不同 Agent 各自确认共享记忆版本；实际 Git 仓库同步与快照重读是不同机制。
+[安全说明](SECURITY.md) · [权限约束](core/boundaries.md) · [导入和重试](docs/guide.md) · [本地备份恢复](docs/deployment.md)
+## 七、当前已实现什么？还缺什么？
+| 能力 | 当前真实状态 |
 | --- | --- |
-| **19 个通用工作区模块** | 已模板化，可按用户分别初始化 |
-| **12 类 / 52 领域 / 134 字段人生档案** | 分类、注册表和校验已实现，默认无真实资料 |
-| **L0–L3 会话、版本文件归档与 Vault** | 已实现；敏感原文与来源读取需额外授权 |
-| **候选记忆治理和历史版本** | 验证、建议、审批、单独激活、撤销及追溯已实现 |
-| **跨 Agent 快照与重读确认** | 已实现，但只适用于经授权交付的快照与接收端 |
-| **离线项目交接和文件版本取回** | 合成测试已通过，不是云端实时同步 |
-| **Windows / Ubuntu、ZIP / Bundle 发行审计** | 工程验收已通过 |
-| **真实用户数据接入、自动归档定时任务** | 不默认启用，需用户另外配置和验证 |
-| **健康原始数据同步** | 未作为通用功能实现；仅支持去标识化汇总校验 |
-| **GitHub 公开仓库与正式 2.3.0 Release** | 尚未发布；当前仓库为 Private |
-
-项目完整性与安全边界详见 [19 模块覆盖矩阵](docs/workspace-parity.md)、[安全说明](SECURITY.md)及 [GitHub Actions](.github/workflows/test.yml)。**合成环境测试通过不能替代真实来源授权或某个 AI 平台的实际接入确认。**
-
----
-
+| 完整 19 模块工作区和独立 Vault 初始化 | **已实现，已进行合成测试** |
+| 12/52/134 人生档案分类和缺口检查 | **已实现**；初始数据全部 `unknown` |
+| 会话 L0–L3、项目检查点、真实文件版本 | **已实现引擎**，具体内容须从实际获准来源提供 |
+| 候选去重、审查、独立激活和修订追溯 | **已实现** |
+| 授权快照的逐 Agent 版本读取与确认 | **已实现**；并非第三方平台自动共享内部记忆 |
+| **让任意 Agent 一键新建用户私有 GitHub 仓库** | **尚无内置通用编排器**；有授权 GitHub 工具的 Agent 可以协助操作 |
+| **自动获取所有 AI 平台记忆、会话及附件** | **不具备通用访问能力**；依赖平台提供的导出和授权连接 |
+| **自动形成按目录分类的可审阅 Git 投影与提交** | **尚未作为完整端到端功能实现**；工作区默认拒绝跟踪 |
+| **首次完整性报告、待补资料和同步部署向导** | 可以通过本仓库 [Agent 操作协议](docs/agent-onboarding.zh-CN.md)指导完成，但尚无平台无关的一键执行器 |
+| 自动周期归档、远端 Git 同步与生产备份 | **默认不安装、不执行**；需用户另行配置和验收 |
+| 健康原始数据自动读取 | **未实现为通用功能**；仅支持去标识化健康汇总校验 |
+| 公开 Release | **未执行**，通用仓库仍是 Private |
+**当前阶段**：通用存储引擎、组织模板和审查机制已完成；“交给任意 AI 就自动部署、分类导入、创建仓库并持续更新”的**一站式 Agent 产品体验尚待补齐**。请勿把“有引导文档”误当作“自动化已经验收通过”。
+[能力对照与测试证据](docs/workspace-parity.md) · [Agent 首次使用协议](docs/agent-onboarding.zh-CN.md) · [GitHub Actions](.github/workflows/test.yml)
 ## 八、长期目标
-
-**让个人记忆从不同 AI 平台内部零散、不可直接迁移的摘要，转变成用户真正拥有、跨工具可用、持续修订且可验证的长期数字资产。**
-
-AI Memory Hub 不追求记录所有聊天，不以“存得越多”作为成功指标。它更重视：
-
-**保存方向清晰、来源证据可靠、历史能够回溯、更新经过审核、使用遵守权限，并且在 AI 工具变化后仍能够继续使用。**
+**用户只需把通用项目交给自己信任的 AI，经过必要的授权，就能拥有一套长期可维护、独立于单一平台的私人记忆中枢。**
+我们追求的是：自动化能做的让 Agent 完成，身份与权限由用户掌控，未经核实的信息保留为候选，敏感原文留在适当的私有存储中，长期同步有可验证的结果。
+这不是“无条件保存一切”，而是**把真正值得长期保留的信息，变成有证据、有版本、有范围、有退出机制的个人数字资产**。
