@@ -6,9 +6,11 @@
 
 **Zum ersten Mal hier?** Nutzen Sie den [Leitfaden zur Agent-gestützten Einrichtung](../agent-onboarding.md). Workspace und Vault lassen sich lokal initialisieren; ein eigenes privates GitHub-Repository, der Zugriff auf echte Gespräche/Dateien, Git-Veröffentlichung und Zeitplanung erfordern passende Werkzeuge und ausdrückliche Freigaben.
 
+**V2.4.0:** Der Einstieg mit `onboarding plan`, `apply` und `report` ist im [Einrichtungsleitfaden](../agent-onboarding.md) beschrieben. Die Beispiele zum lokalen Kern beruhen auf V2.3.0.
+
 > **Dein Kontext. Deine Dateien. Deine Entscheidung.** Eine lokale, plattformneutrale Grundlage für langfristige KI-Erinnerungen, nachvollziehbare Projektarbeit und autorisierte Übergaben zwischen KI-Agenten.
 
-**Version 2.3.0 · Python 3.11+ · MIT-Lizenz · Kommandozeile (CLI)**
+**Version 2.4.0 · Python 3.11+ · MIT-Lizenz · Kommandozeile (CLI)**
 
 Ein Chatverlauf ist noch kein verlässliches Langzeitgedächtnis. Entscheidungen verschwinden in langen Gesprächen, Anhänge verlieren ihren Zusammenhang und bei einem Wechsel des KI-Assistenten muss alles erneut erklärt werden. **AI Memory Hub** speichert ausdrücklich freigegebene Informationen, Herkunftsnachweise, Projektstände und **echte Dateiinhalte** in einem lokalen Vault – unabhängig von einzelnen KI-Anbietern.
 
@@ -60,7 +62,7 @@ Vorschläge werden nicht automatisch als bestätigte Fakten übernommen. Siehe [
 ### Agentübergreifende Versionen und Erinnerungspflege
 
 Ausdrücklich freigegebene Erinnerungen können in einem lokalen Snapshot bereitgestellt werden. Auf der Empfängerseite erkennt `version check` Änderungen; `version reload` gibt betroffene Bereiche und eine einmalige Quittung zurück; `version confirm` setzt `synced_sha` **erst nach ausdrücklicher Bestätigung**. `detected_sha` bedeutet nicht synchronisiert; nicht lesbare Quellen liefern `unknown`. Die Quittung beweist weder das Verständnis des Agenten noch eine automatische Verbindung zu sämtlichen KI-Diensten. Siehe [Bootstrap und Versionsabgleich](../../integrations/memory-bootstrap.md).
-`candidate suggest`, `candidate advance` und `candidate history` ermöglichen eine dokumentierte, autorisierte Prüfung und Aktivierung. Siehe [Lebenszyklus](../../workflows/memory-lifecycle.md). Das optionale Gesundheitsmodul **prüft nur de-identifizierte Aggregate**, keine Rohdaten-Synchronisierung. Software **2.3.0**, Vault-Schema **2.1**, Arbeitsbereichsformat **1.0**.
+`candidate suggest`, `candidate advance` und `candidate history` ermöglichen eine dokumentierte, autorisierte Prüfung und Aktivierung. Siehe [Lebenszyklus](../../workflows/memory-lifecycle.md). Das optionale Gesundheitsmodul **prüft nur de-identifizierte Aggregate**, keine Rohdaten-Synchronisierung. Software **2.4.0**, Vault-Schema **2.1**, Arbeitsbereichsformat **1.0**.
 
 ### L0–L3: Gespräche nur so tief lesen wie nötig
 
@@ -150,11 +152,11 @@ Mit `config set FEATURE on|off` ändern. `local run --source ID` verwendet norma
 ## Datenschutz, Grenzen und Kompatibilität
 
 Der Vault wird nicht von der Anwendung verschlüsselt. Betriebssystemrechte, Festplattenverschlüsselung und Backups müssen gesondert eingerichtet werden. Das Entziehen einer Quellenfreigabe stoppt zukünftiges Lesen, löscht aber keine gespeicherten Revisionen. Transfer-ZIPs sind unverschlüsselt und dürfen nur über einen freigegebenen Kanal an berechtigte Empfänger gehen. Ein externer Link ist kein bereits gespeicherter Dateiinhalt.
-Die Anwendung ist V2.3.0 und unterstützt weiterhin das Datensatzschema `2.1`; das Offline-Transferformat trägt die Version 2.2. Vor Updates eine Sicherung erstellen und das Upgrade an einer wiederhergestellten Kopie prüfen.
+Die Anwendung ist V2.4.0 und unterstützt weiterhin das Datensatzschema `2.1`; das Offline-Transferformat trägt die Version 2.2. Vor Updates eine Sicherung erstellen und das Upgrade an einer wiederhergestellten Kopie prüfen.
 
 ## Dokumentation und Mitwirkung
 
 [Einrichtung, Backup und Transfer](../deployment.md) · [Benutzerhandbuch](../guide.md) · [Adapter](../adapters.md) · [Protokoll](../protocol.md) · [Sicherheit](../../SECURITY.md) · [MIT-Lizenz](../../LICENSE)
 Für Beiträge ausschließlich synthetische Daten verwenden, keine privaten Exporte oder Anhänge veröffentlichen. Tests: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` und `python scripts/smoke_v22.py`.
 
-**Veröffentlichungsstand:** Der V2.3-Kern ist implementiert und synthetisch getestet. Die öffentliche Freigabe des GitHub-Repositories und ein offizielles Release 2.3.0 sind eigenständige Veröffentlichungsschritte.
+**Veröffentlichungsstand:** Der V2.3-Kern ist implementiert und synthetisch getestet. Die öffentliche Freigabe des GitHub-Repositories und ein offizielles Release 2.4.0 sind eigenständige Veröffentlichungsschritte.

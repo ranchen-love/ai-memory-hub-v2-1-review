@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "onboarding.schema.json",
+  "title": "AI Memory Hub onboarding request, plan or report",
+  "oneOf": [
+    {"$ref": "#/$defs/request"},
+    {"$ref": "#/$defs/plan"},
+    {"$ref": "#/$defs/report"}
+  ],
+  "$defs": {
+    "identifier": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,99}$"},
+    "path": {"type": "string", "minLength": 1, "maxLength": 3000},
+    "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "level": {"enum": ["public", "internal", "private", "restricted"]},
+    "state": {"enum": ["completed", "partial", "failed", "blocked", "not_requested", "not_verified"]},
+    "target": {
+      "type": "object",
+      "required": ["target", "visibility"],
+      "additionalProperties": false,
+      "properties": {
+        "target": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_.-]{1,100}$"},
+        "visibility": {"const": "private"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["id", "adapter", "path", "authorized"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "adapter": {"$ref": "#/$defs/identifier"},
+        "path": {"$ref": "#/$defs/path"},
+        "authorized": {"type": "boolean"},
+        "allow_raw": {"type": "boolean", "default": false}
+      },
+      "if": {"required": ["allow_raw"], "properties": {"allow_raw": {"const": true}}},
+      "then": {
+        "properties": {
+          "authorized": {"const": true},
+          "adapter": {"not": {"enum": ["life_profile", "life_timeline"]}}
+        }
+      }
+    },
+    "request": {
+      "type": "object",
+      "required": ["format", "workspace"],
+      "additionalProperties": false,
+      "properties": {
+        "format": {"const": "1.0"},
+        "workspace": {"$ref": "#/$defs/path"},
+        "vault": {"$ref": "#/$defs/path"},
+        "sensitivity": {"$ref": "#/$defs/level"},
+        "sources": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/source"}},
+        "github": {"$ref": "#/$defs/target"}
+      }
+    },
+    "sourceReceipt": {
+      "type": "object",
+      "required": ["id", "adapter", "status"],
+      "properties": {
+        "id": {"$ref": "#/$defs/identifier"},
+        "adapter": {"$ref": "#/$defs/identifier"},
+        "status": {"$ref": "#/$defs/state"},
+        "reason": {"type": "string"},
+        "records": {"type": "array"},
+        "scope_digest": {"$ref": "#/$defs/digest"}
+      }
+    },
+    "base": {
+      "type": "object",
+      "required": ["format", "kind", "status", "plan_digest", "engine_version", "vault_schema_version",
+        "storage", "sources", "github", "markdown"],
+      "properties": {
+        "format": {"const": "1.0"},
+        "kind": {"enum": ["onboarding_plan", "onboarding_report"]},
+        "status": {"type": "string"},
+        "plan_digest": {"$ref": "#/$defs/digest"},
+        "engine_version": {"type": "string"},
+        "vault_schema_version": {"const": "2.1"},
+        "storage": {
+          "type": "object",
+          "required": ["status"],
+          "properties": {"status": {"$ref": "#/$defs/state"}}
+        },
+        "sources": {"type": "array", "items": {"$ref": "#/$defs/sourceReceipt"}},
+        "github": {"type": "object", "required": ["status"]},
+        "markdown": {"type": "string"}
+      }
+    },
+    "plan": {
+      "$ref": "#/$defs/base",
+      "required": ["request", "capabilities"],
+      "properties": {
+        "kind": {"const": "onboarding_plan"},
+        "status": {"const": "planned"},
+        "request": {
+          "type": "object",
+          "required": ["format", "workspace", "vault", "sensitivity", "sources", "github"],
+          "properties": {
+            "format": {"const": "1.0"},
+            "workspace": {"$ref": "#/$defs/path"},
+            "vault": {"$ref": "#/$defs/path"},
+            "sensitivity": {"$ref": "#/$defs/level"},
+            "sources": {"type": "array", "items": {"$ref": "#/$defs/source"}},
+            "github": {"anyOf": [{"type": "null"}, {"$ref": "#/$defs/target"}]}
+          }
+        },
+        "capabilities": {"type": "object"}
+      }
+    },
+    "report": {
+      "$ref": "#/$defs/base",
+      "required": ["workspace", "vault", "sync", "next_actions"],
+      "properties": {
+        "kind": {"const": "onboarding_report"},
+        "status": {"$ref": "#/$defs/state"},
+        "workspace": {"$ref": "#/$defs/path"},
+        "vault": {"$ref": "#/$defs/path"},
+        "data": {
+          "type": "object",
+          "required": ["session", "project", "asset", "memory"],
+          "additionalProperties": false,
+          "properties": {
+            "session": {"type": "array"},
+            "project": {"type": "array"},
+            "asset": {"type": "array"},
+            "memory": {"type": "array"}
+          }
+        },
+        "life_archive": {"type": "object"},
+        "memory_review": {"type": "object"},
+        "sync": {
+          "type": "object",
+          "required": ["scheduler"],
+          "properties": {
+            "scheduler": {"const": "not_verified"},
+            "switches": {"type": "object"},
+            "agents": {"type": "array"}
+          }
+        },
+        "next_actions": {"type": "array", "items": {"type": "string"}}
+      }
+    }
+  }
+}

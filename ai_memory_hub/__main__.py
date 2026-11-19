@@ -12,14 +12,14 @@ from .adapters import ADAPTERS, describe, grant, list_sources, local_input, revo
 from .assets import (
     LINK_STATES, LocalVault, availability, export_public_text, observe_link, put_file, put_link, references, retrieve_blob,
 )
-from . import candidates, shared_version
+from . import candidates, onboarding, shared_version
 from .handoff import create_handoff
 from .life import health_coverage
 from .model import FEATURES, LEVELS, PRESETS, Denied, HubError, Missing, ident, read_json, revision
 from .store import Store, memory_review, view_session
 from .sync import dispatch, failure, run_batch, status
 from .transfer import inspect_transfer, pack_transfer, receive_transfer, retrieve_transfer
-from .workspace import check_workspace, facts_projection, init_workspace
+from .workspace import bound_workspace, check_workspace, facts_projection, init_workspace, private_pair
 
 
 ORIGINS = ("user_upload", "ai_generated", "workspace_artifact")
@@ -197,6 +197,37 @@ def parser():
     health = workspace.add_parser("health-check")
     health.add_argument("--input", required=True, type=Path)
     permit(health)
+
+    setup = sub(commands.add_parser("onboarding", help="plan, apply and report an owner-approved first setup"))
+    for name in ("plan", "apply", "report"):
+        task = setup.add_parser(name)
+        task.add_argument("--request", required=True, type=Path)
+        if name == "apply":
+            task.add_argument("--approve-plan", required=True, metavar="SHA256")
+            permit(task)
+        if name == "report":
+            task.add_argument("--markdown", type=Path)
+
+    project_git = sub(commands.add_parser("projection", help="create an isolated, reviewable Git publication"))
+    preview = project_git.add_parser("preview")
+    preview.add_argument("--workspace", required=True, type=Path)
+    preview.add_argument("--output", required=True, type=Path)
+    preview.add_argument("--previous", type=Path)
+    preview.add_argument("--select", action="append", default=[], metavar="MEMORY_ID")
+    preview.add_argument("--asset", action="append", default=[], metavar="ID@REV")
+
+    repo = sub(commands.add_parser("repo", help="check or explicitly publish to a private GitHub repository"))
+    for name in ("probe", "create", "publish"):
+        remote = repo.add_parser(name)
+        remote.add_argument("--target", required=True, metavar="OWNER/NAME")
+        if name != "probe":
+            remote.add_argument("--workspace", required=True, type=Path)
+            permit(remote)
+        if name == "publish":
+            remote.add_argument("--projection", required=True, type=Path)
+            remote.add_argument("--digest", required=True, metavar="SHA256")
+            remote.add_argument("--base-sha", metavar="COMMIT", help="reviewed current default-branch commit")
+            remote.add_argument("--pr", action="store_true", help="open a review PR rather than update the default branch")
     return cli
 
 
@@ -329,6 +360,44 @@ def version_command(store, args):
 
 
 def execute(args, governance=None, initial_switches=None):
+    if args.command == "onboarding":
+        request = onboarding.read_request(args.request)
+        if args.action == "plan":
+            return onboarding.plan(request)
+        if args.action == "apply":
+            return onboarding.apply(request, args.approve_plan, args.consent)
+        result = onboarding.report(request)
+        if args.markdown:
+            onboarding.write_markdown(request, args.markdown, result)
+        return result
+    if args.command == "projection":
+        from .projection import build_projection
+
+        root, _, store = bound_workspace(args.workspace)
+        return build_projection(store, args.output, workspace=root, selected=args.select,
+                                assets=args.asset, previous=args.previous)
+    if args.command == "repo":
+        from . import github_publish
+
+        if args.action == "probe":
+            return github_publish.probe(args.target)
+        consent(args)
+        root, _, store = bound_workspace(args.workspace)
+        onboarding.require_repo_target(store, args.target)
+        try:
+            if args.action == "create":
+                result = github_publish.create_private(args.target, consent=True)
+            else:
+                candidate = local_input(args.projection.expanduser().absolute())
+                private_pair(root, candidate)
+                private_pair(store.root, candidate)
+                result = github_publish.publish_projection(
+                    args.target, candidate, args.digest, consent=True, pull_request=args.pr, expected_base=args.base_sha,
+                )
+        except onboarding.RECOVERABLE as exc:
+            result = {"target": args.target.lower(), **onboarding.problem(exc)}
+        onboarding.save_repo_receipt(store, args.action, args.target, result)
+        return result
     if args.command == "workspace":
         if args.action == "init":
             return init_workspace(args.path, args.vault, args.sensitivity, args.demo)
@@ -405,7 +474,7 @@ def main(argv=None, governance=None, initial_switches=None):
     try:
         result = execute(args, governance=governance, initial_switches=initial_switches)
         print(json.dumps(result, ensure_ascii=True, indent=2))
-        return 1 if result.get("status") in ("failed", "partial", "no_sources", "no_items") else 0
+        return 1 if result.get("status") in ("failed", "partial", "blocked", "no_sources", "no_items") else 0
     except (HubError, OSError, json.JSONDecodeError, UnicodeError, sqlite3.Error, RecursionError) as exc:
         error = failure(exc, None)
         print(json.dumps({"status": "error", "code": error["code"], "reason": error["message"]}), file=sys.stderr)

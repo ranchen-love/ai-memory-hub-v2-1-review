@@ -6,9 +6,11 @@
 
 **¿Es tu primera vez?** Sigue la [guía de instalación asistida por un Agent](../agent-onboarding.md). Puedes inicializar un Workspace y un Vault locales; crear tu repositorio privado, acceder a conversaciones y archivos reales, publicar en Git y programar sincronizaciones requieren herramientas disponibles y permisos explícitos.
 
+**V2.4.0:** La [guía de instalación](../agent-onboarding.md) explica cómo ejecutar `onboarding plan`, `apply` y `report`. Los ejemplos del motor local se basan en V2.3.0.
+
 > **Tu contexto, tus archivos, tus decisiones.** Una base local y neutral respecto a las plataformas para la memoria a largo plazo, la continuidad de proyectos y las transferencias autorizadas entre agentes de IA.
 
-**Versión 2.3.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**
+**Versión 2.4.0 · Python 3.11+ · Licencia MIT · Interfaz de línea de comandos (CLI)**
 
 El historial de un chat no es necesariamente una memoria fiable. Las decisiones importantes quedan enterradas, los adjuntos pierden su contexto y cambiar de asistente implica volver a explicar el proyecto. **AI Memory Hub** conserva el contexto autorizado, su procedencia, el estado del proyecto y los **bytes reales** de archivos seleccionados en un Vault local e independiente de cualquier proveedor.
 
@@ -60,7 +62,7 @@ Los candidatos no se convierten automáticamente en hechos aceptados. Consulta [
 ### Versiones compartidas y gestión de candidatos
 
 Solo la memoria seleccionada y autorizada puede exportarse como instantánea local. En el Vault receptor, `version check` detecta cambios, `version reload` devuelve el contenido modificado y un recibo de un solo uso, y `version confirm` actualiza `synced_sha` **tras la confirmación explícita**. `detected_sha` no significa sincronizado; un origen inaccesible produce `unknown`. El recibo no acredita comprensión ni implica conexión automática a todas las IA. Consulta [versiones e integración](../../integrations/memory-bootstrap.md).
-`candidate suggest`, `candidate advance` y `candidate history` permiten revisar, decidir y rastrear revisiones con consentimiento. Más detalles en [ciclo de memoria](../../workflows/memory-lifecycle.md). La extensión de salud **solo valida agregados desidentificados**, no sincroniza historiales originales. Versión **2.3.0**, esquema de Vault **2.1**, formato de espacio personal **1.0**.
+`candidate suggest`, `candidate advance` y `candidate history` permiten revisar, decidir y rastrear revisiones con consentimiento. Más detalles en [ciclo de memoria](../../workflows/memory-lifecycle.md). La extensión de salud **solo valida agregados desidentificados**, no sincroniza historiales originales. Versión **2.4.0**, esquema de Vault **2.1**, formato de espacio personal **1.0**.
 
 ### L0–L3: leer una conversación solo hasta la profundidad necesaria
 
@@ -150,11 +152,11 @@ Modifica un control con `config set FEATURE on|off`. `local run --source ID` uti
 ## Privacidad, límites y compatibilidad
 
 El Vault no dispone de cifrado incorporado: configura permisos del sistema, cifrado de disco y copias de seguridad. Revocar una fuente detiene futuras lecturas, pero no borra automáticamente los registros existentes. Los ZIP de transferencia carecen de cifrado y requieren un canal confiable y la autorización del destinatario. Un enlace externo sigue siendo una referencia hasta que se almacenen los bytes.
-La aplicación es V2.3.0, compatible con el esquema de registros `2.1`, y usa una envoltura independiente 2.2 para transferencias. Haz copias de seguridad y prueba actualizaciones en una restauración antes de cambiar la instancia real.
+La aplicación es V2.4.0, compatible con el esquema de registros `2.1`, y usa una envoltura independiente 2.2 para transferencias. Haz copias de seguridad y prueba actualizaciones en una restauración antes de cambiar la instancia real.
 
 ## Documentación y contribuciones
 
 [Despliegue y recuperación](../deployment.md) · [Guía completa](../guide.md) · [Adaptadores](../adapters.md) · [Protocolo](../protocol.md) · [Seguridad](../../SECURITY.md) · [Licencia MIT](../../LICENSE)
 Usa datos sintéticos en pruebas y contribuciones; nunca subas exportaciones personales. Pruebas: `python -m pip install jsonschema`, `python -m unittest discover -s tests -v`, `python scripts/smoke_release.py` y `python scripts/smoke_v22.py`.
 
-**Estado de publicación:** el núcleo ya funciona y está validado con datos sintéticos; hacer público el repositorio y crear una Release oficial 2.3.0 son pasos separados.
+**Estado de publicación:** el núcleo ya funciona y está validado con datos sintéticos; hacer público el repositorio y crear una Release oficial 2.4.0 son pasos separados.

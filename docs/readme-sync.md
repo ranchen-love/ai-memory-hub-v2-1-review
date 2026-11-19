@@ -11,12 +11,12 @@
 7. 已实现、需要授权和待开发的能力；
 8. 长期目标。
 英文首页遵循相同的八章顺序；其他语言保留实际能力和边界，并引导新用户阅读 `docs/agent-onboarding.md`。
-## 通用 Agent 引导而非虚构的一键自动化
-[Agent 首次部署协议](agent-onboarding.md)和[中文版本](agent-onboarding.zh-CN.md)是 Agent 的可执行流程说明，并非能跨平台自动获取历史数据、创建仓库和安装计划任务的通用程序。
+## Agent 首次部署入口
+[Agent 首次部署指南](agent-onboarding.md)和[中文版本](agent-onboarding.zh-CN.md)记录 `onboarding plan/apply/report`、授权导入、Git 投影及可选的私有仓库命令。平台数据取决于实际获准来源，计划任务需单独部署和验收。
 `AGENTS.md` 必须包含第一次搭建时的入口；所有 Agent 要报告真实工具、来源权限、合成测试结果、Workspace/Vault、可选用户私有 Git 仓库、数据覆盖、待审批与待补信息，以及同步策略与真实运行证据。
 GitHub 远端写入与创建私人仓库必须经过用户批准。生成的 Workspace 默认 `.gitignore` 忽略全部个人内容，不能用 `git add -f .` 回避安全界限；Git 只使用经审核的最小化投影。
 ## 产品版本与测试
-- V2.3.0 软件；Vault `2.1` 协议；Workspace `1.0` 格式；离线传输 `2.2`。
+- V2.4.0 软件沿用 Vault `2.1` 协议、Workspace `1.0` 格式和离线传输 `2.2`。
 - [初始化](workspace.md)、[能力差异](workspace-parity.md)、[来源适配器](adapters.md)、[会话协议](protocol.md)、[候选治理](../workflows/memory-lifecycle.md)、[Agent 版本确认](../integrations/memory-bootstrap.md)。
 - [人生档案字段注册表](../life-archive/field-registry.json)包括 12 类、52 个二级领域和 134 字段，但无真实个人内容。
 - 健康功能当前仅校验去标识化汇总；原始健康平台自动同步、所有 AI 账户会话自动获取、远端 Git 私有资料全自动推送以及持续生产调度均不是已完成的通用能力。

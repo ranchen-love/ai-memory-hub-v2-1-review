@@ -1,0 +1,7 @@
+{
+  "format": "1.0",
+  "workspace": "./my-memory-hub",
+  "vault": "./my-memory-hub-vault",
+  "sensitivity": "private",
+  "sources": []
+}

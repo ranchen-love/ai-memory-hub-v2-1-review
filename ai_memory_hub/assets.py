@@ -13,7 +13,7 @@ from typing import BinaryIO, ContextManager, NamedTuple, Protocol
 from . import SCHEMA
 from .model import (
     Conflict, Denied, HubError, Missing, canonical, digest, evidence, external_url, ident, iso_date,
-    no_credentials, now, one_of, revision, strict_json, text,
+    no_credentials, now, one_of, open_source, revision, strict_json, text,
 )
 from .store import Store, git_tree, private_directory, record, reparse
 
@@ -59,10 +59,7 @@ class LocalVault:
 
     @contextmanager
     def stage(self, source):
-        source.stat()
-        if not source.is_file():
-            raise HubError("asset source must be a regular file")
-        with source.open("rb") as origin:
+        with open_source(source) as origin:
             before = os.fstat(origin.fileno())
             with self.stage_stream(origin, before.st_size) as staged:
                 after = os.fstat(origin.fileno())

@@ -1,72 +1,97 @@
-# 给新用户的 Agent：第一次安装与交付协议
-**适用情境：** 用户把通用 AI Memory Hub 项目交给自己的 AI/Agent，希望创建独立的个人记忆中枢。**这是一份 Agent 操作流程规范，不是一个已实现的跨平台一键自动部署命令。**
-## 0. 先读这些文件
-按顺序阅读 [工作区说明](workspace.md)、[Agent 入口](../AGENTS.md)、[工作区说明](workspace.md)、[来源适配器](adapters.md)、[记忆生命周期](../workflows/memory-lifecycle.md)、[数据与权限边界](../core/boundaries.md)。
-不要因文件标题包含 AI 或某个平台名称，就推定自己具备该平台的文件、聊天历史或仓库写入权限。把工具能否调用作为本次执行的事实，而不是先验条件。
-## 1. 先盘点实际能力，不为常规工程任务反复确认
-记录并向用户一次性说明下列能力的实际状态：
-| 需要确认的能力 | 可执行的判定依据 |
-| --- | --- |
-| 读取当前通用仓库 | 能打开指定文件及其版本 |
-| 创建私有 GitHub 仓库 | 当前 Agent 具有可用的 GitHub 写操作，并能确认目标账号与可见性 |
-| 运行本地程序 | 有实际命令执行环境、Python 3.11+ 和可信的本地路径 |
-| 访问本地文件 | 有用户明确指定的文件或目录，能够读取实际字节 |
-| 读取当前 AI 的记忆或会话 | 平台提供可访问的导出/API/授权连接，而不是 Agent 仅凭自述“记得” |
-| 访问其他 AI 平台历史 | 对应平台单独授权的导出/接口与实际返回结果 |
-| 运行长期同步 | 存在用户批准的执行器、凭据和可查看的运行日志 |
-缺少其中一项不必停止所有工作。完成无风险且可验证的部分，其他项明确标注 `unavailable`、`not_authorized` 或 `not_verified`。
-## 2. 授权边界：哪些可以自主做，哪些一定要批准
-用户已要求进行初始化时，可在可用环境内读取通用文档、审查依赖、准备安装计划、使用**新的安全目录**初始化空工作区和 Vault、运行合成测试。但仍须尊重当前工具的实际权限、项目目录范围和用户指定的授权条件。
-以下行动要在执行前得到**针对目标和范围的明确授权**：创建/配置用户账号中的远端仓库；读取真实 AI 聊天、L3 原文、私人文件或健康/财务资料；对 GitHub 或其他远端执行写入/合并；赋予其他 Agent 或账号读取权；设置持续计划任务；改变原有仓库的可见性；删除或覆盖已有资料。
-**不能把“请帮我搭建”理解为“同意将所有私人内容永久提交到 Git 历史”。**
-不得在日志、Issue、PR、README、提交记录或交接包中放入访问令牌、账户秘密、未经许可的原始资料。不能访问凭据就向用户说明所需的授权界面，而不要要求其把明文令牌粘贴到仓库。
-## 3. 建立用户自己的工作区
-在有授权的本机环境中安装 V2.3.0，选择通用仓库**外**新的空目录：
+# 用 Agent 建立个人 AI Memory Hub
+
+V2.4 命令行可以预览首次部署计划、建立仅属主可访问的工作区及独立 Vault、导入获准材料并报告实际结果。创建远端仓库和发布各有单独的授权步骤。先阅读[数据与权限边界](../core/boundaries.md)。
+
+## 1. 生成首次部署计划
+
+1. 在已获准的源代码检出中，用 Python 3.11 或更新版本安装。为工作区与 Vault 选两个互不嵌套的新目录，避开所有 Git 工作树，且父目录已经存在。恢复先前部署时沿用已经绑定的路径。
+2. 把[空白请求模板](../examples/onboarding-request.json)复制到仅自己可访问的本地目录，按[请求与结果 Schema](../schemas/onboarding.schema.json)填写副本。相对路径从请求文件所在目录解析。省略 `vault` 时使用名称带 `-vault` 的同级目录，默认敏感度为 `private`。
+3. 清单只列用户实际选定的本地路径。每项填写唯一且稳定的 `id`、`adapter`、`path` 和 `authorized`。用户明确批准读取并归档该来源后才填 `authorized: true`。`allow_raw` 可省略，默认关闭。在 `private` 或 `restricted` Vault 中保存获准的可见 L3 消息时，再单独确认 `allow_raw: true`。首次只建空库时，保留空的 `sources`。
+4. 如需规划可选的 GitHub 私有仓库，加入 `"github": {"target": "OWNER/NAME", "visibility": "private"}`。这一步仅登记目标。创建和发布各自确认。
+
 ```sh
 python -m pip install .
-ai-memory-hub workspace init --path ../my-hub
-ai-memory-hub workspace check --path ../my-hub
+ai-memory-hub onboarding plan --request hub-request.json
 ```
-得到一个含有通用分类模板的 `../my-hub` Workspace 和一个独立的 `../my-hub-vault` Vault。所有人生档案初始 `unknown`，所有数据来源未授权；程序不自动下载平台聊天记录，也不会安装调度器。
-检验 `AGENTS.md`、`core/INDEX.md`、`memory/`、`projects/`、`sessions/`、`life-archive/` 等入口确实存在。读回 `workspace check` 的版本号、12/52/134 覆盖统计和 Vault 路径绑定。
-**不要**在已有目录上直接强制初始化；不得复制产品仓库中的作者私人数据或 Git 历史。
-## 4. 建立用户自己的私有 Git 仓库（仅在授权时）
-私有远端仓库是**可选的经审核资料投影**，不是 Vault 的替代品。只有在能够真实调用 GitHub 并获得明确仓库名、所属账号和 Private 授权后，才能创建。
-- 在用户选择的 GitHub 账号下创建**全新 Private 仓库**，再次检查实际可见性。无法创建就报告未完成，不得伪造链接。
-- 不要将整个个人 Workspace 直接作为 Git 项目递归提交。初始化器生成的 `.gitignore` **故意忽略全部文件**，以防私人数据误入远端历史。
-- 如用户批准建立 Git 记忆索引，只在独立的**待审发布目录**中整理安全投影：分类索引、经批准的非敏感事实/偏好、项目 L2 摘要、已审核的工作流、来源 ID、资产版本和链接引用。优先引用 Vault 标识而不是复制附件字节。
-- **默认不提交**：`config/workspace.json` 的本机路径绑定、`*.db`、`*.sqlite`、Vault 目录、聊天 L3 原文、健康/财务等敏感记录、原始附件、生成的密钥或令牌。
-- 建议采用“创建变更集 → 展示将提交的文件与内容类别 → 用户批准 → Git commit/PR → 验证最终远端”的流程；不要以 Git 私有可见性代替内容审查。
-- 发布后的 SHA/PR 或网页链接只能在**真实操作结果**出现后报告。
-**当前产品没有通用的 `repo create` / `repo publish` 命令**。这一阶段依赖 Agent 自己可用的 GitHub 工具及独立的审批机制。
-## 5. 整理 Agent 真正能够读取的会话、文件和记忆
-对每一个来源登记：名称、提供方、访问方式、实际返回内容、可信度、时间范围、是否得到用户授权、是否包含 L3 原文/附件、是否需要额外审批。
-- **会话**：可获取的标题与定位信息归 L0；实际提供的摘要归 L1；目标、要求、决策、被否决方案及理由、证据、遗留项等整理为 L2；只有真实可见消息和单独批准的私有来源才能进入 L3。
-- **长期记忆**：事实、偏好、规则与推断分开，标记来源；先生成 candidate，审核与单独激活后才作为事实。不得把 Agent 猜测或其他用户资料直接写为自己的长期记忆。
-- **项目**：保留可验证的项目目标、状态、决策、源文件引用及待完成任务；没有证据时报告未核实。
-- **文件**：只能通过真正可读取、经过授权的文件路径归档真实字节；保留 SHA-256、来源、ID、版本及关联会话/项目。只有链接时记录链接状态，不标记成已归档文件。
-- **人生档案**：按 12 类、52 领域、134 字段逐步映射已有证据；未获证实的字段继续为 `unknown`，不借助外部猜测来“填满档案”。
-本版仅提供明确授权的本地归档和有限适配器（见 [适配器表](adapters.md)）。Agent 必须根据实际可用资料进行规范化输入并调用现有引擎，**不能宣称可以读取自己或其他平台的所有隐藏会话、内置记忆、未授权文件或附件**。
-## 6. 验证并生成最终“用户需要补充什么”报告
-必须向用户输出一个独立、可以保存的验收报告，至少包含：
-| 项目 | 必须报告的证据 |
+
+读取 JSON 中的 Markdown 摘要和 `plan_digest`。计划只读检查当前运行环境、已选路径及工具能力，标明不可用来源。请用户集中核对属主、资料保留规则、拟读取范围和落盘位置。
+
+## 2. 应用已批准的计划
+
+```sh
+ai-memory-hub onboarding apply --request hub-request.json \
+  --approve-plan APPROVED_PLAN_DIGEST --consent
+ai-memory-hub onboarding report --request hub-request.json \
+  --markdown /path/to/approved/workspace/first-run.md > first-run.json
+```
+
+命令中的摘要替换成实际批准值。报告默认向标准输出写 JSON。使用 `--markdown` 时选已绑定工作区内尚不存在的文件。初始化受阻时省略 `--markdown`，直接读取 JSON 失败报告。两种报告均在本地妥善保存。路径含空格时加引号。示例使用 POSIX 续行符 `\`，在 PowerShell 中可用单行命令或反引号续行。
+某个来源失败时可以保留其他已完成的数据。`apply` 和 `report` 退出码 0 表示完成，1 表示部分完成、受阻或失败，具体原因在 JSON 中。输入或批准有误时退出 2。先看各来源结果和受影响条目，再补齐缺失路径、修正清单或解决修订冲突，重新检查计划并运行。计划变化后重新批准新摘要。同一来源重跑时保留旧版，使用既有成功回执识别未变化项。遇到未绑定的已有目录，核对状态后选择新目录或按恢复流程处理。
+
+## 3. 准备获准的来源
+
+| 适配器 | 选定输入 |
 | --- | --- |
-| 基础环境 | Agent 能力表、实际访问权限、程序与模板版本 |
-| 本地初始化 | Workspace 路径、独立 Vault 路径、初始化/检查命令结果 |
-| GitHub 仓库 | 是否创建、账号、Private 是否核实、提交与 PR 的真实链接；没做说明原因 |
-| 导入来源 | 每个来源的授权范围、适配器、成功/未变化/失败条目数与未覆盖时间段 |
-| 资料覆盖 | L0/L1/L2/L3 各有什么真实资料、有哪些缺失；资产版本与字节可用性 |
-| 长期事实 | 候选、重复、冲突、待审批、已激活、已撤销、已替代数量与证据 |
-| 人生档案 | 12 类状态、52 领域覆盖率、134 字段的未填项与需要用户确认的问题 |
-| 交接与权限 | 向谁分享了哪些范围；哪些敏感记录保留本地，哪些远端推送还在待审 |
-| 同步状态 | 五种开关、来源授权、上次实际归档结果、每个 Agent 的 `detected_sha/synced_sha`、调度器状态 |
-| 待用户行动 | 按影响优先级列出需要补充的来源、权限、事实、文件、接收人和长期策略 |
-**任何失败或不可访问，都不能写成成功。** 报告要区分 `completed`、`partial`、`blocked`、`not_requested` 和 `not_verified`。
-## 7. 讲清楚同步，不用“开关已开”冒充上线
-普通模式默认 `weekly=on`、`full=on`、`event=off`、`daily=off`、`handoff=off`。这些是**策略控制**，不是现成的操作系统计划任务。
-来源读取授权、定时执行器安装、每次导入回执、仓库 Git 提交与接收 Agent 的记忆版本重读是**五件不同的事情**。只有拿到对应证据才能分别报告已完成。
-调用 `local status` 查看已有来源和运行记录；使用 [版本检测协议](../integrations/memory-bootstrap.md)核对接收方 `detected_sha` 与 `synced_sha`。真实自动运行需要用户批准调度方式、执行账号和频率，并在安装后验证日志和失败重试。
-**结束时告诉用户**：数据目前保存在哪里，哪些还没进入 Git，怎样手动运行一次同步，自动执行是否已安装，未来失联/冲突/源变更如何处理，以及如何导出和备份。
-## 8. 完成交付的标准
-只有在**实际可访问的范围内**完成对应步骤、核对文件路径/版本、用户授权与真实运行结果之后，才可报告已交付。若 GitHub 无写权限、某 AI 无原始导出能力或用户尚未批准敏感数据处理，应在报告中列明限制，保留已经完成的本地交付成果。
-研发者正在规划更高层的“Agent 首次安装编排器”和经过审核的 Git 投影工具；**本协议本身不是已经完成的自动化程序**。
+| `normalized`、`codex_workspace`、`local_checkpoint` | 含 `memory-hub.json` 的目录。清单仅用相对路径列出获准的文件、链接及规范记录 |
+| `chatgpt_export` | 含支持的会话分片的官方本地 ZIP，或提取后仅含已获授权会话的 JSON |
+| `life_profile`、`life_timeline` | 符合工作区人生档案 Schema 和字段注册表的单个获准 JSON 文档 |
+
+Agent 可以把自己实际可读的资料整理成规范化清单。平台没有可用导出或授权连接时，将其标记不可用，并由用户提供明确授权的本地检查点。[来源适配器及覆盖范围](adapters.md)
+
+获准的本地检查点目录可在 `sources` 中登记为下列形式。路径相对请求文件，原文导入保持关闭。
+
+```json
+{
+  "id": "checkpoints",
+  "adapter": "local_checkpoint",
+  "path": "./owner-selected-intake",
+  "authorized": true,
+  "allow_raw": false
+}
+```
+
+- **会话和项目**。L0 保存实际索引、L1 保存已有摘要、L2 保存带证据的目标、决策、结果与下一步。L3 需单独许可。ChatGPT 导出适配器会保留摘要与检查点的缺口，附件仍按文件单独授权。
+- **长期记忆**。先录入候选，核查重复或冲突，审批证据后单独激活。推断和证据不足的内容留在候选。[候选查重、审批和激活命令](../workflows/memory-lifecycle.md)
+- **文件与链接**。清单键和资产 ID 保持稳定。用户上传件标为 `user_upload`，AI 生成件标为 `ai_generated`。可按精确版本回读字节并检查 SHA-256。只有 URL 时保留为外部引用。
+- **人生档案**。使用现有 12 类、52 个领域和 134 个字段。仅填有真实证据的结构化值，缺失信息保持 `unknown`。[字段说明](../life-archive/README.md)
+
+## 4. 预览独立 Git 投影
+
+```sh
+ai-memory-hub projection preview --workspace WORKSPACE \
+  --output NEW_PROJECTION
+ai-memory-hub projection preview --workspace WORKSPACE \
+  --output NEXT_PROJECTION --previous NEW_PROJECTION
+```
+
+在工作区和 Vault 之外选择独立目录，避开所有 Git 工作树。默认生成汇总计数、固定 README 和清单。检查逐文件预览、与上一版的差异和 SHA-256 摘要。只有 `public` 工作区和 Vault 可以用 `--select ID` 选入已激活的公开级事实、偏好或规则，用 `--asset ID@REV` 选入公开级文件引用。按所选条目重复参数后审核新预览。文件引用保留 ID、版本、存储类型和已有哈希。文件字节和 URL 均留在原边界内。固定白名单排除 Vault、SQLite、本机路径绑定、L3、敏感个人原文、附件及任意工作区文件。GitHub Private 提供远端访问控制，敏感资料留在独立 Vault。
+
+## 5. 可选创建和发布到 GitHub 私有仓库
+
+使用工作区已应用计划中记录的 GitHub 目标。确认用户批准了账号、仓库名和对应操作，再使用已获授权的 GitHub CLI。凭据由现有认证机制管理。
+
+```sh
+ai-memory-hub repo probe --target OWNER/NAME
+ai-memory-hub repo create --workspace WORKSPACE \
+  --target OWNER/NAME --consent
+ai-memory-hub repo publish --workspace WORKSPACE --target OWNER/NAME \
+  --projection REVIEWED_PROJECTION --digest APPROVED_SHA256 --consent
+```
+
+内置创建入口适用于 github.com 上当前登录的个人账号。组织账号或缺少 `gh` 的场景，可走获准的 GitHub 集成或网页创建全新空的 Private 仓库并核对可见性。手动发布时，只在独立 Git 历史中暂存获审的投影文件。发布前通过哈希核对暂存文件，发布后验证远端引用和可见性，并留存手动回执。内置发布器会审核自身协议建立的历史，可能拒绝接管手动初始化或经过改写的提交历史。
+
+发布前核对用户批准的目标和投影摘要。首次直接发布到空仓库时，用已审核的清单初始化分支，再提交完整投影。中断后用同一批准摘要重试。向已初始化的仓库发布有变化的投影前，审核 `repo probe` 返回的 `base_commit`，再用 `--base-sha` 指定核实过的提交。只有用户明确同意创建 PR、远端也已有基础分支时，才加 `--pr`。保存实际返回的私有状态、提交和 PR 回执。工具或权限不可用时保留本地结果，报告远端受阻。
+
+## 6. 交付与持续维护
+
+报告应包含实际范围、版本、执行记录、资料缺口及待授权事项。用户未要求的步骤记为 `not_requested`，无权限的记为受阻，无法证实的记为 `not_verified`。把 JSON、可读报告和最少量的待补事项一起交给用户。
+
+```sh
+ai-memory-hub --root VAULT local status
+ai-memory-hub --root VAULT local run --source APPROVED_ID
+ai-memory-hub --root VAULT asset check ASSET_ID --version REV
+```
+
+来源路径改变或授权收窄时，先暂停已有调度。用 `source revoke ID` 撤销旧授权，再审查新计划并批准替代来源。撤销保留已归档的历史版本。冲突按当前修订核对后，仅重试受影响的获准来源。
+
+普通模式启用每周和按需全量，事件、每日和交接默认关闭。使用 `local status` 查看来源和最近结果。实际归档回执、远端提交、接收 Agent 的 `detected_sha` 与 `synced_sha` 分别核对。[逐 Agent 读取与确认](../integrations/memory-bootstrap.md) 与[备份、恢复和定时任务指南](deployment.md)提供原有命令。调度需另行批准，在真实执行后核对系统记录及归档回执。

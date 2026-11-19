@@ -5,7 +5,8 @@
 ---
 **把 AI 的长期记忆变成用户自己掌控、可以迁移和持续维护的资料体系。**
 AI Memory Hub 提供完整的**个人记忆工作区模板 + 本地 Vault 归档引擎**，用于组织长期事实、会话检查点、项目、文件、人生档案，以及不同 Agent 之间经授权的交接和版本确认。
-**V2.3.0** · Python 3.11+ · MIT · 本地优先 · 当前项目仓库仍为 **Private**，未正式公开发布。
+**V2.4.0** · Python 3.11+ · MIT · 本地优先 · 当前项目仓库仍为 **Private**，未正式公开发布。
+首装编排沿用 V2.3.0 的 19 个工作区模块与 Vault 2.1 数据协议。
 **新用户从这里开始：** [让你的 Agent 协助初始化（中文）](docs/agent-onboarding.zh-CN.md) · [English onboarding](docs/agent-onboarding.md) · [手动安装及命令](docs/workspace.md)
 ## 一、这是什么？适合谁？
 你可以把它理解为一套**长期私人资料的组织方法、治理规则和实际可运行的存储程序**，而不是把所有聊天复制到一个大文件里。
@@ -39,7 +40,16 @@ AI Memory Hub 提供完整的**个人记忆工作区模板 + 本地 Vault 归档
 | **③ 整理来源** | 对已经获准、实际可读的数据生成 L0–L2、项目检查点、候选和文件清单 | 具体来源授权；L3 原文、敏感文件需另行许可 |
 | **④ 审核与发布** | 去重、冲突建议、生成待审核资料及 Git 提交计划 | 正式记忆激活、远端写入、共享范围和私有仓库创建批准 |
 | **⑤ 交付与维护** | 检查数据覆盖、来源回执、同步状态，列出资料缺口与操作说明 | 是否部署定时任务、备份策略及将来变更权限 |
-**当前版本的实际限制**：这是一套可执行的引擎加操作协议，尚**没有内置一键创建 GitHub 仓库、遍历任意 AI 账号历史、自动形成并推送完整个人仓库的通用编排器**。有足够权限和工具的 Agent 可以协助完成若干步骤，但“阅读 README”本身不会赋予它 GitHub 写权限或历史聊天访问权。
+### 首次部署命令
+把[空白请求模板](examples/onboarding-request.json)复制到已批准的本地目录，选定工作区和 Vault 路径。如需归档真实资料，再按[接入指南](docs/agent-onboarding.zh-CN.md)填写用户已批准的来源。
+```sh
+python -m pip install .
+ai-memory-hub onboarding plan --request hub-request.json
+ai-memory-hub onboarding apply --request hub-request.json \
+  --approve-plan APPROVED_PLAN_DIGEST --consent
+ai-memory-hub onboarding report --request hub-request.json
+```
+Agent 应先展示计划与资料范围，取得批准后再填入实际摘要。创建私有仓库和发布 Git 投影各有单独的命令和批准步骤。平台来源可用性以真实授权和导出为准。
 [Agent 首次部署与交付清单](docs/agent-onboarding.zh-CN.md) · [真实数据来源支持范围](docs/adapters.md) · [当前能力对照](docs/workspace-parity.md)
 ## 三、关键能力：为什么这样设计？
 ### 会话采用 L0–L3，而不是只存一份全文
@@ -155,14 +165,14 @@ ai-memory-hub --root RECEIVER_VAULT transfer file PACKAGE_ID calibration-notes@1
 | 会话 L0–L3、项目检查点、真实文件版本 | **已实现引擎**，具体内容须从实际获准来源提供 |
 | 候选去重、审查、独立激活和修订追溯 | **已实现** |
 | 授权快照的逐 Agent 版本读取与确认 | **已实现**；并非第三方平台自动共享内部记忆 |
-| **让任意 Agent 一键新建用户私有 GitHub 仓库** | **尚无内置通用编排器**；有授权 GitHub 工具的 Agent 可以协助操作 |
+| 首次部署与资料缺口报告 | **已实现** `onboarding plan/apply/report`，按获准来源检测、导入和收集证据 |
+| 可选 GitHub 私有仓库创建 | **已实现** `repo probe/create`，要求 GitHub CLI 授权和用户批准 |
 | **自动获取所有 AI 平台记忆、会话及附件** | **不具备通用访问能力**；依赖平台提供的导出和授权连接 |
-| **自动形成按目录分类的可审阅 Git 投影与提交** | **尚未作为完整端到端功能实现**；工作区默认拒绝跟踪 |
-| **首次完整性报告、待补资料和同步部署向导** | 可以通过本仓库 [Agent 操作协议](docs/agent-onboarding.zh-CN.md)指导完成，但尚无平台无关的一键执行器 |
+| 受审 Git 投影与发布 | **已实现**文件白名单、内容预览和版本比较。发布前批准具体目标和摘要 |
 | 自动周期归档、远端 Git 同步与生产备份 | **默认不安装、不执行**；需用户另行配置和验收 |
 | 健康原始数据自动读取 | **未实现为通用功能**；仅支持去标识化健康汇总校验 |
 | 公开 Release | **未执行**，通用仓库仍是 Private |
-**当前阶段**：通用存储引擎、组织模板和审查机制已完成；“交给任意 AI 就自动部署、分类导入、创建仓库并持续更新”的**一站式 Agent 产品体验尚待补齐**。请勿把“有引导文档”误当作“自动化已经验收通过”。
+手动归档、远端发布和逐 Agent 读取确认各自留下回执。自动调度需要单独配置，并核验系统任务的首次实际运行。
 [能力对照与测试证据](docs/workspace-parity.md) · [Agent 首次使用协议](docs/agent-onboarding.zh-CN.md) · [GitHub Actions](.github/workflows/test.yml)
 ## 八、长期目标
 **用户只需把通用项目交给自己信任的 AI，经过必要的授权，就能拥有一套长期可维护、独立于单一平台的私人记忆中枢。**

@@ -5,7 +5,8 @@
 ---
 **Own your AI memory: organized, verifiable, portable, and under your control.**
 AI Memory Hub combines a **complete personal memory Workspace template with a local versioned Vault engine** for durable facts, conversations, projects, files, a life archive, and authorized transfers between different AI agents.
-**V2.3.0** · Python 3.11+ · MIT · local-first · the distribution repository remains **Private** and has not yet had an official public Release.
+**V2.4.0** · Python 3.11+ · MIT · local-first · the distribution repository remains **Private** and has not yet had an official public Release.
+The core examples retain the V2.3.0 Workspace and Vault workflow.
 **Start here:** [Agent-led first-time setup](../agent-onboarding.md) · [中文入门指南](../agent-onboarding.zh-CN.md) · [Manual setup](../workspace.md)
 ## I. What is it, and who is it for?
 The project supplies **organization conventions, reviewable memory governance, and a working local storage engine**, not one giant text file containing every conversation.
@@ -38,7 +39,7 @@ questions for me, and actual sync and scheduler status.
 | **Organize** | Process approved accessible sources into sessions, projects, file records and memory proposals | Real source grants; separate L3/raw/sensitive permissions |
 | **Review** | Present duplicate/conflict advice and a preview of any Git projection | Explicit memory activation, repo creation and remote publishing authority |
 | **Maintain** | Report missing sources, field coverage, sync switches and run evidence | Scheduler, backup and recipient-sharing decisions |
-**Current product limitation:** the engine and procedure exist, but there is **no built-in universal one-command orchestrator** that automatically creates a GitHub repo, reads every AI platform's history and publishes a complete personal hub. A capable authorized Agent may assist with individual steps using its own tools. Merely reading the README grants no such powers.
+The [V2.4 setup guide](../agent-onboarding.md) covers executable `onboarding plan`, `apply` and `report`, along with separately approved repository creation and publication. Use the owner's actual source grants and the current runtime's verified capabilities.
 [Agent setup and acceptance checklist](../agent-onboarding.md) · [Supported adapters](../adapters.md) · [Feature coverage](../workspace-parity.md)
 ## III. Important capabilities and the design behind them
 ### L0–L3: read conversations only as deeply as necessary
@@ -142,17 +143,17 @@ Uppercase paths, IDs, receipt hashes, and exact revision numbers must be replace
 Only read accessible authorized sources. L3, sensitive files, external recipients, permanent schedules and remote publication need scoped approval. Revoking a source grant stops future reads, not historical data retention. The Vault and transfer ZIP are **not encrypted by this application**; OS access controls, disk encryption and an approved transfer channel are required.
 [Security](../../SECURITY.md) · [Boundaries](../../core/boundaries.md) · [Operations](../guide.md)
 ## VII. What works today, and what still needs development?
-| Capability | Actual V2.3 status |
+| Capability | Actual V2.4 status |
 | --- | --- |
 | 19-module owner Workspace and independent Vault | **Implemented and synthetic-tested** |
 | 12/52/134 life registry and unknown coverage | **Implemented** |
 | L0–L3 session records, projects and file versions | **Engine implemented**, actual content needs real authorized sources |
 | Memory proposal review, activation and audit | **Implemented** |
 | Approved snapshot detection and per-Agent confirmation | **Implemented**, not native provider memory sync |
-| Universal Agent-led GitHub repo creation | **No built-in orchestrator**; may be assisted through externally authorized GitHub tools |
+| Optional Private GitHub repository creation | **Supported** for authenticated GitHub CLI personal accounts with explicit owner approval |
 | Automatic harvesting of all AI memories/chats/files | **Not universally supported**; depends on exports and permitted connectors |
-| Automated curated Git projection and push | **Not delivered as a complete end-to-end feature**; personal Workspaces are ignored by default |
-| First-run missing-info report and setup prompts | Specified in [the Agent protocol](../agent-onboarding.md), **not a platform-neutral one-click program** |
+| Independently reviewed Git projection and publish | **Implemented** with file allowlist, preview and diff. The user approves the exact digest and target |
+| First-run plan, apply and coverage report | **Implemented** with local source grants and evidence of missing information |
 | Recurring scheduling, Git mirroring and production backups | Not installed or enabled by default |
 | Raw health-device capture | Not in the generic product; de-identified aggregate validation only |
 | Public GitHub visibility and formal Release | Not published; repository remains Private |
