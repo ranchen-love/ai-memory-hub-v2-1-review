@@ -1,0 +1,1910 @@
+{
+  "schema_version": "1.0",
+  "kind": "life_field_registry",
+  "categories": [
+    {
+      "id": "01",
+      "label": "Identity",
+      "domains": {
+        "01-01": "Basic identity",
+        "01-02": "Origin and residence",
+        "01-03": "Contact methods",
+        "01-04": "Identity documents",
+        "01-05": "Language and culture"
+      },
+      "fields": [
+        {
+          "id": "display_name",
+          "domains": [
+            "01-01"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "legal_name",
+          "domains": [
+            "01-04"
+          ],
+          "type": "presence",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "gender",
+          "domains": [
+            "01-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "birth_year",
+          "domains": [
+            "01-01"
+          ],
+          "type": "integer",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "birth_date",
+          "domains": [
+            "01-01"
+          ],
+          "type": "date",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "birth_place",
+          "domains": [
+            "01-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "hometown",
+          "domains": [
+            "01-02"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "current_city",
+          "domains": [
+            "01-02"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "interval",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "nationality",
+          "domains": [
+            "01-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "id_documents_index",
+          "domains": [
+            "01-04"
+          ],
+          "type": "presence_list",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "phone_email_index",
+          "domains": [
+            "01-03"
+          ],
+          "type": "presence_list",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "languages",
+          "domains": [
+            "01-05"
+          ],
+          "type": "text_list",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "02",
+      "label": "Childhood and development",
+      "domains": {
+        "02-01": "Family environment",
+        "02-02": "Childhood experiences",
+        "02-03": "Development milestones",
+        "02-04": "Origins and moves"
+      },
+      "fields": [
+        {
+          "id": "stage",
+          "domains": [
+            "02-01",
+            "02-02"
+          ],
+          "type": "enum",
+          "choices": [
+            "childhood",
+            "adolescence",
+            "youth"
+          ],
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "interval",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "family_background",
+          "domains": [
+            "02-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "hometown_memories",
+          "domains": [
+            "02-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "key_event",
+          "domains": [
+            "02-02",
+            "02-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "event_year",
+          "domains": [
+            "02-02",
+            "02-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "location",
+          "domains": [
+            "02-02",
+            "02-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "people_involved_refs",
+          "domains": [
+            "02-02",
+            "02-04"
+          ],
+          "type": "reference_list",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "impact_note",
+          "domains": [
+            "02-02",
+            "02-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "timeline_event_ref",
+          "domains": [
+            "02-03"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "status_note",
+          "domains": [
+            "02-01",
+            "02-02",
+            "02-03",
+            "02-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "03",
+      "label": "Education and learning",
+      "domains": {
+        "03-01": "Formal education",
+        "03-02": "Skills and credentials",
+        "03-03": "Self-directed learning",
+        "03-04": "Learning methods"
+      },
+      "fields": [
+        {
+          "id": "institution",
+          "domains": [
+            "03-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "interval",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "level",
+          "domains": [
+            "03-01"
+          ],
+          "type": "enum",
+          "choices": [
+            "primary",
+            "secondary",
+            "vocational",
+            "undergraduate",
+            "graduate",
+            "other"
+          ],
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "major_field",
+          "domains": [
+            "03-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "degree_status",
+          "domains": [
+            "03-01"
+          ],
+          "type": "enum",
+          "choices": [
+            "completed",
+            "in_progress",
+            "dropped",
+            "pending"
+          ],
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "skill_name",
+          "domains": [
+            "03-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "skill_level",
+          "domains": [
+            "03-02"
+          ],
+          "type": "enum",
+          "choices": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "certificate_name",
+          "domains": [
+            "03-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "certificate_issuer",
+          "domains": [
+            "03-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "certificate_expiry",
+          "domains": [
+            "03-02"
+          ],
+          "type": "date",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "interval",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "self_study_topic",
+          "domains": [
+            "03-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "learning_method",
+          "domains": [
+            "03-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "evidence_ref",
+          "domains": [
+            "03-01",
+            "03-02",
+            "03-03",
+            "03-04"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "04",
+      "label": "Work and ventures",
+      "domains": {
+        "04-01": "Work history",
+        "04-02": "Current responsibilities",
+        "04-03": "Projects and outcomes",
+        "04-04": "Professional skills",
+        "04-05": "Independent ventures"
+      },
+      "fields": [
+        {
+          "id": "employer",
+          "domains": [
+            "04-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "interval",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "employment_type",
+          "domains": [
+            "04-01"
+          ],
+          "type": "enum",
+          "choices": [
+            "full_time",
+            "outsourced",
+            "part_time",
+            "freelance",
+            "other"
+          ],
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "job_title",
+          "domains": [
+            "04-01",
+            "04-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "department_team",
+          "domains": [
+            "04-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "responsibilities",
+          "domains": [
+            "04-02"
+          ],
+          "type": "text_list",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "project_name",
+          "domains": [
+            "04-03",
+            "04-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "interval",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "project_role",
+          "domains": [
+            "04-03",
+            "04-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "project_outcome",
+          "domains": [
+            "04-03",
+            "04-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "tech_stack",
+          "domains": [
+            "04-04"
+          ],
+          "type": "text_list",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "tech_stack_note",
+          "domains": [
+            "04-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "work_location",
+          "domains": [
+            "04-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "work_hours_note",
+          "domains": [
+            "04-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "side_business",
+          "domains": [
+            "04-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "project_ref",
+          "domains": [
+            "04-03",
+            "04-05"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "05",
+      "label": "Personality and reflection",
+      "domains": {
+        "05-01": "Traits",
+        "05-02": "Values and beliefs",
+        "05-03": "Emotion and coping",
+        "05-04": "Behavior patterns"
+      },
+      "fields": [
+        {
+          "id": "trait_dimension",
+          "domains": [
+            "05-01"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "trait_description",
+          "domains": [
+            "05-01"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "value_statement",
+          "domains": [
+            "05-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "belief_note",
+          "domains": [
+            "05-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "stress_response",
+          "domains": [
+            "05-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "coping_preference",
+          "domains": [
+            "05-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "communication_style",
+          "domains": [
+            "05-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "decision_style",
+          "domains": [
+            "05-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "behavior_pattern",
+          "domains": [
+            "05-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "status",
+          "domains": [
+            "05-01",
+            "05-02",
+            "05-03",
+            "05-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "06",
+      "label": "Relationships and community",
+      "domains": {
+        "06-01": "Family",
+        "06-02": "Close relationships",
+        "06-03": "Friends and social circles",
+        "06-04": "Professional relationships",
+        "06-05": "Groups and communities"
+      },
+      "fields": [
+        {
+          "id": "person_ref",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "person_display",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "relationship_type",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "enum",
+          "choices": [
+            "family",
+            "partner",
+            "friend",
+            "colleague",
+            "community",
+            "other"
+          ],
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "interval",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "relationship_status",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "enum",
+          "choices": [
+            "active",
+            "distant",
+            "ended",
+            "pending"
+          ],
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "how_met",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "key_events",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text_list",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "contact_index",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "presence",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "notes",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "timeline_event_refs",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "reference_list",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "source",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "status",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "enum",
+          "choices": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "retention_note",
+          "domains": [
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        }
+      ]
+    },
+    {
+      "id": "07",
+      "label": "Health and lifestyle",
+      "domains": {
+        "07-01": "Health overview index",
+        "07-02": "Lifestyle",
+        "07-03": "Living and routine",
+        "07-04": "Health data storage index"
+      },
+      "fields": [
+        {
+          "id": "health_index_entry",
+          "domains": [
+            "07-01",
+            "07-04"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "system",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "data_type",
+          "domains": [
+            "07-01",
+            "07-04"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "date_range",
+          "domains": [
+            "07-01",
+            "07-04"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "record_count",
+          "domains": [
+            "07-01",
+            "07-04"
+          ],
+          "type": "integer",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "storage_ref",
+          "domains": [
+            "07-04"
+          ],
+          "type": "reference",
+          "expected": true,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "sync_batch",
+          "domains": [
+            "07-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "lifestyle_note",
+          "domains": [
+            "07-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "living_arrangement",
+          "domains": [
+            "07-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "daily_routine",
+          "domains": [
+            "07-02",
+            "07-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "health_summary_ref",
+          "domains": [
+            "07-01"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "08",
+      "label": "Finances and practical conditions",
+      "domains": {
+        "08-01": "Income and expense structure",
+        "08-02": "Assets and liabilities",
+        "08-03": "Goals and budgeting",
+        "08-04": "Insurance and safeguards"
+      },
+      "fields": [
+        {
+          "id": "income_structure",
+          "domains": [
+            "08-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "expense_structure",
+          "domains": [
+            "08-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "asset_index",
+          "domains": [
+            "08-02"
+          ],
+          "type": "presence",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "liability_index",
+          "domains": [
+            "08-02"
+          ],
+          "type": "presence",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "financial_goal",
+          "domains": [
+            "08-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "budget_note",
+          "domains": [
+            "08-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "private"
+        },
+        {
+          "id": "insurance_index",
+          "domains": [
+            "08-04"
+          ],
+          "type": "presence",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "restricted"
+        },
+        {
+          "id": "storage_ref",
+          "domains": [
+            "08-02",
+            "08-04"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "snapshot_date",
+          "domains": [
+            "08-01",
+            "08-02",
+            "08-03",
+            "08-04"
+          ],
+          "type": "date",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "status",
+          "domains": [
+            "08-01",
+            "08-02",
+            "08-03",
+            "08-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "09",
+      "label": "Goals and future plans",
+      "domains": {
+        "09-01": "Near-term goals",
+        "09-02": "Longer-term goals",
+        "09-03": "Travel plans",
+        "09-04": "Learning and growth goals"
+      },
+      "fields": [
+        {
+          "id": "goal_title",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "goal_category",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "career",
+            "travel",
+            "learning",
+            "health",
+            "finance",
+            "personal",
+            "other"
+          ],
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "goal_horizon",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "short",
+            "medium",
+            "long"
+          ],
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "target_date",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "date",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "goal_status",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "active",
+            "completed",
+            "paused",
+            "abandoned",
+            "pending"
+          ],
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "progress_note",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "related_project_ref",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "related_event_refs",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "reference_list",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "decision_ref",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "reference",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "status",
+          "domains": [
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "10",
+      "label": "AI collaboration and decisions",
+      "domains": {
+        "10-01": "Collaboration rules",
+        "10-02": "Decisions",
+        "10-03": "AI tools",
+        "10-04": "Collaboration reviews"
+      },
+      "fields": [
+        {
+          "id": "rule_id",
+          "domains": [
+            "10-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "rule_content",
+          "domains": [
+            "10-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "rule_scope",
+          "domains": [
+            "10-01"
+          ],
+          "type": "enum",
+          "choices": [
+            "global",
+            "development",
+            "communication",
+            "automation",
+            "projects",
+            "other"
+          ],
+          "expected": false,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "decision_id",
+          "domains": [
+            "10-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "decision_title",
+          "domains": [
+            "10-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "decision_outcome",
+          "domains": [
+            "10-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "decision_reason",
+          "domains": [
+            "10-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "review_condition",
+          "domains": [
+            "10-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "ai_tool_name",
+          "domains": [
+            "10-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "ai_tool_purpose",
+          "domains": [
+            "10-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "ai_tool_access_status",
+          "domains": [
+            "10-03"
+          ],
+          "type": "enum",
+          "choices": [
+            "verified",
+            "unverified",
+            "unknown"
+          ],
+          "expected": false,
+          "source_hint": "review",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "collaboration_note",
+          "domains": [
+            "10-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "11",
+      "label": "Major life events",
+      "domains": {
+        "11-01": "Milestones",
+        "11-02": "Turning points",
+        "11-03": "Achievements",
+        "11-04": "Challenges"
+      },
+      "fields": [
+        {
+          "id": "event_title",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "event_category",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "milestone",
+            "turning_point",
+            "achievement",
+            "challenge",
+            "other"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "start_date",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "date",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "end_date",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "date",
+          "expected": false,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "date_precision",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "day",
+            "month",
+            "year",
+            "unknown"
+          ],
+          "expected": true,
+          "source_hint": "evidence",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "event_summary",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "impact_note",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "related_category_refs",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "reference_list",
+          "expected": false,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "timeline_event_ref",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "reference",
+          "expected": true,
+          "source_hint": "reference",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "status",
+          "domains": [
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04"
+          ],
+          "type": "enum",
+          "choices": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    },
+    {
+      "id": "12",
+      "label": "Collection and maintenance",
+      "domains": {
+        "12-01": "Source catalog",
+        "12-02": "Capture and sync logs",
+        "12-03": "Deduplication and corrections",
+        "12-04": "Versioning and backup",
+        "12-05": "Access and audit"
+      },
+      "fields": [
+        {
+          "id": "source_name",
+          "domains": [
+            "12-01",
+            "12-05"
+          ],
+          "type": "text",
+          "expected": true,
+          "source_hint": "owner",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "source_type",
+          "domains": [
+            "12-01"
+          ],
+          "type": "enum",
+          "choices": [
+            "repository",
+            "health_export",
+            "user_statement",
+            "document",
+            "system_log",
+            "other"
+          ],
+          "expected": true,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "source_location",
+          "domains": [
+            "12-01"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "access_status",
+          "domains": [
+            "12-05"
+          ],
+          "type": "enum",
+          "choices": [
+            "connected",
+            "not_connected",
+            "pending",
+            "revoked"
+          ],
+          "expected": true,
+          "source_hint": "review",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "sync_batch_id",
+          "domains": [
+            "12-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "sync_scope",
+          "domains": [
+            "12-02"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "sync_result",
+          "domains": [
+            "12-02"
+          ],
+          "type": "enum",
+          "choices": [
+            "success",
+            "partial",
+            "failed"
+          ],
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "dedup_key_used",
+          "domains": [
+            "12-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "correction_record_id",
+          "domains": [
+            "12-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "superseded_record_id",
+          "domains": [
+            "12-03"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "backup_location_ref",
+          "domains": [
+            "12-04"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "system",
+          "timing": "point",
+          "minimum_sensitivity": "internal"
+        },
+        {
+          "id": "audit_note",
+          "domains": [
+            "12-05"
+          ],
+          "type": "text",
+          "expected": false,
+          "source_hint": "owner",
+          "timing": "none",
+          "minimum_sensitivity": "internal"
+        }
+      ]
+    }
+  ]
+}

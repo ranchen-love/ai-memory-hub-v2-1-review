@@ -40,7 +40,9 @@ For offline cross-agent transfer, enable handoff on both Vaults and follow [depl
 ## Customize and maintain
 
 - Use the [memory governance](../workflows/memory-lifecycle.md), [project template](../projects/TEMPLATE.md) and [life archive](../life-archive/README.md) as local, owner-approved inputs.
-- `workspace check` displays versions and the Vault's settings, tests workspace navigation and summarizes coverage. Unknown profile categories remain unknown.
-- Check `local status` for read grants, last successful archive and production scheduling evidence. [Bootstrap](../integrations/memory-bootstrap.md) describes fallback when a new Agent lacks access.
+- `workspace check` displays versions and the Vault's settings, checks the entry documents and reports 12 categories, 52 domains, 134 registered fields and missing evidence. Empty coverage stays unknown.
+- Check `local status` for read grants, last successful archive and production scheduling evidence. For shared content use [snapshot detection, read and confirmation](../integrations/memory-bootstrap.md) from each authorized Agent.
 - Stop executors before backup. Protect both snapshots, record hashes, trial upgrades with copies and verify the Vault binding if moving a workspace. Keep the matching prior engine and backup for rollback. The new workspace format adds no required field to existing 2.2 Vault records.
 - Keep actual workspaces and Vaults outside the product repo. An explicitly approved private repository can host a separately reviewed, non-sensitive projection. The generated workspace's Git ignore rules exclude all data by default.
+
+For structured candidate approval and history, follow the [lifecycle commands](../workflows/memory-lifecycle.md). Use the shipped schema and [life archive guide](../life-archive/README.md) for category, domain and field-level evidence. For older workspace copies that predate the registry, workspace check uses the installed registry and reports that the local reference is missing. Copy the new field registry from the same distribution if you want a local reference. Review old ad hoc extension keys against the new registry before adding them to a registered record.

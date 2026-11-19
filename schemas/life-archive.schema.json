@@ -44,6 +44,16 @@
                 "items": {
                   "$ref": "#/$defs/record"
                 }
+              },
+              "domains": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^(0[1-9]|1[0-2])-0[1-5]$"
+                },
+                "minItems": 4,
+                "maxItems": 5,
+                "uniqueItems": true
               }
             },
             "required": [
@@ -51,7 +61,301 @@
               "status",
               "records"
             ],
-            "additionalProperties": false
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "01"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "01-01",
+                          "01-02",
+                          "01-03",
+                          "01-04",
+                          "01-05"
+                        ]
+                      },
+                      "minItems": 5
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "02"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "02-01",
+                          "02-02",
+                          "02-03",
+                          "02-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "03"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "03-01",
+                          "03-02",
+                          "03-03",
+                          "03-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "04"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "04-01",
+                          "04-02",
+                          "04-03",
+                          "04-04",
+                          "04-05"
+                        ]
+                      },
+                      "minItems": 5
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "05"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "05-01",
+                          "05-02",
+                          "05-03",
+                          "05-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "06"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "06-01",
+                          "06-02",
+                          "06-03",
+                          "06-04",
+                          "06-05"
+                        ]
+                      },
+                      "minItems": 5
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "07"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "07-01",
+                          "07-02",
+                          "07-03",
+                          "07-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "08"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "08-01",
+                          "08-02",
+                          "08-03",
+                          "08-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "09"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "09-01",
+                          "09-02",
+                          "09-03",
+                          "09-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "10"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "10-01",
+                          "10-02",
+                          "10-03",
+                          "10-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "11"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "11-01",
+                          "11-02",
+                          "11-03",
+                          "11-04"
+                        ]
+                      },
+                      "minItems": 4
+                    }
+                  }
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "category": {
+                      "const": "12"
+                    }
+                  }
+                },
+                "then": {
+                  "properties": {
+                    "domains": {
+                      "items": {
+                        "enum": [
+                          "12-01",
+                          "12-02",
+                          "12-03",
+                          "12-04",
+                          "12-05"
+                        ]
+                      },
+                      "minItems": 5
+                    }
+                  }
+                }
+              }
+            ]
           },
           "minItems": 12,
           "maxItems": 12
@@ -204,6 +508,10 @@
         },
         "extensions": {
           "type": "object"
+        },
+        "domain": {
+          "type": "string",
+          "pattern": "^(0[1-9]|1[0-2])-0[1-5]$"
         }
       },
       "required": [
@@ -218,7 +526,12 @@
         "summary",
         "sensitivity"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "$ref": "life-fields.schema.json#/$defs/registered_fields"
+        }
+      ]
     },
     "timeline_event": {
       "type": "object",
@@ -349,6 +662,10 @@
             "year",
             "unknown"
           ]
+        },
+        "domain": {
+          "type": "string",
+          "pattern": "^(0[1-9]|1[0-2])-0[1-5]$"
         }
       },
       "required": [
@@ -433,6 +750,9 @@
               }
             }
           }
+        },
+        {
+          "$ref": "life-fields.schema.json#/$defs/registered_fields"
         }
       ]
     }

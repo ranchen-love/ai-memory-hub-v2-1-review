@@ -5,7 +5,7 @@ from pathlib import Path, PurePosixPath
 from uuid import uuid4
 
 from . import SCHEMA, VERSION
-from .life import archive_coverage
+from .life import REGISTRY, archive_coverage, field_registry, validate_registry
 from .model import LEVELS, Conflict, Denied, HubError, canonical, one_of, read_json, seq, shape
 from .store import Store, checked_relative, instance_path, protect_root, reparse
 
@@ -153,13 +153,18 @@ def check_workspace(path):
                      "sessions/README.md", "life-archive/README.md"):
         if not checked_relative(root, required).is_file():
             raise HubError("workspace entry document is missing")
+    registry = field_registry()
+    registry_present = os.path.lexists(root / REGISTRY)
+    if registry_present and validate_registry(read_json(checked_relative(root, REGISTRY))) != registry:
+        raise HubError("workspace archive field registry differs from the engine")
     coverage = archive_coverage(
-        read_json(checked_relative(root, PROFILE)), read_json(checked_relative(root, TIMELINE)), store.level,
+        read_json(checked_relative(root, PROFILE)), read_json(checked_relative(root, TIMELINE)), store.level, registry,
     )
     settings = store.settings()
     return {"status": "checked", "workspace": str(root), **binding, "engine_version": VERSION,
             "template_matches_engine": binding["template_version"] == VERSION, "schema_version": SCHEMA,
-            "switches": settings["switches"], "scheduler": settings["scheduler"], "life_archive": coverage}
+            "switches": settings["switches"], "scheduler": settings["scheduler"], "life_archive": coverage,
+            "local_field_registry": registry_present}
 
 
 def facts_projection(path):

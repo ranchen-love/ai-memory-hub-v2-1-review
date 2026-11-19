@@ -346,7 +346,7 @@ class Store:
                 if asset:
                     ref["version"] = asset["revision"]
 
-    def ingest(self, db, data, allow_raw=False, allow_review=False):
+    def ingest(self, db, data, allow_raw=False, allow_review=False, *, lifecycle_decision=False):
         document(data, self.level, allow_raw, allow_review)
         kind, entry_id = data["kind"], data["id"]
         previous = self.get(db, kind, entry_id)
@@ -359,6 +359,10 @@ class Store:
                 return {"status": "unchanged", "kind": kind, "id": entry_id, "revision": replay["revision"]}
         if base != current:
             raise Conflict("base revision differs from the current revision")
+        if kind == "memory" and not lifecycle_decision:
+            lifecycle = self.get(db, "memory_lifecycle", entry_id)
+            if lifecycle and (allow_review or lifecycle["state"] != "candidate"):
+                raise Denied("this candidate is managed by its review lifecycle")
         if kind == "memory" and previous and previous["data"]["status"] != "candidate" and not allow_review:
             raise Denied("a reviewed memory needs a confirmed review transition or a separate candidate ID")
         fields = strict_json(canonical(data["data"]))

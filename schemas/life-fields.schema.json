@@ -1,0 +1,742 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Life archive field registry",
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "kind": {
+      "const": "life_field_registry"
+    },
+    "categories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^(0[1-9]|1[0-2])$"
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "domains": {
+            "type": "object",
+            "propertyNames": {
+              "type": "string",
+              "pattern": "^(0[1-9]|1[0-2])-0[1-5]$"
+            },
+            "minProperties": 4,
+            "maxProperties": 5,
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 100
+            }
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+                },
+                "domains": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^(0[1-9]|1[0-2])-0[1-5]$"
+                  },
+                  "minItems": 1,
+                  "maxItems": 5,
+                  "uniqueItems": true
+                },
+                "type": {
+                  "enum": [
+                    "text",
+                    "text_list",
+                    "integer",
+                    "date",
+                    "reference",
+                    "reference_list",
+                    "enum",
+                    "presence",
+                    "presence_list"
+                  ]
+                },
+                "choices": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+                  },
+                  "minItems": 1,
+                  "uniqueItems": true
+                },
+                "expected": {
+                  "type": "boolean"
+                },
+                "source_hint": {
+                  "enum": [
+                    "reference",
+                    "review",
+                    "owner",
+                    "evidence",
+                    "system"
+                  ]
+                },
+                "timing": {
+                  "enum": [
+                    "none",
+                    "interval",
+                    "point"
+                  ]
+                },
+                "minimum_sensitivity": {
+                  "enum": [
+                    "public",
+                    "internal",
+                    "private",
+                    "restricted"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "domains",
+                "type",
+                "expected",
+                "source_hint",
+                "timing",
+                "minimum_sensitivity"
+              ],
+              "additionalProperties": false,
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "enum"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "choices"
+                    ]
+                  },
+                  "else": {
+                    "not": {
+                      "required": [
+                        "choices"
+                      ]
+                    }
+                  }
+                }
+              ]
+            },
+            "minItems": 10,
+            "maxItems": 14
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "domains",
+          "fields"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 12,
+      "maxItems": 12
+    }
+  },
+  "required": [
+    "schema_version",
+    "kind",
+    "categories"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "field_evidence": {
+      "type": "object",
+      "properties": {
+        "value": {},
+        "source": {
+          "$ref": "protocol.schema.json#/$defs/source"
+        },
+        "source_type": {
+          "enum": [
+            "user_statement",
+            "document",
+            "official_record",
+            "system_sync",
+            "secondary_source"
+          ]
+        },
+        "observed_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "valid_from": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valid_to": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sensitivity": {
+          "enum": [
+            "public",
+            "internal",
+            "private",
+            "restricted"
+          ]
+        }
+      },
+      "required": [
+        "value",
+        "source",
+        "source_type",
+        "observed_at",
+        "valid_from",
+        "valid_to",
+        "sensitivity"
+      ],
+      "additionalProperties": false
+    },
+    "text": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200000
+        }
+      }
+    },
+    "text_list": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200000
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "integer": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "integer",
+          "minimum": -9223372036854775808,
+          "maximum": 9223372036854775807
+        }
+      }
+    },
+    "date": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "string",
+          "format": "date"
+        }
+      }
+    },
+    "reference": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+        }
+      }
+    },
+    "reference_list": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "presence": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "object",
+          "properties": {
+            "presence": {
+              "enum": [
+                "present",
+                "absent",
+                "unknown"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+            }
+          },
+          "required": [
+            "presence"
+          ],
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "required": [
+                  "ref"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "presence": {
+                    "const": "present"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "presence_list": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "presence": {
+                "enum": [
+                  "present",
+                  "absent",
+                  "unknown"
+                ]
+              },
+              "ref": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9_.-]{0,98}[A-Za-z0-9_-])?$"
+              }
+            },
+            "required": [
+              "presence"
+            ],
+            "additionalProperties": false,
+            "allOf": [
+              {
+                "if": {
+                  "required": [
+                    "ref"
+                  ]
+                },
+                "then": {
+                  "properties": {
+                    "presence": {
+                      "const": "present"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "minItems": 0
+        }
+      }
+    },
+    "enum_1": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "active",
+            "completed",
+            "paused",
+            "abandoned",
+            "pending"
+          ]
+        }
+      }
+    },
+    "enum_2": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "active",
+            "distant",
+            "ended",
+            "pending"
+          ]
+        }
+      }
+    },
+    "enum_3": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
+        }
+      }
+    },
+    "enum_4": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "career",
+            "travel",
+            "learning",
+            "health",
+            "finance",
+            "personal",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_5": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "childhood",
+            "adolescence",
+            "youth"
+          ]
+        }
+      }
+    },
+    "enum_6": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "completed",
+            "in_progress",
+            "dropped",
+            "pending"
+          ]
+        }
+      }
+    },
+    "enum_7": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "connected",
+            "not_connected",
+            "pending",
+            "revoked"
+          ]
+        }
+      }
+    },
+    "enum_8": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "day",
+            "month",
+            "year",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "enum_9": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "fact",
+            "self-report",
+            "hypothesis",
+            "pending"
+          ]
+        }
+      }
+    },
+    "enum_10": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "family",
+            "partner",
+            "friend",
+            "colleague",
+            "community",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_11": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "full_time",
+            "outsourced",
+            "part_time",
+            "freelance",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_12": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "global",
+            "development",
+            "communication",
+            "automation",
+            "projects",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_13": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "milestone",
+            "turning_point",
+            "achievement",
+            "challenge",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_14": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "primary",
+            "secondary",
+            "vocational",
+            "undergraduate",
+            "graduate",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_15": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "repository",
+            "health_export",
+            "user_statement",
+            "document",
+            "system_log",
+            "other"
+          ]
+        }
+      }
+    },
+    "enum_16": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "short",
+            "medium",
+            "long"
+          ]
+        }
+      }
+    },
+    "enum_17": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "success",
+            "partial",
+            "failed"
+          ]
+        }
+      }
+    },
+    "enum_18": {
+      "$ref": "#/$defs/field_evidence",
+      "properties": {
+        "value": {
+          "enum": [
+            "verified",
+            "unverified",
+            "unknown"
+          ]
+        }
+      }
+    },
+    "registered_fields": {
+      "properties": {
+        "domain": {
+          "enum": [
+            "01-01",
+            "01-02",
+            "01-03",
+            "01-04",
+            "01-05",
+            "02-01",
+            "02-02",
+            "02-03",
+            "02-04",
+            "03-01",
+            "03-02",
+            "03-03",
+            "03-04",
+            "04-01",
+            "04-02",
+            "04-03",
+            "04-04",
+            "04-05",
+            "05-01",
+            "05-02",
+            "05-03",
+            "05-04",
+            "06-01",
+            "06-02",
+            "06-03",
+            "06-04",
+            "06-05",
+            "07-01",
+            "07-02",
+            "07-03",
+            "07-04",
+            "08-01",
+            "08-02",
+            "08-03",
+            "08-04",
+            "09-01",
+            "09-02",
+            "09-03",
+            "09-04",
+            "10-01",
+            "10-02",
+            "10-03",
+            "10-04",
+            "11-01",
+            "11-02",
+            "11-03",
+            "11-04",
+            "12-01",
+            "12-02",
+            "12-03",
+            "12-04",
+            "12-05"
+          ]
+        }
+      },
+      "dependentRequired": {
+        "extensions": [
+          "domain"
+        ]
+      },
+      "allOf": [
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "01-01"}}}, "then": {"properties": {"category": {"const": "01"}, "extensions": {"type": "object", "properties": {"display_name": {"$ref": "#/$defs/text"}, "gender": {"$ref": "#/$defs/text"}, "birth_year": {"$ref": "#/$defs/integer"}, "birth_date": {"$ref": "#/$defs/date"}, "birth_place": {"$ref": "#/$defs/text"}, "nationality": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "01-02"}}}, "then": {"properties": {"category": {"const": "01"}, "extensions": {"type": "object", "properties": {"hometown": {"$ref": "#/$defs/text"}, "current_city": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "01-03"}}}, "then": {"properties": {"category": {"const": "01"}, "extensions": {"type": "object", "properties": {"phone_email_index": {"$ref": "#/$defs/presence_list"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "01-04"}}}, "then": {"properties": {"category": {"const": "01"}, "extensions": {"type": "object", "properties": {"legal_name": {"$ref": "#/$defs/presence"}, "id_documents_index": {"$ref": "#/$defs/presence_list"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "01-05"}}}, "then": {"properties": {"category": {"const": "01"}, "extensions": {"type": "object", "properties": {"languages": {"$ref": "#/$defs/text_list"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "02-01"}}}, "then": {"properties": {"category": {"const": "02"}, "extensions": {"type": "object", "properties": {"stage": {"$ref": "#/$defs/enum_5"}, "family_background": {"$ref": "#/$defs/text"}, "status_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "02-02"}}}, "then": {"properties": {"category": {"const": "02"}, "extensions": {"type": "object", "properties": {"stage": {"$ref": "#/$defs/enum_5"}, "key_event": {"$ref": "#/$defs/text"}, "event_year": {"$ref": "#/$defs/text"}, "location": {"$ref": "#/$defs/text"}, "people_involved_refs": {"$ref": "#/$defs/reference_list"}, "impact_note": {"$ref": "#/$defs/text"}, "status_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "02-03"}}}, "then": {"properties": {"category": {"const": "02"}, "extensions": {"type": "object", "properties": {"key_event": {"$ref": "#/$defs/text"}, "event_year": {"$ref": "#/$defs/text"}, "impact_note": {"$ref": "#/$defs/text"}, "timeline_event_ref": {"$ref": "#/$defs/reference"}, "status_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "02-04"}}}, "then": {"properties": {"category": {"const": "02"}, "extensions": {"type": "object", "properties": {"hometown_memories": {"$ref": "#/$defs/text"}, "location": {"$ref": "#/$defs/text"}, "people_involved_refs": {"$ref": "#/$defs/reference_list"}, "status_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "03-01"}}}, "then": {"properties": {"category": {"const": "03"}, "extensions": {"type": "object", "properties": {"institution": {"$ref": "#/$defs/text"}, "level": {"$ref": "#/$defs/enum_14"}, "major_field": {"$ref": "#/$defs/text"}, "degree_status": {"$ref": "#/$defs/enum_6"}, "evidence_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "03-02"}}}, "then": {"properties": {"category": {"const": "03"}, "extensions": {"type": "object", "properties": {"skill_name": {"$ref": "#/$defs/text"}, "skill_level": {"$ref": "#/$defs/enum_3"}, "certificate_name": {"$ref": "#/$defs/text"}, "certificate_issuer": {"$ref": "#/$defs/text"}, "certificate_expiry": {"$ref": "#/$defs/date"}, "evidence_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "03-03"}}}, "then": {"properties": {"category": {"const": "03"}, "extensions": {"type": "object", "properties": {"self_study_topic": {"$ref": "#/$defs/text"}, "evidence_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "03-04"}}}, "then": {"properties": {"category": {"const": "03"}, "extensions": {"type": "object", "properties": {"learning_method": {"$ref": "#/$defs/text"}, "evidence_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "04-01"}}}, "then": {"properties": {"category": {"const": "04"}, "extensions": {"type": "object", "properties": {"employer": {"$ref": "#/$defs/text"}, "employment_type": {"$ref": "#/$defs/enum_11"}, "job_title": {"$ref": "#/$defs/text"}, "work_location": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "04-02"}}}, "then": {"properties": {"category": {"const": "04"}, "extensions": {"type": "object", "properties": {"job_title": {"$ref": "#/$defs/text"}, "department_team": {"$ref": "#/$defs/text"}, "responsibilities": {"$ref": "#/$defs/text_list"}, "work_hours_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "04-03"}}}, "then": {"properties": {"category": {"const": "04"}, "extensions": {"type": "object", "properties": {"project_name": {"$ref": "#/$defs/text"}, "project_role": {"$ref": "#/$defs/text"}, "project_outcome": {"$ref": "#/$defs/text"}, "project_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "04-04"}}}, "then": {"properties": {"category": {"const": "04"}, "extensions": {"type": "object", "properties": {"tech_stack": {"$ref": "#/$defs/text_list"}, "tech_stack_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "04-05"}}}, "then": {"properties": {"category": {"const": "04"}, "extensions": {"type": "object", "properties": {"project_name": {"$ref": "#/$defs/text"}, "project_role": {"$ref": "#/$defs/text"}, "project_outcome": {"$ref": "#/$defs/text"}, "side_business": {"$ref": "#/$defs/text"}, "project_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "05-01"}}}, "then": {"properties": {"category": {"const": "05"}, "extensions": {"type": "object", "properties": {"trait_dimension": {"$ref": "#/$defs/text"}, "trait_description": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "05-02"}}}, "then": {"properties": {"category": {"const": "05"}, "extensions": {"type": "object", "properties": {"value_statement": {"$ref": "#/$defs/text"}, "belief_note": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "05-03"}}}, "then": {"properties": {"category": {"const": "05"}, "extensions": {"type": "object", "properties": {"stress_response": {"$ref": "#/$defs/text"}, "coping_preference": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "05-04"}}}, "then": {"properties": {"category": {"const": "05"}, "extensions": {"type": "object", "properties": {"communication_style": {"$ref": "#/$defs/text"}, "decision_style": {"$ref": "#/$defs/text"}, "behavior_pattern": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "06-01"}}}, "then": {"properties": {"category": {"const": "06"}, "extensions": {"type": "object", "properties": {"person_ref": {"$ref": "#/$defs/text"}, "person_display": {"$ref": "#/$defs/text"}, "relationship_type": {"$ref": "#/$defs/enum_10"}, "relationship_status": {"$ref": "#/$defs/enum_2"}, "how_met": {"$ref": "#/$defs/text"}, "key_events": {"$ref": "#/$defs/text_list"}, "contact_index": {"$ref": "#/$defs/presence"}, "notes": {"$ref": "#/$defs/text"}, "timeline_event_refs": {"$ref": "#/$defs/reference_list"}, "source": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}, "retention_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "06-02"}}}, "then": {"properties": {"category": {"const": "06"}, "extensions": {"type": "object", "properties": {"person_ref": {"$ref": "#/$defs/text"}, "person_display": {"$ref": "#/$defs/text"}, "relationship_type": {"$ref": "#/$defs/enum_10"}, "relationship_status": {"$ref": "#/$defs/enum_2"}, "how_met": {"$ref": "#/$defs/text"}, "key_events": {"$ref": "#/$defs/text_list"}, "contact_index": {"$ref": "#/$defs/presence"}, "notes": {"$ref": "#/$defs/text"}, "timeline_event_refs": {"$ref": "#/$defs/reference_list"}, "source": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}, "retention_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "06-03"}}}, "then": {"properties": {"category": {"const": "06"}, "extensions": {"type": "object", "properties": {"person_ref": {"$ref": "#/$defs/text"}, "person_display": {"$ref": "#/$defs/text"}, "relationship_type": {"$ref": "#/$defs/enum_10"}, "relationship_status": {"$ref": "#/$defs/enum_2"}, "how_met": {"$ref": "#/$defs/text"}, "key_events": {"$ref": "#/$defs/text_list"}, "contact_index": {"$ref": "#/$defs/presence"}, "notes": {"$ref": "#/$defs/text"}, "timeline_event_refs": {"$ref": "#/$defs/reference_list"}, "source": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}, "retention_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "06-04"}}}, "then": {"properties": {"category": {"const": "06"}, "extensions": {"type": "object", "properties": {"person_ref": {"$ref": "#/$defs/text"}, "person_display": {"$ref": "#/$defs/text"}, "relationship_type": {"$ref": "#/$defs/enum_10"}, "relationship_status": {"$ref": "#/$defs/enum_2"}, "how_met": {"$ref": "#/$defs/text"}, "key_events": {"$ref": "#/$defs/text_list"}, "contact_index": {"$ref": "#/$defs/presence"}, "notes": {"$ref": "#/$defs/text"}, "timeline_event_refs": {"$ref": "#/$defs/reference_list"}, "source": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}, "retention_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "06-05"}}}, "then": {"properties": {"category": {"const": "06"}, "extensions": {"type": "object", "properties": {"person_ref": {"$ref": "#/$defs/text"}, "person_display": {"$ref": "#/$defs/text"}, "relationship_type": {"$ref": "#/$defs/enum_10"}, "relationship_status": {"$ref": "#/$defs/enum_2"}, "how_met": {"$ref": "#/$defs/text"}, "key_events": {"$ref": "#/$defs/text_list"}, "contact_index": {"$ref": "#/$defs/presence"}, "notes": {"$ref": "#/$defs/text"}, "timeline_event_refs": {"$ref": "#/$defs/reference_list"}, "source": {"$ref": "#/$defs/text"}, "status": {"$ref": "#/$defs/enum_9"}, "retention_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "07-01"}}}, "then": {"properties": {"category": {"const": "07"}, "extensions": {"type": "object", "properties": {"health_index_entry": {"$ref": "#/$defs/text"}, "data_type": {"$ref": "#/$defs/text"}, "date_range": {"$ref": "#/$defs/text"}, "record_count": {"$ref": "#/$defs/integer"}, "health_summary_ref": {"$ref": "#/$defs/reference"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "07-02"}}}, "then": {"properties": {"category": {"const": "07"}, "extensions": {"type": "object", "properties": {"lifestyle_note": {"$ref": "#/$defs/text"}, "daily_routine": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "07-03"}}}, "then": {"properties": {"category": {"const": "07"}, "extensions": {"type": "object", "properties": {"living_arrangement": {"$ref": "#/$defs/text"}, "daily_routine": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "07-04"}}}, "then": {"properties": {"category": {"const": "07"}, "extensions": {"type": "object", "properties": {"health_index_entry": {"$ref": "#/$defs/text"}, "data_type": {"$ref": "#/$defs/text"}, "date_range": {"$ref": "#/$defs/text"}, "record_count": {"$ref": "#/$defs/integer"}, "storage_ref": {"$ref": "#/$defs/reference"}, "sync_batch": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "08-01"}}}, "then": {"properties": {"category": {"const": "08"}, "extensions": {"type": "object", "properties": {"income_structure": {"$ref": "#/$defs/text"}, "expense_structure": {"$ref": "#/$defs/text"}, "snapshot_date": {"$ref": "#/$defs/date"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "08-02"}}}, "then": {"properties": {"category": {"const": "08"}, "extensions": {"type": "object", "properties": {"asset_index": {"$ref": "#/$defs/presence"}, "liability_index": {"$ref": "#/$defs/presence"}, "storage_ref": {"$ref": "#/$defs/reference"}, "snapshot_date": {"$ref": "#/$defs/date"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "08-03"}}}, "then": {"properties": {"category": {"const": "08"}, "extensions": {"type": "object", "properties": {"financial_goal": {"$ref": "#/$defs/text"}, "budget_note": {"$ref": "#/$defs/text"}, "snapshot_date": {"$ref": "#/$defs/date"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "08-04"}}}, "then": {"properties": {"category": {"const": "08"}, "extensions": {"type": "object", "properties": {"insurance_index": {"$ref": "#/$defs/presence"}, "storage_ref": {"$ref": "#/$defs/reference"}, "snapshot_date": {"$ref": "#/$defs/date"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "09-01"}}}, "then": {"properties": {"category": {"const": "09"}, "extensions": {"type": "object", "properties": {"goal_title": {"$ref": "#/$defs/text"}, "goal_category": {"$ref": "#/$defs/enum_4"}, "goal_horizon": {"$ref": "#/$defs/enum_16"}, "target_date": {"$ref": "#/$defs/date"}, "goal_status": {"$ref": "#/$defs/enum_1"}, "progress_note": {"$ref": "#/$defs/text"}, "related_project_ref": {"$ref": "#/$defs/reference"}, "related_event_refs": {"$ref": "#/$defs/reference_list"}, "decision_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "09-02"}}}, "then": {"properties": {"category": {"const": "09"}, "extensions": {"type": "object", "properties": {"goal_title": {"$ref": "#/$defs/text"}, "goal_category": {"$ref": "#/$defs/enum_4"}, "goal_horizon": {"$ref": "#/$defs/enum_16"}, "target_date": {"$ref": "#/$defs/date"}, "goal_status": {"$ref": "#/$defs/enum_1"}, "progress_note": {"$ref": "#/$defs/text"}, "related_project_ref": {"$ref": "#/$defs/reference"}, "related_event_refs": {"$ref": "#/$defs/reference_list"}, "decision_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "09-03"}}}, "then": {"properties": {"category": {"const": "09"}, "extensions": {"type": "object", "properties": {"goal_title": {"$ref": "#/$defs/text"}, "goal_category": {"$ref": "#/$defs/enum_4"}, "goal_horizon": {"$ref": "#/$defs/enum_16"}, "target_date": {"$ref": "#/$defs/date"}, "goal_status": {"$ref": "#/$defs/enum_1"}, "progress_note": {"$ref": "#/$defs/text"}, "related_project_ref": {"$ref": "#/$defs/reference"}, "related_event_refs": {"$ref": "#/$defs/reference_list"}, "decision_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "09-04"}}}, "then": {"properties": {"category": {"const": "09"}, "extensions": {"type": "object", "properties": {"goal_title": {"$ref": "#/$defs/text"}, "goal_category": {"$ref": "#/$defs/enum_4"}, "goal_horizon": {"$ref": "#/$defs/enum_16"}, "target_date": {"$ref": "#/$defs/date"}, "goal_status": {"$ref": "#/$defs/enum_1"}, "progress_note": {"$ref": "#/$defs/text"}, "related_project_ref": {"$ref": "#/$defs/reference"}, "related_event_refs": {"$ref": "#/$defs/reference_list"}, "decision_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "10-01"}}}, "then": {"properties": {"category": {"const": "10"}, "extensions": {"type": "object", "properties": {"rule_id": {"$ref": "#/$defs/text"}, "rule_content": {"$ref": "#/$defs/text"}, "rule_scope": {"$ref": "#/$defs/enum_12"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "10-02"}}}, "then": {"properties": {"category": {"const": "10"}, "extensions": {"type": "object", "properties": {"decision_id": {"$ref": "#/$defs/text"}, "decision_title": {"$ref": "#/$defs/text"}, "decision_outcome": {"$ref": "#/$defs/text"}, "decision_reason": {"$ref": "#/$defs/text"}, "review_condition": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "10-03"}}}, "then": {"properties": {"category": {"const": "10"}, "extensions": {"type": "object", "properties": {"ai_tool_name": {"$ref": "#/$defs/text"}, "ai_tool_purpose": {"$ref": "#/$defs/text"}, "ai_tool_access_status": {"$ref": "#/$defs/enum_18"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "10-04"}}}, "then": {"properties": {"category": {"const": "10"}, "extensions": {"type": "object", "properties": {"collaboration_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "11-01"}}}, "then": {"properties": {"category": {"const": "11"}, "extensions": {"type": "object", "properties": {"event_title": {"$ref": "#/$defs/text"}, "event_category": {"$ref": "#/$defs/enum_13"}, "start_date": {"$ref": "#/$defs/date"}, "end_date": {"$ref": "#/$defs/date"}, "date_precision": {"$ref": "#/$defs/enum_8"}, "event_summary": {"$ref": "#/$defs/text"}, "impact_note": {"$ref": "#/$defs/text"}, "related_category_refs": {"$ref": "#/$defs/reference_list"}, "timeline_event_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "11-02"}}}, "then": {"properties": {"category": {"const": "11"}, "extensions": {"type": "object", "properties": {"event_title": {"$ref": "#/$defs/text"}, "event_category": {"$ref": "#/$defs/enum_13"}, "start_date": {"$ref": "#/$defs/date"}, "end_date": {"$ref": "#/$defs/date"}, "date_precision": {"$ref": "#/$defs/enum_8"}, "event_summary": {"$ref": "#/$defs/text"}, "impact_note": {"$ref": "#/$defs/text"}, "related_category_refs": {"$ref": "#/$defs/reference_list"}, "timeline_event_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "11-03"}}}, "then": {"properties": {"category": {"const": "11"}, "extensions": {"type": "object", "properties": {"event_title": {"$ref": "#/$defs/text"}, "event_category": {"$ref": "#/$defs/enum_13"}, "start_date": {"$ref": "#/$defs/date"}, "end_date": {"$ref": "#/$defs/date"}, "date_precision": {"$ref": "#/$defs/enum_8"}, "event_summary": {"$ref": "#/$defs/text"}, "impact_note": {"$ref": "#/$defs/text"}, "related_category_refs": {"$ref": "#/$defs/reference_list"}, "timeline_event_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "11-04"}}}, "then": {"properties": {"category": {"const": "11"}, "extensions": {"type": "object", "properties": {"event_title": {"$ref": "#/$defs/text"}, "event_category": {"$ref": "#/$defs/enum_13"}, "start_date": {"$ref": "#/$defs/date"}, "end_date": {"$ref": "#/$defs/date"}, "date_precision": {"$ref": "#/$defs/enum_8"}, "event_summary": {"$ref": "#/$defs/text"}, "impact_note": {"$ref": "#/$defs/text"}, "related_category_refs": {"$ref": "#/$defs/reference_list"}, "timeline_event_ref": {"$ref": "#/$defs/reference"}, "status": {"$ref": "#/$defs/enum_9"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "12-01"}}}, "then": {"properties": {"category": {"const": "12"}, "extensions": {"type": "object", "properties": {"source_name": {"$ref": "#/$defs/text"}, "source_type": {"$ref": "#/$defs/enum_15"}, "source_location": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "12-02"}}}, "then": {"properties": {"category": {"const": "12"}, "extensions": {"type": "object", "properties": {"sync_batch_id": {"$ref": "#/$defs/text"}, "sync_scope": {"$ref": "#/$defs/text"}, "sync_result": {"$ref": "#/$defs/enum_17"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "12-03"}}}, "then": {"properties": {"category": {"const": "12"}, "extensions": {"type": "object", "properties": {"dedup_key_used": {"$ref": "#/$defs/text"}, "correction_record_id": {"$ref": "#/$defs/text"}, "superseded_record_id": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "12-04"}}}, "then": {"properties": {"category": {"const": "12"}, "extensions": {"type": "object", "properties": {"backup_location_ref": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}},
+        {"if": {"required": ["domain"], "properties": {"domain": {"const": "12-05"}}}, "then": {"properties": {"category": {"const": "12"}, "extensions": {"type": "object", "properties": {"source_name": {"$ref": "#/$defs/text"}, "access_status": {"$ref": "#/$defs/enum_7"}, "audit_note": {"$ref": "#/$defs/text"}}, "additionalProperties": false}}}}
+      ]
+    }
+  }
+}

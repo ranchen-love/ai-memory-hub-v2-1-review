@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Consent-scoped shared memory snapshot",
+  "type": "object",
+  "properties": {
+    "format": {"const": "1.0"},
+    "kind": {"const": "shared_memory"},
+    "scopes": {
+      "type": "object",
+      "propertyNames": {"$ref": "protocol.schema.json#/$defs/memory/properties/id"},
+      "additionalProperties": {
+        "type": "array",
+        "items": {"$ref": "#/$defs/accepted"},
+        "minItems": 1
+      }
+    }
+  },
+  "required": ["format", "kind", "scopes"],
+  "additionalProperties": false,
+  "$defs": {
+    "accepted": {
+      "type": "object",
+      "properties": {
+        "schema_version": {"const": "2.1"},
+        "kind": {"const": "memory"},
+        "id": {"$ref": "protocol.schema.json#/$defs/memory/properties/id"},
+        "sensitivity": {"$ref": "protocol.schema.json#/$defs/memory/properties/sensitivity"},
+        "source": {"$ref": "protocol.schema.json#/$defs/source"},
+        "data": {
+          "$ref": "protocol.schema.json#/$defs/memory/properties/data",
+          "properties": {
+            "status": {"const": "accepted"},
+            "classification": {"enum": ["fact", "rule", "preference"]}
+          }
+        },
+        "revision": {"type": "integer", "minimum": 1, "maximum": 9223372036854775807}
+      },
+      "required": ["schema_version", "kind", "id", "sensitivity", "source", "data", "revision"],
+      "additionalProperties": false
+    }
+  }
+}

@@ -43,6 +43,9 @@ ALLOWED = {
     "tests/test_workspace.py", "vendor/README.md", "workflows/data-quality.md",
     "workflows/development.md", "workflows/document-writing.md", "workflows/hybrid-sync.md",
     "workflows/memory-lifecycle.md", "workflows/project-handoff.md", "workflows/research.md",
+    "ai_memory_hub/candidates.py", "ai_memory_hub/shared_version.py",
+    "life-archive/field-registry.json", "schemas/life-fields.schema.json", "schemas/shared-memory.schema.json",
+    "tests/test_candidate_lifecycle.py", "tests/test_life_registry.py", "tests/test_shared_version.py",
 }
 LEGACY_ALLOWED = {
     "README.zh-CN.md", "README.ja.md", "README.ko.md", "README.es.md",

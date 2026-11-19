@@ -36,6 +36,8 @@ assert {f.as_posix().removeprefix(p) for f in d.files if f.as_posix().startswith
     assert cli("workspace", "init", "--path", workspace, "--vault", vault, expected=2)["code"] == "conflict"
     info = cli("workspace", "check", "--path", workspace)
     assert info["life_archive"]["states"]["unknown"] == 12 and info["template_matches_engine"]
+    assert info["life_archive"]["registered"] == {"categories": 12, "domains": 52, "fields": 134}
+    assert len(info["life_archive"]["missing_fields"]) == 134 and info["local_field_registry"]
     assert hub("source", "list")["sources"] == []
     manifest = workspace / "demo-inbox"
     assert hub("source", "grant", "sample", "normalized", "--path", manifest, "--consent")["status"] == "granted"
@@ -68,6 +70,41 @@ assert {f.as_posix().removeprefix(p) for f in d.files if f.as_posix().startswith
     actual = cli("--root", recipient, "transfer", "file", receipt["id"], "calibration-notes@1", "--consent")
     assert Path(actual["path"]).read_bytes() == (manifest / "checklist.txt").read_bytes()
 
+    proposal = workspace / "proposal.json"
+    candidate.update(id="new-candidate", base_revision=0)
+    candidate["data"].update(key="synthetic.workflow", status="candidate", classification="rule")
+    proposal.write_text(json.dumps(candidate), encoding="utf-8")
+    hub("import", "--input", proposal, "--consent")
+
+    def advance(state, base_revision, *options, expected=0):
+        return hub("candidate", "advance", "new-candidate", state, "--base", base_revision,
+                   "--actor", "demo-reviewer", "--reason", "Synthetic review", *options, expected=expected)
+
+    advance("validated", 0, "--record-revision", 1, "--consent")
+    advance("review", 1, "--consent")
+    assert advance("approved", 2, expected=2)["code"] == "permission_denied"
+    advance("approved", 2, "--evidence-verified", "--consent")
+    assert hub("memory", "show", "new-candidate")["data"]["status"] == "candidate"
+    advance("active", 3, "--consent")
+    history = hub("candidate", "history", "new-candidate", "--consent")
+    assert history["events"][-1]["state"] == "active" and history["records"][-1]["revision"] == 2
+
+    snapshot = hub("version", "snapshot", "--name", "authorized", "--include", "rules=new-candidate", "--consent")
+    approved_file = base / "received-memory.json"
+    approved_file.write_bytes(Path(snapshot["path"]).read_bytes())
+
+    def version(action, *options):
+        return cli("--root", recipient, "version", action, "--channel", "example", "--agent", "agent-b",
+                   *options, "--consent")
+
+    detected = version("check", "--snapshot", approved_file)
+    assert detected["pending_reload"] and detected["synced_sha"] is None
+    read = version("reload", "--scope", "rules")
+    assert read["scopes"]["rules"][0]["id"] == "new-candidate"
+    assert read["pending_reload"] and read["synced_sha"] is None
+    confirmed = version("confirm", "--sha", read["detected_sha"], "--receipt", read["receipt"])
+    assert confirmed["synced_sha"] == snapshot["sha"] and not confirmed["pending_reload"]
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
@@ -75,4 +112,4 @@ if __name__ == "__main__":
     arguments = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix="hub-v23-onboarding-") as directory:
         check(Path(directory).resolve(), arguments.installed)
-    print("PASS: workspace initialization, candidate approval and revision, project checkpoint, file and recipient bytes")
+    print("PASS: workspace initialization, candidate approval and revision, project checkpoint, recipient bytes, 12/52/134 coverage and confirmed shared-memory reload")
