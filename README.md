@@ -1,7 +1,7 @@
 # AI Memory Hub
 **Languages:** [English](README.md) · [简体中文](docs/i18n/README.zh-CN.md) · [日本語](docs/i18n/README.ja.md) · [한국어](docs/i18n/README.ko.md) · [Español](docs/i18n/README.es.md) · [Français](docs/i18n/README.fr.md) · [Deutsch](docs/i18n/README.de.md) · [Português (Brasil)](docs/i18n/README.pt-BR.md) · [Русский](docs/i18n/README.ru.md)
 > **Your context. Your files. Your control.** A local-first, platform-neutral foundation for lasting AI memory, verifiable project continuity, and selective handoffs between AI agents.
-**Current version: 2.2.0 · Python 3.11+ · MIT License · Command-line interface (CLI)**
+**Current version: 2.3.0 · Python 3.11+ · MIT License · Command-line interface (CLI)**
 AI conversations are useful—but a conversation history alone is not a dependable long-term project workspace. Decisions become buried, attachments lose their context, and switching assistants can mean explaining everything again. **AI Memory Hub** gives you an independent, versioned place to preserve *authorized* context, its evidence, and the actual files associated with it, without tying your archive to one AI provider.
 It is built for people using several AI tools, developers running coding agents, and anyone who wants a portable record of why a project reached its current state. The core runs locally and does **not** require a hosted AI service.
 ## Why it exists
@@ -11,7 +11,7 @@ It is built for people using several AI tools, developers running coding agents,
 - **Choice instead of platform lock-in:** Transfer selected project context to another AI or owner-controlled Vault under explicit consent.
 - **Control instead of indiscriminate capture:** Select sources and sensitivity levels. Raw conversations (L3) need additional authorization.
 ## What you can do today
-| Capability | What V2.2 provides |
+| Capability | What V2.3 provides |
 | --- | --- |
 | Long-term memory candidates | Record and review candidate facts, preferences and decisions; prevent raw text from becoming accepted memory automatically |
 | Conversation layers | L0 index, L1 summary, L2 detailed checkpoint, optional L3 source-backed visible messages |
@@ -22,6 +22,26 @@ It is built for people using several AI tools, developers running coding agents,
 | Sync controls | Independent weekly, on-demand full, event, daily and handoff switches; detailed coverage and failure status |
 | Recovery | Retry idempotently, preserve history, verify backup integrity and test rollback against a restored copy |
 **Important:** These are implemented capabilities, validated with synthetic data on Windows and Ubuntu. The software does **not** automatically read every AI conversation, install a scheduler, capture every attachment, or provide hosted real-time synchronization.
+## V2.3: a complete, reusable personal memory workspace
+The V2.3 product combines the **tested local engine** with an **owner-initialized memory workspace**—not merely a Python library. Its neutral templates cover the original 19 organizational modules, including `AGENTS.md`, `core/`, `memory/`, `candidates/`, `projects/`, `sessions/`, `assets/`, `life-archive/`, `knowledge/`, `collaboration/`, `integrations/`, `config/` and `workflows/`. They contain **no personal facts**.
+The optional life profile has **12 categories, 52 subdomains and 134 registered fields**, with source, validity and sensitivity checks. All categories start as `unknown`; a file path or raw health record is never imported merely by installing the package. Candidates follow a reviewable lifecycle—validation, duplicate/conflict advice, evidence-backed approval and **separate activation**—with revision history and revocation.
+### Create your own workspace
+Run these commands from a checked-out V2.3 source tree with Python 3.11+. The example creates a workspace and a **separate Vault** outside Git, using only synthetic demo files. Copying the demo does not authorize a source; the explicit `source grant` does.
+```sh
+python -m pip install .
+ai-memory-hub workspace init --path ../workspace-demo-v23 --demo
+ai-memory-hub workspace check --path ../workspace-demo-v23
+ai-memory-hub --root ../workspace-demo-v23-vault source grant sample normalized --path ../workspace-demo-v23/demo-inbox --consent
+ai-memory-hub --root ../workspace-demo-v23-vault local run --source sample
+ai-memory-hub --root ../workspace-demo-v23-vault memory review
+ai-memory-hub --root ../workspace-demo-v23-vault project list
+ai-memory-hub --root ../workspace-demo-v23-vault local status
+```
+The first review reports candidates; they are **not** automatically accepted facts. See [workspace onboarding](docs/workspace.md), [19-module coverage](docs/workspace-parity.md), [Agent entry](AGENTS.md) and the [life field registry](life-archive/field-registry.json).
+### Cross-agent memory versions and governance
+Approved, explicitly selected memories can be exported as a local snapshot. On the recipient's authorized Vault, `version check` detects the snapshot, `version reload` returns changed scopes with a one-time receipt, and `version confirm` advances `synced_sha` **only after** explicit confirmation. `detected_sha` is not `synced_sha`; unavailable inputs report `unknown`. This is not an automatic connection to every AI account, and a receipt does not prove comprehension. See [bootstrap and version commands](integrations/memory-bootstrap.md).
+For proposals, use `candidate suggest`, `candidate advance` and `candidate history` with explicit consent; accepted output is only activated after the separate authorized step. See [memory lifecycle](workflows/memory-lifecycle.md). Optional health support validates **de-identified aggregate summaries only**, not raw health-device synchronization. The program is **2.3.0**; existing Vault records retain schema **2.1**, while the new workspace format is **1.0**.
+
 ## How it works
 ```mermaid
 flowchart LR
@@ -87,7 +107,7 @@ Change a switch with `config set FEATURE on|off`. `local run --source ID` uses `
 - **Offline transfer:** Review both sides, exact file versions and the transfer channel. Transfer ZIPs are unencrypted; retain and delete them under your own data policy.
 - **No magical provider access:** Official exports and explicit manifests are supported. No universal AI chat watcher, no automatic acquisition of provider credentials, and no default production schedule.
 - **Honest source status:** An external URL is only a reference unless file bytes are actually stored. An unavailable source never becomes a successful full-coverage claim.
-- **Compatibility:** Package release 2.2.0 uses protocol/schema version 2.1 for existing records and adds a 2.2 offline transfer envelope. Keep backups and test upgrades on a restored copy.
+- **Compatibility:** Package release 2.3.0 uses protocol/schema version 2.1 for existing records and adds a 2.2 offline transfer envelope. Keep backups and test upgrades on a restored copy.
 ## Documentation and development
 - [Local deployment, recovery and transfer](docs/deployment.md)
 - [Full user guide](docs/guide.md)
@@ -101,4 +121,4 @@ python -m unittest discover -s tests -v
 python scripts/smoke_release.py
 python scripts/smoke_v22.py
 ```
-**Release status:** The core is implemented and has passed synthetic end-to-end validation. Public repository visibility and a formal 2.2.0 GitHub Release are **separate publishing steps**, not prerequisites to using the code from an authorized checkout. Issues and pull requests are welcome where repository permissions allow.
+**Release status:** The core is implemented and has passed synthetic end-to-end validation. Public repository visibility and a formal 2.3.0 GitHub Release are **separate publishing steps**, not prerequisites to using the code from an authorized checkout. Issues and pull requests are welcome where repository permissions allow.

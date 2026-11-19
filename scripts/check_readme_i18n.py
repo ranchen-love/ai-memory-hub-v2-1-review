@@ -63,8 +63,16 @@ def main():
         for command in ("transfer pack", "transfer receive", "transfer inspect", "transfer file"):
             if not any(command in body for _, body in blocks):
                 failures.append(f"{name}: missing working transfer example ({command})")
-        if "2.2.0" not in text:
+        if "2.3.0" not in text:
             failures.append(f"{name}: package version missing")
+        if "12" not in text or "52" not in text or "134" not in text:
+            failures.append(f"{name}: complete life archive summary missing")
+        if "synced_sha" not in text or "detected_sha" not in text:
+            failures.append(f"{name}: cross-agent version state missing")
+        if "candidate advance" not in text or "version confirm" not in text:
+            failures.append(f"{name}: governance and read-confirm commands missing")
+        if "workspace init --path ../workspace-demo-v23 --demo" not in text:
+            failures.append(f"{name}: V2.3 workspace onboarding missing")
         if text.count("\n## ") < 7:
             failures.append(f"{name}: expected full product and usage sections")
     if failures:

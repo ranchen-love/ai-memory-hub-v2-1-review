@@ -1,7 +1,7 @@
 # AI Memory Hub · 开放、可迁移的 AI 记忆中枢
 **Languages:** [English](../../README.md) · [简体中文](README.zh-CN.md) · [日本語](README.ja.md) · [한국어](README.ko.md) · [Español](README.es.md) · [Français](README.fr.md) · [Deutsch](README.de.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md)
 > **你的上下文、你的文件、你的控制权。** 一套本地优先、模型与平台中立的 AI 长期记忆、项目延续及跨 Agent 授权交接底座。
-**当前版本：2.2.0 · Python 3.11+ · MIT 开源许可 · 命令行工具（CLI）**
+**当前版本：2.3.0 · Python 3.11+ · MIT 开源许可 · 命令行工具（CLI）**
 AI 对话很方便，但**聊天记录本身并不等于可靠的长期记忆**。重要决策埋在长对话里，上传附件和生成文件逐渐与背景脱节；换一个 AI 或几周后继续项目，又要重新解释前因后果。AI Memory Hub 将**经过授权的上下文、来源证据、项目状态和真实文件字节**保存到独立、可追溯的本地存储中，而不是被某个 AI 平台锁定。
 适用于需要同时使用多个 AI 工具的人、使用编程 Agent 的开发者，以及希望长期保存项目来龙去脉的个人用户。核心在本机运行，不要求订阅托管式 AI 服务。
 ## 为什么需要它？
@@ -10,7 +10,7 @@ AI 对话很方便，但**聊天记录本身并不等于可靠的长期记忆**�
 - **真正保存文件：** 对获准的用户上传件和 AI 生成件保存原始字节与版本，而非只存一个可能失效的链接。
 - **可以更换 AI：** 在独立授权下，将选定的项目上下文和文件版本交给另一个 AI 或 Vault。
 - **用户掌握范围：** 明确指定来源和敏感等级，原始消息（L3）必须另行授权。
-## V2.2 已实现的能力
+## V2.3 已实现的能力
 | 功能 | 实际提供的能力 |
 | --- | --- |
 | 长期记忆候选 | 保存并审核候选事实、偏好和决策，不把原始聊天自动认定为长期事实 |
@@ -22,6 +22,26 @@ AI 对话很方便，但**聊天记录本身并不等于可靠的长期记忆**�
 | 五种同步机制 | 每周、按需全量、事件、每日补漏、即时交接独立开关及覆盖状态 |
 | 恢复能力 | 幂等重试、历史保留、完整性检查、备份恢复和副本回滚 |
 **请注意：** 以上是已完成并通过 Windows、Ubuntu 合成数据验证的程序能力。它**不会自动读取所有 AI 平台聊天、默认安装定时任务、捕获所有附件，或提供开箱即用的云端实时同步**。
+## V2.3：完整、可复用的个人记忆中枢
+V2.3 不只是 Python 底层引擎，而是**经过测试的存储引擎 + 每位用户独立初始化的完整记忆工作区**。通用模板对应私人实例的 19 个组织模块，包括 `AGENTS.md`、`core/`、`memory/`、`candidates/`、`projects/`、`sessions/`、`assets/`、`life-archive/`、`knowledge/`、`collaboration/`、`integrations/`、`config/` 和 `workflows/` 等，**不包含任何私人事实**。
+人生档案具备 **12 大类、52 个二级领域、134 项注册字段**，支持来源、有效期和敏感度校验。初始所有类别均为 `unknown`，安装不会自动读取健康原始记录。记忆候选具备验证、去重与冲突建议、证据审批、**单独激活**、撤销及历史版本管理。
+### 初始化属于自己的工作区
+在 V2.3 源码目录使用 Python 3.11+ 执行下列命令。示例会在 Git 仓库外建立**两个独立目录：工作区和 Vault**，仅复制合成演示数据。复制演示数据本身不会授予读取权限；权限由显式的 `source grant` 授予。
+```sh
+python -m pip install .
+ai-memory-hub workspace init --path ../workspace-demo-v23 --demo
+ai-memory-hub workspace check --path ../workspace-demo-v23
+ai-memory-hub --root ../workspace-demo-v23-vault source grant sample normalized --path ../workspace-demo-v23/demo-inbox --consent
+ai-memory-hub --root ../workspace-demo-v23-vault local run --source sample
+ai-memory-hub --root ../workspace-demo-v23-vault memory review
+ai-memory-hub --root ../workspace-demo-v23-vault project list
+ai-memory-hub --root ../workspace-demo-v23-vault local status
+```
+初次查看候选不会将它们自动转为正式事实。详见[工作区初始化](../workspace.md)、[19 模块覆盖对照](../workspace-parity.md)、[Agent 入口](../../AGENTS.md)和[人生档案字段注册表](../../life-archive/field-registry.json)。
+### 跨 Agent 版本确认与记忆治理
+经用户选择和授权的已接受记忆可以生成本地快照。接收端使用 `version check` 检测更新，`version reload` 按变更范围读取并生成一次性回执，`version confirm` 在明确确认后才推进 `synced_sha`。**`detected_sha` 不等于 `synced_sha`**；来源不可用时返回 `unknown`。这不代表已连接所有 AI 平台，回执也不能证明 Agent 理解了内容。参见[共享版本与接入协议](../../integrations/memory-bootstrap.md)。
+记忆治理使用 `candidate suggest`、`candidate advance`、`candidate history`，均需按实际操作授权；候选获批后仍须单独激活才能进入事实视图，详见[记忆生命周期](../../workflows/memory-lifecycle.md)。健康扩展目前**仅校验去标识化汇总**，并非原始健康数据自动同步。软件版本 **2.3.0**；兼容既有 Vault 记录协议 **2.1**，新工作区格式为 **1.0**。
+
 ## 系统如何工作？
 ```mermaid
 flowchart LR
@@ -87,7 +107,7 @@ python -m ai_memory_hub --root ../recipient transfer file PACKAGE_ID calibration
 - **离线交接：** 双方确认范围、版本和传输渠道。ZIP 未加密，需要自行规定保存与清理周期。
 - **不会无感监听全部平台：** 支持官方导出和显式清单，不自动获取平台凭证或安装生产定时任务。
 - **不混淆文件与链接：** 外部 URL 仅是引用；只有取得并写入真实字节才算文件归档。来源缺失也不会报告为全量成功。
-- **兼容性：** 软件版本 2.2.0 继续使用既有的 2.1 记录 Schema，同时加入 2.2 离线传输包；升级请先备份并在恢复副本测试。
+- **兼容性：** 软件版本 2.3.0 继续使用既有的 2.1 记录 Schema，同时加入 2.2 离线传输包；升级请先备份并在恢复副本测试。
 ## 文档、开源与贡献
 - [部署、恢复和跨 Vault 交接](../deployment.md)
 - [完整使用指南](../guide.md)
@@ -101,4 +121,4 @@ python -m unittest discover -s tests -v
 python scripts/smoke_release.py
 python scripts/smoke_v22.py
 ```
-**发布状态：** 核心已经实现并通过合成端到端验证。正式公开 GitHub 仓库和创建 2.2.0 Release 是单独的发布步骤；有仓库访问权限时，无需等待公开也可以从授权的源码检出安装使用。
+**发布状态：** 核心已经实现并通过合成端到端验证。正式公开 GitHub 仓库和创建 2.3.0 Release 是单独的发布步骤；有仓库访问权限时，无需等待公开也可以从授权的源码检出安装使用。
