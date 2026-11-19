@@ -14,11 +14,12 @@ from .model import (
     revision, seq, shape, strict_json, text,
 )
 from .shared_version import export_record
-from .store import checked_relative, instance_path, protect_root
+from .store import checked_relative, instance_path, protect_root, reparse
 from .transfer import asset_key, checksum, hash_bytes
 from .workspace import private_pair
 
 FORMAT = "1.0"
+MANIFEST_FORMAT = "2.0"
 MANIFEST = "projection.json"
 README = b"""# AI Memory Hub Git projection
 
@@ -26,9 +27,47 @@ This directory contains reviewed publication data. The private Workspace, Vault,
 raw conversations, machine binding, and stored file bytes remain local.
 Verify the manifest and review the exact preview before publishing.
 """
-REQUIRED = {"README.md": "static", "inventory.json": "aggregate_metadata"}
-OPTIONAL = {"shared-memory.json": "public_reviewed_memory", "asset-refs.json": "public_version_references"}
-CLASSES = {**REQUIRED, **OPTIONAL, MANIFEST: "manifest"}
+LEGACY_REQUIRED = {"README.md": "static", "inventory.json": "aggregate_metadata"}
+LEGACY_OPTIONAL = {"shared-memory.json": "public_reviewed_memory", "asset-refs.json": "public_version_references"}
+MODULES = {
+    ".github": "Repository configuration. No active workflows are provided.",
+    "assets": "Optional approved version references. Original files stay in the Vault.",
+    "candidates": "Review proposals in the owner Workspace before sharing accepted records.",
+    "collaboration": "Use approved summaries and authorize any separate context transfer.",
+    "config": "Runtime bindings, grants and schedules stay in the owner Workspace.",
+    "core": "Start with the Agent entry and use published working rules in memory.",
+    "docs": "See the Agent entry for this repository's data layout.",
+    "examples": "Use synthetic fixtures when checking the owner workflow.",
+    "integrations": "Use only integrations and sources the owner has authorized.",
+    "knowledge": "Use independently reviewed references when adding knowledge.",
+    "life-archive": "Life records and original evidence stay with the owner.",
+    "memory": "Read reviewed.json for approved portable summaries, or shared-memory.json for a public snapshot.",
+    "projects": "Read index.json for approved project summaries and checkpoints.",
+    "schemas": "The installed AI Memory Hub validates the publication format.",
+    "scripts": "Owner execution stays local. This projection carries no runnable scripts.",
+    "sessions": "Read index.json for approved session indexes and optional L2 checkpoints.",
+    "tests": "Validate changes with synthetic inputs.",
+    "vendor": "Use the separately distributed AI Memory Hub engine.",
+    "workflows": "Review local changes, then publish only the exact approved projection.",
+}
+AGENTS = ("# Agent entry\n\n"
+          "Use only the summaries and indexes in this reviewed Private repository. "
+          "Follow the owner's actual permissions to access any original evidence.\n\n"
+          "## Modules\n\n" + "".join(f"- [{name}]({name}/README.md)\n" for name in MODULES)).encode("utf-8")
+STATIC = {
+    "README.md": b"# Personal AI Memory Hub\n\nStart with [the Agent entry](AGENTS.md).\n",
+    "AGENTS.md": AGENTS,
+    **{f"{name}/README.md": f"# {name}\n\n{description}\n\n[All modules](../AGENTS.md)\n".encode("utf-8")
+       for name, description in MODULES.items()},
+}
+PUBLIC_MEMORY = "memory/shared-memory.json"
+PUBLIC_ASSETS = "assets/refs.json"
+REVIEWED_PATHS = {"memory": "memory/reviewed.json", "project": "projects/index.json", "session": "sessions/index.json"}
+REQUIRED = {**dict.fromkeys(STATIC, "static"), "inventory.json": "aggregate_metadata"}
+OPTIONAL = {PUBLIC_MEMORY: "public_reviewed_memory", PUBLIC_ASSETS: "public_version_references",
+            **{path: f"private_reviewed_{kind}" for kind, path in REVIEWED_PATHS.items()}}
+CLASSES = {**LEGACY_REQUIRED, **LEGACY_OPTIONAL, **REQUIRED, **OPTIONAL, MANIFEST: "manifest"}
+DIRECTORIES = frozenset(MODULES)
 RECORD_KINDS = ("session", "project", "memory", "asset")
 MEMORY_CLASSES = ("fact", "rule", "preference")
 MAX_FILE = 512 * 1024
@@ -124,20 +163,30 @@ def validate_assets(value):
     unique_ordered(keys)
 
 
-VALIDATORS = {"inventory.json": validate_inventory, "shared-memory.json": validate_memories,
-              "asset-refs.json": validate_assets}
+VALIDATORS = {"inventory.json": validate_inventory,
+              "shared-memory.json": validate_memories, PUBLIC_MEMORY: validate_memories,
+              "asset-refs.json": validate_assets, PUBLIC_ASSETS: validate_assets}
 
 
-def validate_payload(files):
-    if set(REQUIRED) - files.keys() or files.keys() - (REQUIRED.keys() | OPTIONAL.keys()):
+def validate_payload(files, format_version, review=None):
+    required, optional = (LEGACY_REQUIRED, LEGACY_OPTIONAL) if format_version == FORMAT else (REQUIRED, OPTIONAL)
+    if required.keys() - files.keys() or files.keys() - (required.keys() | optional.keys()):
         raise Denied("the projection may only contain its approved file classes")
     if any(len(contents) > MAX_FILE for contents in files.values()):
         raise Denied("projection file exceeds the 512 KiB inspection limit")
-    if files["README.md"] != README:
-        raise Denied("the projection README must match the built-in text")
+    fixed = {"README.md": README} if format_version == FORMAT else STATIC
+    if any(files[path] != contents for path, contents in fixed.items()):
+        raise Denied("projection scaffold must match the built-in neutral templates")
     for name, validate in VALIDATORS.items():
         if name in files:
             validate(json_value(files[name]))
+    reviewed = {kind: json_value(files[path]) for kind, path in REVIEWED_PATHS.items() if path in files}
+    if bool(reviewed) != (review is not None) or (reviewed and files.keys() & {PUBLIC_MEMORY, PUBLIC_ASSETS}):
+        raise Denied("private reviewed data needs exactly one bound review and its own projection")
+    if reviewed:
+        from .projection_review import validate_sections
+
+        validate_sections(reviewed)
 
 
 def declared_files(files):
@@ -160,32 +209,73 @@ def read_member(root, name):
     return contents
 
 
+def validate_manifest(contents, expected_digest):
+    if expected_digest is not None and hash_bytes(contents) != checksum(expected_digest):
+        raise Conflict("projection differs from the approved digest")
+    value = json_value(contents)
+    shape(value, ("format", "kind", "files"), ("review",))
+    version = one_of(value["format"], (FORMAT, MANIFEST_FORMAT))
+    one_of(value["kind"], ("git_projection",))
+    required, optional = (LEGACY_REQUIRED, LEGACY_OPTIONAL) if version == FORMAT else (REQUIRED, OPTIONAL)
+    names = []
+    for entry in seq(value["files"]):
+        shape(entry, ("path", "classification", "sha256"))
+        name = entry["path"]
+        if not isinstance(name, str) or name not in required.keys() | optional.keys():
+            raise Denied("projection manifest names an unapproved path")
+        if entry["classification"] != CLASSES[name]:
+            raise Denied("projection classification differs from the fixed allowlist")
+        checksum(entry["sha256"])
+        names.append(name)
+    if not required.keys() <= set(names) or names != sorted(set(names)):
+        raise Denied("projection manifest is missing required files or contains duplicates")
+    reviewed = set(names) & set(REVIEWED_PATHS.values())
+    if bool(reviewed) != ("review" in value) or (reviewed and set(names) & {PUBLIC_MEMORY, PUBLIC_ASSETS}):
+        raise Denied("private reviewed data needs its own bound manifest")
+    if reviewed:
+        from .projection_review import validate_review_binding
+
+        validate_review_binding(value["review"])
+    return value
+
+
 def verify_projection_files(files, expected_digest):
     """Validate a complete projection tree already read into trusted memory."""
     if MANIFEST not in files or files.keys() - CLASSES.keys():
         raise Denied("unexpected or missing projection members")
     if any(type(contents) is not bytes or len(contents) > MAX_FILE for contents in files.values()):
         raise Denied("projection files must be bytes within the 512 KiB inspection limit")
-    manifest_bytes = files[MANIFEST]
-    if expected_digest is not None and hash_bytes(manifest_bytes) != checksum(expected_digest):
-        raise Conflict("projection differs from the approved digest")
-    manifest = json_value(manifest_bytes)
-    shape(manifest, ("format", "kind", "files"))
-    one_of(manifest["format"], (FORMAT,))
-    one_of(manifest["kind"], ("git_projection",))
+    manifest = validate_manifest(files[MANIFEST], expected_digest)
     payload = {name: contents for name, contents in files.items() if name != MANIFEST}
-    validate_payload(payload)
+    validate_payload(payload, manifest["format"], manifest.get("review"))
     if manifest["files"] != declared_files(payload):
         raise Conflict("projection contents do not match the manifest")
     return dict(files)
 
 
+def projection_members(root):
+    names = set()
+    for member in root.iterdir():
+        if reparse(member):
+            raise Denied("projection cannot contain links or reparse points")
+        if member.is_dir():
+            if member.name not in DIRECTORIES:
+                raise Denied("projection contains an unexpected directory")
+            children = list(member.iterdir())
+            if not children or any(not child.is_file() or reparse(child) for child in children):
+                raise Denied("projection directories must contain only approved regular files")
+            names.update(f"{member.name}/{child.name}" for child in children)
+        else:
+            names.add(member.name)
+    return names
+
+
 def read_projection(root, expected_digest=None):
-    names = {file.name for file in root.iterdir()}
+    names = projection_members(root)
     if MANIFEST not in names or names - CLASSES.keys():
         raise Denied("unexpected or missing projection members")
     files = {name: read_member(root, name) for name in names}
-    if names != {file.name for file in root.iterdir()}:
+    if names != projection_members(root):
         raise Conflict("projection members changed during verification")
     return verify_projection_files(files, expected_digest)
 
@@ -193,6 +283,33 @@ def read_projection(root, expected_digest=None):
 def verify_projection(path, expected_digest):
     """Return a byte snapshot of exactly the independently reviewed projection."""
     return read_projection(instance_path(path), checksum(expected_digest))
+
+
+def authorize_projection(store, files, target):
+    manifest = json_value(files[MANIFEST])
+    if manifest["format"] != MANIFEST_FORMAT:
+        raise Denied("regenerate the legacy preview as a complete modular projection before publishing")
+    if "review" in manifest:
+        from .projection_review import authorize_publication
+
+        if store is None:
+            raise Denied("reviewed private material requires its approved Vault")
+        with store.transaction() as db:
+            authorize_publication(store, db, files, manifest["review"], target)
+    selections = files.keys() & {PUBLIC_MEMORY, PUBLIC_ASSETS}
+    if selections:
+        if store is None or store.level != "public":
+            raise Denied("public selections must be verified against their public Vault")
+        ids = [item["id"] for item in json_value(files[PUBLIC_MEMORY])["scopes"]["reviewed"]] if PUBLIC_MEMORY in files else []
+        refs = [(item["id"], item["version"]) for item in json_value(files[PUBLIC_ASSETS])["refs"]] if PUBLIC_ASSETS in files else []
+        with store.transaction() as db:
+            expected = {
+                PUBLIC_MEMORY: encoded(public_memories(store, db, ids)) if ids else None,
+                PUBLIC_ASSETS: encoded(public_assets(store, db, refs)) if refs else None,
+            }
+        if any(files[name] != expected[name] for name in selections):
+            raise Conflict("public selection differs from the current approved Vault records")
+    return manifest.get("review")
 
 
 def public_memories(store, db, selected):
@@ -220,25 +337,35 @@ def public_assets(store, db, selected):
     return {"format": FORMAT, "kind": "public_asset_references", "refs": refs}
 
 
-def prepare_payload(store, selected, assets):
+def prepare_payload(store, selected, assets, review_digest=None):
     memory_ids = sorted(ident(entry) for entry in selected)
     asset_versions = sorted(asset_key(entry) for entry in assets)
     if memory_ids or asset_versions:
         if store.level != "public":
             raise Denied("a private or internal Vault can only project aggregate inventory")
+    if review_digest is not None and (memory_ids or asset_versions):
+        raise Denied("use a separate projection for public and private reviewed records")
+    binding = None
     with store.transaction() as db:
         counts = {kind: db.execute("SELECT count(DISTINCT id) FROM revisions WHERE kind=?", (kind,)).fetchone()[0]
                   for kind in RECORD_KINDS}
-        files = {"README.md": README, "inventory.json":
+        files = {**STATIC, "inventory.json":
                  encoded({"format": FORMAT, "kind": "aggregate_inventory", "counts": counts})}
         if memory_ids:
             unique_ordered(memory_ids)
-            files["shared-memory.json"] = encoded(public_memories(store, db, memory_ids))
+            files[PUBLIC_MEMORY] = encoded(public_memories(store, db, memory_ids))
         if asset_versions:
             unique_ordered(asset_versions)
-            files["asset-refs.json"] = encoded(public_assets(store, db, asset_versions))
-    validate_payload(files)
-    manifest = {"format": FORMAT, "kind": "git_projection", "files": declared_files(files)}
+            files[PUBLIC_ASSETS] = encoded(public_assets(store, db, asset_versions))
+        if review_digest is not None:
+            from .projection_review import approved_sections
+
+            binding, reviewed = approved_sections(store, db, review_digest)
+            files.update(reviewed)
+    validate_payload(files, MANIFEST_FORMAT, binding)
+    manifest = {"format": MANIFEST_FORMAT, "kind": "git_projection", "files": declared_files(files)}
+    if binding is not None:
+        manifest["review"] = binding
     return {**files, MANIFEST: encoded(manifest)}
 
 
@@ -260,7 +387,9 @@ def write_projection(root, files):
         stage = Path(staging)
         protect_root(stage, create=True)
         for name, contents in sorted(files.items()):
-            with (stage / name).open("xb") as output:
+            destination = stage / name
+            destination.parent.mkdir(exist_ok=True)
+            with destination.open("xb") as output:
                 output.write(contents)
                 output.flush()
                 os.fsync(output.fileno())
@@ -284,7 +413,7 @@ def differences(previous, current):
     return result
 
 
-def build_projection(store, output, *, workspace, selected=(), assets=(), previous=None):
+def build_projection(store, output, *, workspace, selected=(), assets=(), previous=None, review_digest=None):
     """Write a new immutable review snapshot, or verify an unchanged rerun."""
     workspace = instance_path(workspace)
     root = separated_path(output, workspace, store.root)
@@ -292,7 +421,7 @@ def build_projection(store, output, *, workspace, selected=(), assets=(), previo
     if baseline is not None:
         private_pair(root, baseline)
     before = read_projection(baseline) if baseline is not None else {}
-    files = prepare_payload(store, selected, assets)
+    files = prepare_payload(store, selected, assets, review_digest)
     status = write_projection(root, files)
     digest = hash_bytes(files[MANIFEST])
     verified = verify_projection(root, digest)

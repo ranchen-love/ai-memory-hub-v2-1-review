@@ -152,7 +152,7 @@ Only read accessible authorized sources. L3, sensitive files, external recipient
 | Approved snapshot detection and per-Agent confirmation | **Implemented**, not native provider memory sync |
 | Optional Private GitHub repository creation | **Supported** for authenticated GitHub CLI personal accounts with explicit owner approval |
 | Automatic harvesting of all AI memories/chats/files | **Not universally supported**; depends on exports and permitted connectors |
-| Independently reviewed Git projection and publish | **Implemented** with file allowlist, preview and diff. The user approves the exact digest and target |
+| Independently reviewed Git projection and publish | **Implemented**. An empty Private repository receives the neutral 19-module scaffold on first publication. Explicitly reviewed and redacted memory, project and session indexes from a private Vault are grouped into modules. The user approves the review and then the exact projection digest and target |
 | First-run plan, apply and coverage report | **Implemented** with local source grants and evidence of missing information |
 | Recurring scheduling, Git mirroring and production backups | Not installed or enabled by default |
 | Raw health-device capture | Not in the generic product; de-identified aggregate validation only |

@@ -1,15 +1,19 @@
 import base64
+import copy
 import hashlib
 import json
 import os
+import re
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ai_memory_hub import github_publish as publish, projection
-from ai_memory_hub.model import Conflict, Denied
+from ai_memory_hub import candidates, github_publish as publish, projection, projection_review
+from ai_memory_hub.__main__ import execute, parser
+from ai_memory_hub.model import Conflict, Denied, HubError
+from ai_memory_hub.workspace import bound_workspace
 
 
 TARGET = "fixture-owner/memory-fixture"
@@ -50,6 +54,9 @@ class FakeGitHub:
 
     def add_tree(self, entries):
         tree = [{**item, "size": self.blobs[item["sha"]]["size"]} for item in entries]
+        for name in sorted({item["path"].split("/", 1)[0] for item in entries if "/" in item["path"]}):
+            children = [item for item in tree if item["path"].startswith(name + "/")]
+            tree.append({"path": name, "mode": "040000", "type": "tree", "sha": self.object_sha(children)})
         sha = self.object_sha(tree)
         self.trees[sha] = {"sha": sha, "tree": tree, "truncated": False}
         return sha
@@ -116,7 +123,10 @@ class FakeGitHub:
             for kind, objects in (("blobs", self.blobs), ("trees", self.trees), ("commits", self.commits)):
                 prefix = f"/git/{kind}/"
                 if resource.startswith(prefix):
-                    return objects[resource.removeprefix(prefix)]
+                    key, _, options = resource.removeprefix(prefix).partition("?")
+                    if kind == "trees":
+                        assert options == "recursive=1"
+                    return objects[key]
         if resource.startswith("/pulls?") and method == "GET":
             return [self.pull] if self.pull else []
         if resource == "/pulls" and method == "POST":
@@ -144,19 +154,237 @@ class GitHubPublicationTests(unittest.TestCase):
     def build(self, number):
         root = self.root / str(number)
         root.mkdir()
-        data = {"README.md": projection.README, "inventory.json": projection.encoded({
+        data = {**projection.STATIC, "inventory.json": projection.encoded({
             "format": projection.FORMAT, "kind": "aggregate_inventory",
             "counts": {"session": number, "asset": 0, "project": 0, "memory": 0},
         })}
         data["projection.json"] = projection.encoded({
-            "format": projection.FORMAT, "kind": "git_projection", "files": projection.declared_files(data),
+            "format": projection.MANIFEST_FORMAT, "kind": "git_projection", "files": projection.declared_files(data),
         })
         for name, contents in data.items():
-            (root / name).write_bytes(contents)
+            destination = root / name
+            destination.parent.mkdir(exist_ok=True)
+            destination.write_bytes(contents)
         return root, hashlib.sha256(data["projection.json"]).hexdigest()
 
     def publish(self, plan, **options):
         return publish.publish_projection(TARGET, *plan, consent=True, **options)
+
+    def test_legacy_flat_publication_remains_auditable_but_new_head_is_modular(self):
+        legacy = {"README.md": projection.README, "inventory.json": projection.encoded({
+            "format": projection.FORMAT, "kind": "aggregate_inventory",
+            "counts": dict.fromkeys(projection.RECORD_KINDS, 0),
+        })}
+        legacy[projection.MANIFEST] = projection.encoded({
+            "format": projection.FORMAT, "kind": "git_projection", "files": projection.declared_files(legacy),
+        })
+        digest = hashlib.sha256(legacy[projection.MANIFEST]).hexdigest()
+        seed = self.remote.add_tree([{"path": projection.MANIFEST, "mode": "100644", "type": "blob",
+                                      "sha": self.remote.add_blob(legacy[projection.MANIFEST])}])
+        initial = self.remote.add_commit(publish.BOOTSTRAP + digest, seed, [])
+        tree = self.remote.add_tree([{"path": path, "mode": "100644", "type": "blob", "sha": self.remote.add_blob(data)}
+                                     for path, data in legacy.items()])
+        previous = self.remote.add_commit(publish.PUBLICATION + digest, tree, [initial])
+        self.remote.refs["main"] = previous
+        self.assertEqual(self.publish(self.build(1), expected_base=previous)["status"], "completed")
+
+    def test_private_onboarding_review_and_modular_publication_end_to_end(self):
+        self.remote.exists = False
+        workspace = self.root / "workspace"
+        request = self.root / "request.json"
+        intake = self.root / "intake"
+        intake.mkdir()
+
+        def write(path, obj):
+            path.write_bytes(projection.encoded(obj))
+
+        def cli(*args):
+            return execute(parser().parse_args(list(map(str, args))))
+
+        examples = Path(__file__).resolve().parents[1] / "examples"
+        read = lambda name: json.loads((examples / name).read_text(encoding="utf-8"))
+        session = read("session.json")
+        session["source"].update(kind="observed_messages", locator="fixture:SYNTHETIC_PRIVATE_LOCATOR")
+        session["data"].update(title="SYNTHETIC_PRIVATE_TITLE", messages=[
+            {"id": "memo", "role": "user", "text": "SYNTHETIC_PRIVATE_TRANSCRIPT"},
+        ])
+        memory, project, manifest = (read(name) for name in ("memory.json", "project.json", "memory-hub.json"))
+        memory["data"]["claim"] = "SYNTHETIC_ORIGINAL_MEMORY_CLAIM"
+        other = read("memory.json")
+        other["id"] = "unselected-secret"
+        other["data"].update(key="unselected", claim="SYNTHETIC_UNSELECTED_CLAIM")
+        manifest["items"].append({"key": "unselected", "kind": "record", "path": "unselected.json"})
+        for name, row in (("session", session), ("project", project), ("memory", memory),
+                          ("unselected", other), ("memory-hub", manifest)):
+            write(intake / f"{name}.json", row)
+        (intake / "checklist.txt").write_bytes(b"SYNTHETIC_ATTACHMENT_BYTES")
+        write(request, {
+            "format": "1.0", "workspace": str(workspace), "vault": str(self.root / "vault"),
+            "sources": [{"id": "fixture", "adapter": "codex_workspace", "path": str(intake),
+                         "authorized": True, "allow_raw": True}],
+            "github": {"target": TARGET, "visibility": "private"},
+        })
+        plan = cli("onboarding", "plan", "--request", request)
+        cli("onboarding", "apply", "--request", request, "--approve-plan", plan["plan_digest"], "--consent")
+        _, _, store = bound_workspace(workspace)
+        self.assertEqual(store.level, "private")
+        memory_id = memory["id"]
+        spec = {"format": "1.0", "target": TARGET, "items": [
+            {"kind": "memory", "id": "review-rule", "purpose": "reference",
+             "source": {"id": memory_id, "revision": 1},
+             "data": {"key": "verification", "claim": "Review measurements before accepting a result."}},
+            {"kind": "project", "id": "instrument-review", "purpose": "continuity",
+             "source": {"id": project["id"], "revision": 1},
+             "data": {"title": "Instrument review", "checkpoint": {"goal": "Verify the reference sample."}}},
+            {"kind": "session", "id": "reading-review", "purpose": "navigation",
+             "source": {"id": session["id"], "revision": 1},
+             "data": {"title": "Reading review", "summary": "A second reading is pending.",
+                      "project": "instrument-review", "checkpoint": {"goal": "Record a second reading."}}},
+        ]}
+        input_path = self.root / "review.json"
+        write(input_path, spec)
+        action = ("--workspace", workspace, "--input", input_path)
+        out = self.root / "modular-preview"
+        preview = ("projection", "preview", "--workspace", workspace, "--output", out)
+        default = cli(*preview[:-1], self.root / "totals")
+        self.assertEqual(len(projection.MODULES), 19)
+        self.assertTrue(not set(projection.REVIEWED_PATHS.values()) & {row["path"] for row in default["files"]})
+        with self.assertRaises(Denied):
+            cli("projection", "review", *action)
+        for base, state in enumerate(("validated", "review", "approved", "active")):
+            options = {"record_revision": 1} if state == "validated" else {"attest": True} if state == "approved" else {}
+            candidates.step(store, memory_id, state, base=base, actor="tester", reason="Synthetic review",
+                            consent=True, **options)
+        report = cli("onboarding", "report", "--request", request)
+        self.assertIn("active", [row["review_state"] for row in report["data"]["memory"]])
+        spec["items"][0]["source"]["revision"] = 2
+        wrong_project = copy.deepcopy(spec)
+        wrong_project["items"][2]["data"]["project"] = "unapproved-project"
+        write(input_path, wrong_project)
+        with self.assertRaises(Conflict):
+            cli("projection", "review", *action)
+        write(input_path, spec)
+        prepared = cli("projection", "review", *action)
+        approved = prepared["review_digest"]
+        with self.assertRaises(Denied):
+            cli(*preview, "--review-digest", approved)
+        with self.assertRaises(Denied):
+            cli("projection", "approve", *action, "--digest", approved, "--consent")
+        with self.assertRaises(Denied):
+            cli("projection", "approve", *action, "--digest", approved, "--confirm-redacted")
+        approve = ("projection", "approve", *action, "--digest", approved, "--confirm-redacted", "--consent")
+        for field, value in (
+            ("claim", "See C:/Users/synthetic/private.txt"), ("claim", "Contact fixture@example.org"),
+            ("claim", "Authorization Bearer " + "fixture" * 6), ("messages", ["raw data"]),
+        ):
+            malicious = copy.deepcopy(spec)
+            malicious["items"][0]["data"][field] = value
+            write(input_path, malicious)
+            with self.assertRaises(HubError):
+                cli("projection", "review", *action)
+        changed = copy.deepcopy(spec)
+        changed["items"][0]["data"]["claim"] = "Different reviewed text."
+        write(input_path, changed)
+        with self.assertRaises(Conflict):
+            cli(*approve)
+        write(input_path, spec)
+        self.assertEqual(cli(*approve)["status"], "approved")
+        self.assertEqual(cli(*approve)["status"], "unchanged")
+        reviewed = cli(*preview, "--review-digest", approved)
+        self.assertEqual(cli(*preview, "--review-digest", approved)["status"], "unchanged")
+        digest = reviewed["digest"]
+        command = ("repo", "publish", "--workspace", workspace, "--target", TARGET,
+                   "--repository-id", str(self.remote.metadata["id"]), "--projection", out, "--digest", digest)
+        calls = len(self.remote.calls)
+        with self.assertRaises(Denied):
+            cli(*command)
+        with self.assertRaises(Denied):
+            publish.publish_projection("other-owner/other-repo", out, digest, consent=True, store=store)
+        with self.assertRaises(Denied):
+            publish.publish_projection(TARGET, out, digest, consent=True)
+        self.assertEqual(len(self.remote.calls), calls)
+        payload = projection.verify_projection(out, digest)
+        forged = json.loads(payload[projection.REVIEWED_PATHS["memory"]])
+        forged["records"][0]["data"]["claim"] = "Well formed text with no approved source."
+        modified = {**payload, projection.REVIEWED_PATHS["memory"]: projection.encoded(forged)}
+        binding = json.loads(modified.pop(projection.MANIFEST))
+        binding["files"] = projection.declared_files(modified)
+        modified[projection.MANIFEST] = projection.encoded(binding)
+        forged_dir = self.root / "forged"
+        projection.write_projection(forged_dir, modified)
+        with self.assertRaises(Denied):
+            publish.publish_projection(TARGET, forged_dir, hashlib.sha256(modified[projection.MANIFEST]).hexdigest(),
+                                       consent=True, store=store, repository_id=7)
+        self.assertEqual(len(self.remote.calls), calls)
+        self.assertTrue(cli("repo", "create", "--workspace", workspace, "--target", TARGET, "--consent")["private"])
+        self.remote.metadata["id"] = 8
+        writes = self.remote.writes()
+        self.assertEqual(cli(*command, "--consent")["status"], "blocked")
+        self.assertEqual(self.remote.writes(), writes)
+        self.remote.metadata["id"] = 7
+        self.remote.reject = ("POST", BASE + "/git/blobs")
+        seed = cli(*command, "--consent")
+        self.assertEqual(seed["status"], "partial")
+        self.assertEqual(seed["verified_step"], "bootstrap")
+        self.remote.reject = None
+
+        update = {"schema_version": "2.1", "kind": "session", "id": session["id"], "sensitivity": "private",
+                  "base_revision": 1, "source": session["source"], "data": {"title": "SYNTHETIC_REVISION_TWO"}}
+        with store.transaction(write=True) as db:
+            self.assertEqual(store.ingest(db, update)["revision"], 2)
+        self.assertEqual(cli(*command, "--consent")["status"], "blocked")
+        spec["items"][2]["source"]["revision"] = 2
+        write(input_path, spec)
+        new_approval = cli("projection", "review", *action)["review_digest"]
+        cli("projection", "approve", *action, "--digest", new_approval, "--confirm-redacted", "--consent")
+        out = self.root / "recovered-projection"
+        recovered = cli(*preview[:-1], out, "--review-digest", new_approval, "--previous", preview[-1])
+        digest = recovered["digest"]
+        command = (*command[:-3], out, "--digest", digest, "--base-sha", seed["commit_sha"])
+        result = cli(*command, "--consent")
+        self.assertEqual(result["status"], "completed")
+        writes = self.remote.writes()
+        self.assertEqual(cli(*command, "--consent")["outcome"], "unchanged")
+        self.assertEqual(self.remote.writes(), writes)
+        head = result["commit_sha"]
+        repo = publish.Repository(self.remote, OWNER, TARGET.split("/")[1])
+        repo.private()
+        with store.transaction() as db:
+            repo.review_history = lambda value, binding: projection_review.published_bases(db, 7, value, binding)
+            self.assertFalse(repo.audit(head)[3])
+        _, tree, parents = repo.commit(head)
+        payload = projection.verify_projection(out, digest)
+        self.assertEqual(set(repo.tree(tree)), set(payload))
+        self.assertEqual({p.split("/")[0] for p in repo.tree(tree) if "/" in p}, set(projection.MODULES))
+        navigation = re.findall(r"\]\(([^)]+)\)", payload["AGENTS.md"].decode("utf-8"))
+        self.assertEqual(set(navigation), {f"{name}/README.md" for name in projection.MODULES})
+        self.assertTrue(set(navigation) <= repo.tree(tree).keys())
+        self.assertEqual(set(repo.tree(repo.commit(parents[0])[1])), {"projection.json"})
+        combined = b"".join(base64.b64decode(blob["content"]) for blob in self.remote.blobs.values())
+        for marker in (b"SYNTHETIC_", session["id"].encode(), project["id"].encode(), memory_id.encode(), b"index.sqlite"):
+            self.assertNotIn(marker, combined)
+        for reviewed_path in projection.REVIEWED_PATHS.values():
+            self.assertIn(reviewed_path, repo.tree(tree))
+        self.assertEqual(json.loads(payload["sessions/index.json"])["records"][0]["data"]["project"], "instrument-review")
+        foreign_tree = self.remote.add_tree([
+            {"path": path, "mode": "100644", "type": "blob", "sha": self.remote.add_blob(contents)}
+            for path, contents in modified.items()
+        ])
+        foreign_digest = hashlib.sha256(modified[projection.MANIFEST]).hexdigest()
+        self.remote.refs["main"] = self.remote.add_commit(publish.PUBLICATION + foreign_digest, foreign_tree, [head])
+        default_args = (self.root / "totals", default["digest"])
+        with self.assertRaises(Denied):
+            publish.publish_projection(TARGET, *default_args, consent=True, store=store, repository_id=7)
+        self.remote.refs["main"] = head
+        self.assertEqual(self.remote.writes(), writes)
+        conflict = copy.deepcopy(memory)
+        conflict["id"] = "independent-conflict"
+        conflict["data"]["claim"] = "Disagree with the original evidence."
+        with store.transaction(write=True) as db:
+            store.ingest(db, conflict)
+        with self.assertRaises(Conflict):
+            publish.publish_projection(TARGET, out, digest, consent=True, store=store, repository_id=7)
+        self.assertEqual(self.remote.writes(), writes)
 
     def test_missing_tool_and_unverified_permissions(self):
         # Exercise the real tool detector while keeping all network calls mocked.
@@ -214,8 +442,9 @@ class GitHubPublicationTests(unittest.TestCase):
         self.assertEqual(sha, self.remote.refs["main"])
         self.assertEqual(publish.probe(TARGET)["base_commit"], sha)
         contents = self.remote.trees[self.remote.commits[sha]["tree"]["sha"]]["tree"]
-        self.assertEqual({item["path"]: item["sha"] for item in contents},
-                         {path.name: publish.blob_id(path.read_bytes()) for path in plan[0].iterdir()})
+        self.assertEqual({item["path"]: item["sha"] for item in contents if item["type"] == "blob"},
+                         {path.relative_to(plan[0]).as_posix(): publish.blob_id(path.read_bytes())
+                          for path in plan[0].rglob("*") if path.is_file()})
         writes = self.remote.writes()
         self.assertEqual(self.publish(plan)["outcome"], "unchanged")
         self.assertEqual(self.remote.writes(), writes)

@@ -10,7 +10,11 @@ import subprocess
 from urllib.parse import quote, urlencode
 
 from .model import Conflict, Denied, HubError, Missing, canonical, no_credentials, strict_json
-from .projection import CLASSES, MANIFEST, MAX_FILE, verify_projection, verify_projection_files
+from .projection import (
+    CLASSES, DIRECTORIES, MANIFEST, MAX_FILE, authorize_projection, validate_manifest,
+    verify_projection, verify_projection_files,
+)
+from .projection_review import authorize_publication, published_bases, remember_publication
 
 OWNER = re.compile(r"[A-Za-z0-9](?:[A-Za-z0-9-]{0,37}[A-Za-z0-9])?")
 NAME = re.compile(r"[A-Za-z0-9._-]{1,100}")
@@ -133,6 +137,7 @@ class Repository:
         self.git_trees = {}
         self.git_blobs = {}
         self.history = {}
+        self.review_history = None
 
     def request(self, endpoint, method="GET", body=None, *, missing=()):
         return self.api.request(f"repos/{self.target}{endpoint}", method, body, missing=missing)
@@ -198,19 +203,28 @@ class Repository:
 
     def tree(self, sha):
         if sha not in self.git_trees:
-            data = record(self.request(f"/git/trees/{sha}"))
+            data = record(self.request(f"/git/trees/{sha}?recursive=1"))
             if data.get("sha") != sha or data.get("truncated") is not False:
                 raise GitHubError("GitHub did not verify a complete requested Git tree")
-            entries = {}
+            entries, directories = {}, set()
             for item in array(data.get("tree")):
                 item = record(item)
                 path = item.get("path")
                 size = item.get("size")
+                if item.get("type") == "tree":
+                    if (not isinstance(path, str) or path not in DIRECTORIES or path in directories
+                            or item.get("mode") != "040000"):
+                        raise Denied("destination history contains an unapproved directory")
+                    object_id(item.get("sha"))
+                    directories.add(path)
+                    continue
                 if (not isinstance(path, str) or path not in CLASSES or path in entries
                         or item.get("mode") != "100644" or item.get("type") != "blob"
                         or type(size) is not int or not 0 < size <= MAX_FILE):
                     raise Denied("destination history contains a path outside the projection allowlist")
                 entries[path] = (object_id(item.get("sha")), size)
+            if directories != {path.split("/", 1)[0] for path in entries if "/" in path}:
+                raise Denied("destination tree directories do not match its approved file paths")
             self.git_trees[sha] = entries
         return self.git_trees[sha]
 
@@ -248,34 +262,47 @@ class Repository:
         published = re.fullmatch(re.escape(PUBLICATION) + r"([0-9a-f]{64})", message)
         merge = re.fullmatch(
             r"Merge pull request #[1-9][0-9]* from " + re.escape(self.target.split("/")[0])
-            + r"/hub-review-[0-9a-f]{64}-[0-9a-f]{12}(?:\n\n" + re.escape(PUBLICATION) + r"[0-9a-f]{64})?",
+            + r"/hub-review-([0-9a-f]{64})-([0-9a-f]{12})(?:\n\n" + re.escape(PUBLICATION) + r"([0-9a-f]{64}))?",
             message, re.IGNORECASE,
         )
         if bootstrap and not parents:
             entries = self.tree(tree)
-            if set(entries) != {MANIFEST} or hashlib.sha256(self.blob(*entries[MANIFEST])).hexdigest() != bootstrap[1]:
+            if set(entries) != {MANIFEST}:
                 raise Denied("GitHub bootstrap tree does not match its projection receipt")
+            self.audit_manifest(self.blob(*entries[MANIFEST]), bootstrap[1])
             result = (bootstrap[1], tree, commit, True)
         elif published and len(parents) == 1:
             previous = self._audit(parents[0], visiting)
-            if previous[3] and previous[0] != published[1]:
-                raise Denied("the first complete projection does not match its approved bootstrap")
             files = {path: self.blob(*entry) for path, entry in self.tree(tree).items()}
             try:
                 verify_projection_files(files, published[1])
+                bases = self.audit_manifest(files[MANIFEST], published[1])
             except (ValueError, RecursionError) as exc:
                 raise Denied("destination history contains an invalid projection tree") from exc
+            if previous[3] and previous[0] != published[1] and parents[0] not in bases:
+                raise Denied("the first complete projection does not match its approved bootstrap or recovery")
             result = (published[1], tree, previous[2], False)
         elif merge and len(parents) == 2:
             left, right = (self._audit(parent, visiting) for parent in parents)
-            if left[3] or right[3] or left[2] != right[2] or tree not in (left[1], right[1]):
+            if (left[3] or right[3] or left[2] != right[2] or tree != right[1]
+                    or self.commit(parents[1])[2] != (parents[0],)
+                    or merge[1] != right[0] or merge[2] != parents[0][:12]
+                    or merge[3] not in (None, right[0])):
                 raise Denied("destination merge combines unknown or modified project history")
-            result = left if tree == left[1] else right
+            result = right
         else:
             raise Denied("destination history was not created by the Hub projection protocol")
         visiting.remove(commit)
         self.history[commit] = result
         return result
+
+    def audit_manifest(self, contents, digest):
+        manifest = validate_manifest(contents, digest)
+        if "review" not in manifest:
+            return ()
+        if manifest["review"]["target"] != self.target.lower() or self.review_history is None:
+            raise Denied("private history needs authorization in its original Vault and destination")
+        return self.review_history(digest, manifest["review"])
 
     def seed(self, digest, contents):
         branches = self.request("/branches?per_page=1")
@@ -389,7 +416,8 @@ def create_private(target, *, consent=False):
     return {**repository.receipt(), "status": "completed", "outcome": "created", "created": True}
 
 
-def publish_projection(target, projection_path, digest, *, consent=False, pull_request=False, expected_base=None):
+def publish_projection(target, projection_path, digest, *, consent=False, pull_request=False, expected_base=None,
+                       store=None, repository_id=None):
     if consent is not True:
         raise Denied("publication requires explicit consent for this destination, digest and Git action")
     if not isinstance(digest, str) or not DIGEST.fullmatch(digest):
@@ -398,15 +426,31 @@ def publish_projection(target, projection_path, digest, *, consent=False, pull_r
         raise HubError("approved remote baseline must be a full 40-character Git commit SHA")
     owner, name = target_name(target)
     files = verify_projection(projection_path, digest)
+    binding = authorize_projection(store, files, target)
+    if (binding is not None or repository_id is not None) and (type(repository_id) is not int or repository_id <= 0):
+        raise Denied("approve the exact Private repository ID reported by create or probe")
     if any(path not in CLASSES or not 0 < len(data) <= MAX_FILE for path, data in files.items()):
         raise Denied("the projection exceeds the GitHub publication allowlist or file size limit")
     api = GitHub()
     repository = Repository(api, verify_owner(api, owner), name)
     if not repository.private(missing=True):
         raise Missing("approved Private repository is unavailable, verify gh access or create it first")
+    if repository_id is not None and repository.id != repository_id:
+        raise Conflict("GitHub repository ID differs from the approved destination")
     head = repository.ref(repository.base)
     details = {**repository.receipt(), "digest": digest, "approved_action": "pull_request" if pull_request else "direct"}
-    return publish_on_baseline(repository, files, digest, head, details, pull_request, expected_base)
+    if store is None:
+        return publish_on_baseline(repository, files, digest, head, details, pull_request, expected_base)
+    if binding is not None:
+        # Commit the local authorization before any remote write so a lost response remains auditable.
+        with store.transaction(write=True) as db:
+            authorize_publication(store, db, files, binding, target)
+            remember_publication(db, repository.id, digest, binding, expected_base)
+    with store.transaction(write=binding is not None) as db:
+        repository.review_history = lambda value, review: published_bases(db, repository.id, value, review)
+        if binding is not None:
+            authorize_publication(store, db, files, binding, target)
+        return publish_on_baseline(repository, files, digest, head, details, pull_request, expected_base)
 
 
 def publish_on_baseline(repository, files, digest, head, details, pull_request, expected_base):
@@ -420,7 +464,10 @@ def publish_on_baseline(repository, files, digest, head, details, pull_request, 
             head = repository.seed(digest, files[MANIFEST])
         previous_digest, _, _, bootstrap = repository.audit(head)
         if bootstrap:
-            if pull_request or previous_digest != digest or expected_base not in (None, head):
+            changed = previous_digest != digest
+            recover = (changed and expected_base == head
+                       and head in repository.audit_manifest(files[MANIFEST], digest))
+            if pull_request or (changed and not recover) or expected_base not in (None, head):
                 raise Conflict("finish the initial direct publication with its original approved digest")
             progress = {"branch": repository.base, "commit_sha": head, "verified_step": "bootstrap"}
         elif previous_digest == digest:

@@ -281,7 +281,10 @@ def record_rows(store):
             """SELECT id, max(revision) AS raw_revision FROM revisions
             WHERE kind='session' AND json_type(content, '$.data.messages')='array' GROUP BY id""",
         )}
-        lifecycle = {row["id"]: row["data"]["state"] for row in store.latest(db, candidates.KIND)}
+        lifecycle = dict(db.execute(
+            "SELECT id, json_extract(content, '$.state') FROM revisions WHERE kind=? ORDER BY revision",
+            (candidates.KIND,),
+        ))
         result = {kind: [] for kind in records}
         for kind, entries in records.items():
             for entry in entries:

@@ -57,14 +57,51 @@ Agent 可以把自己实际可读的资料整理成规范化清单。平台没�
 
 ## 4. 预览独立 Git 投影
 
+在工作区、Vault 和 Git 工作树之外选择独立输出目录。默认预览包含中立的 19 模块骨架和汇总计数。要从默认 `private` Vault 分享内容，先创建本地 UTF-8 JSON 审阅文件，填写真实来源 ID 和当前修订，另写脱敏内容和可分享别名。以下值为合成示例。
+
+```json
+{
+  "format": "1.0",
+  "target": "owner/example-private-repo",
+  "items": [
+    {
+      "kind": "memory",
+      "id": "verification-rule",
+      "source": {"id": "accepted-local-rule", "revision": 2},
+      "purpose": "reference",
+      "data": {"key": "验证规则", "claim": "验收结论须有实际检查记录。"}
+    },
+    {
+      "kind": "project",
+      "id": "instrument-review",
+      "source": {"id": "local-project", "revision": 1},
+      "purpose": "continuity",
+      "data": {"title": "仪器复核", "summary": "待记录第二次读数。"}
+    },
+    {
+      "kind": "session",
+      "id": "second-reading",
+      "source": {"id": "local-session", "revision": 1},
+      "purpose": "navigation",
+      "data": {"title": "第二次读数", "project": "instrument-review"}
+    }
+  ]
+}
+```
+
 ```sh
 ai-memory-hub projection preview --workspace WORKSPACE \
   --output NEW_PROJECTION
-ai-memory-hub projection preview --workspace WORKSPACE \
-  --output NEXT_PROJECTION --previous NEW_PROJECTION
+ai-memory-hub projection review --workspace WORKSPACE --input REVIEW.json
+ai-memory-hub projection approve --workspace WORKSPACE --input REVIEW.json \
+  --digest REVIEW_SHA256 --confirm-redacted --consent
+ai-memory-hub projection preview --workspace WORKSPACE --output NEXT_PROJECTION \
+  --review-digest REVIEW_SHA256 --previous NEW_PROJECTION
 ```
 
-在工作区和 Vault 之外选择独立目录，避开所有 Git 工作树。默认生成汇总计数、固定 README 和清单。检查逐文件预览、与上一版的差异和 SHA-256 摘要。只有 `public` 工作区和 Vault 可以用 `--select ID` 选入已激活的公开级事实、偏好或规则，用 `--asset ID@REV` 选入公开级文件引用。按所选条目重复参数后审核新预览。文件引用保留 ID、版本、存储类型和已有哈希。文件字节和 URL 均留在原边界内。固定白名单排除 Vault、SQLite、本机路径绑定、L3、敏感个人原文、附件及任意工作区文件。GitHub Private 提供远端访问控制，敏感资料留在独立 Vault。
+在本地逐项核对来源修订、用途、脱敏文字和 Private 接收仓库，用户确认后才记录审阅摘要。记忆必须已接受且有事实、规则或偏好分类，存在冲突时先处理候选。项目或会话可用 `checkpoint` 提供脱敏的 `goal`、可选 `decisions` 和 `next_actions`。会话的 L1 摘要和 L2 检查点要求原记录有对应层，关联项目别名必须指向同一审阅中实际对应的项目。
+
+获审资料分别进入 `memory/reviewed.json`、`projects/index.json` 和 `sessions/index.json`。原始来源 ID 和定位符留在本地。最终逐文件预览会给出另一个投影 SHA-256 和差异，发布要单独批准该摘要。来源修订或脱敏文本变化后须重新审阅。审阅输入和输出只能留在本地。内置过滤可识别常见敏感格式，普通文字中的个人细节仍由用户核对。凭据、私有路径、L3、附件和 Vault 保持本地隔离。已有 `public` Vault 可在另一份预览中继续使用 `--select ID` 与 `--asset ID@REV`。
 
 ## 5. 可选创建和发布到 GitHub 私有仓库
 
@@ -75,12 +112,13 @@ ai-memory-hub repo probe --target OWNER/NAME
 ai-memory-hub repo create --workspace WORKSPACE \
   --target OWNER/NAME --consent
 ai-memory-hub repo publish --workspace WORKSPACE --target OWNER/NAME \
-  --projection REVIEWED_PROJECTION --digest APPROVED_SHA256 --consent
+  --repository-id VERIFIED_REPO_ID --projection REVIEWED_PROJECTION \
+  --digest APPROVED_SHA256 --consent
 ```
 
 内置创建入口适用于 github.com 上当前登录的个人账号。组织账号或缺少 `gh` 的场景，可走获准的 GitHub 集成或网页创建全新空的 Private 仓库并核对可见性。手动发布时，只在独立 Git 历史中暂存获审的投影文件。发布前通过哈希核对暂存文件，发布后验证远端引用和可见性，并留存手动回执。内置发布器会审核自身协议建立的历史，可能拒绝接管手动初始化或经过改写的提交历史。
 
-发布前核对用户批准的目标和投影摘要。首次直接发布到空仓库时，用已审核的清单初始化分支，再提交完整投影。中断后用同一批准摘要重试。向已初始化的仓库发布有变化的投影前，审核 `repo probe` 返回的 `base_commit`，再用 `--base-sha` 指定核实过的提交。只有用户明确同意创建 PR、远端也已有基础分支时，才加 `--pr`。保存实际返回的私有状态、提交和 PR 回执。工具或权限不可用时保留本地结果，报告远端受阻。
+发布前核对用户批准的目标和投影摘要。私有审阅资料还要求提供 `repo create` 或 `repo probe` 返回的数字 `repository_id`。创建命令先保留一个空 Private 仓库。首次获准发布时，用清单初始化分支，再提交 19 模块骨架和获审资料。中断后用同一摘要重试。若只发布了清单且原来源已变化，重新审阅后用 `--base-sha` 钉住该清单提交并批准新摘要。其他更新用 `repo probe` 核实到的 `base_commit`。只有用户明确同意创建 PR、远端也已有完整发布基线时，才加 `--pr`。保留原 Vault 用于核对私有发布历史，记录实际返回的私有状态、提交和 PR 回执。工具或权限不可用时保留本地结果，报告远端受阻。
 
 ## 6. 交付与持续维护
 

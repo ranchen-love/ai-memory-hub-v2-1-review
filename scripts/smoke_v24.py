@@ -52,10 +52,28 @@ def check(base):
             if target and "://" not in target:
                 assert (path.parent / target).exists(), (name, target)
     preview = cli("projection", "preview", "--workspace", workspace, "--output", base / "projection")
-    assert preview["digest"] and not any((base / "projection").glob("*.sqlite"))
+    assert preview["digest"] and len([path for path in (base / "projection").iterdir() if path.is_dir()]) == 19
+    assert not any((base / "projection").rglob("*.sqlite"))
     assert cli("projection", "preview", "--workspace", workspace,
                "--output", workspace / "denied", expected=2)["code"] == "permission_denied"
-    print("PASS: installed V2.4 plan, authorization, isolated Workspace/Vault, retry, report, links and Git projection")
+    review = base / "review.json"
+    review.write_text(json.dumps({
+        "format": "1.0", "target": "fixture-owner/fixture-repository",
+        "items": [{"kind": "session", "id": "second-reading", "purpose": "navigation",
+                   "source": {"id": result["data"]["session"][0]["id"], "revision": 1},
+                   "data": {"title": "Second reading", "summary": "A specimen needs review."}}],
+    }), encoding="utf-8")
+    input_args = ("--workspace", workspace, "--input", review)
+    approval = cli("projection", "review", *input_args)["review_digest"]
+    reviewed = ("projection", "preview", "--workspace", workspace, "--output", base / "reviewed",
+                "--review-digest", approval)
+    assert cli(*reviewed, expected=2)["code"] == "permission_denied"
+    assert cli("projection", "approve", *input_args, "--digest", approval,
+               "--confirm-redacted", "--consent")["status"] == "approved"
+    assert cli(*reviewed)["status"] == "created"
+    index = json.loads((base / "reviewed" / "sessions" / "index.json").read_text(encoding="utf-8"))
+    assert index["records"][0]["id"] == "second-reading"
+    print("PASS: installed V2.4 plan, isolated Workspace/Vault, retry, report, links and approved modular projection")
 
 
 if __name__ == "__main__":

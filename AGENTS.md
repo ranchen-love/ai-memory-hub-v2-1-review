@@ -4,7 +4,7 @@
 For a new owner's personal memory hub, use the executable [Agent onboarding guide](docs/agent-onboarding.md) or [简体中文版](docs/agent-onboarding.zh-CN.md).
 - Prepare an owner-scoped request and run `ai-memory-hub onboarding plan`. Review the resolved paths, capabilities and scope before calling `onboarding apply` with the approved plan digest. Run `onboarding report` to record actual results and remaining gaps.
 - Use only data the owner has specifically authorized and the current environment can access. Scope raw messages, private repository creation, publication, sharing and scheduled execution separately.
-- The workspace denies Git tracking by default. Publish only an independently reviewed projection to the approved destination. Keep raw messages, private documents, files and Vault state local.
+- The workspace denies Git tracking by default. Use `projection review` and `projection approve` for individually redacted private records, then review the modular projection and approve its exact digest and destination separately. Keep raw messages, private documents, files and Vault state local.
 - Report source and time coverage, unresolved fields, verified versions, actual remote receipts, policy switches and scheduler evidence. Mark unavailable or unverified steps explicitly.
 
 Start with [the core index](core/INDEX.md). Read only the task-relevant project, accepted memories and explicitly authorized sources. Check workspace and engine versions at the start of a new task and after a reported update. For a shared snapshot, follow the [Agent version check, reload and confirmation flow](integrations/memory-bootstrap.md) before treating detected changes as read.

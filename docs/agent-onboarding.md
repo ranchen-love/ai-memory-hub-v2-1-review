@@ -57,14 +57,51 @@ For example, an approved directory of local checkpoints can use this entry in `s
 
 ## 4. Review a separate Git projection
 
+Use an independent output directory outside the Workspace, Vault and any Git checkout. The default preview contains only aggregate counts and a neutral 19-module scaffold. To share from a `private` Vault, prepare a local UTF-8 JSON request using the exact source IDs and current revisions. Write independent, redacted summaries and choose shareable aliases. This example uses synthetic values.
+
+```json
+{
+  "format": "1.0",
+  "target": "owner/example-private-repo",
+  "items": [
+    {
+      "kind": "memory",
+      "id": "verification-rule",
+      "source": {"id": "accepted-local-rule", "revision": 2},
+      "purpose": "reference",
+      "data": {"key": "verification", "claim": "Check results before accepting them."}
+    },
+    {
+      "kind": "project",
+      "id": "instrument-review",
+      "source": {"id": "local-project", "revision": 1},
+      "purpose": "continuity",
+      "data": {"title": "Instrument review", "summary": "A second reading is pending."}
+    },
+    {
+      "kind": "session",
+      "id": "second-reading",
+      "source": {"id": "local-session", "revision": 1},
+      "purpose": "navigation",
+      "data": {"title": "Second reading", "project": "instrument-review"}
+    }
+  ]
+}
+```
+
 ```sh
 ai-memory-hub projection preview --workspace WORKSPACE \
   --output NEW_PROJECTION
-ai-memory-hub projection preview --workspace WORKSPACE \
-  --output NEXT_PROJECTION --previous NEW_PROJECTION
+ai-memory-hub projection review --workspace WORKSPACE --input REVIEW.json
+ai-memory-hub projection approve --workspace WORKSPACE --input REVIEW.json \
+  --digest REVIEW_SHA256 --confirm-redacted --consent
+ai-memory-hub projection preview --workspace WORKSPACE --output NEXT_PROJECTION \
+  --review-digest REVIEW_SHA256 --previous NEW_PROJECTION
 ```
 
-Use an independent directory beside the Workspace and Vault, outside every Git checkout. The default projection contains an aggregate inventory, a fixed README and a manifest. Inspect the complete file preview, comparison and SHA-256 digest. Only a `public` Workspace and Vault may project an individually selected accepted fact, preference or rule (`--select ID`) or asset reference (`--asset ID@REV`). Repeat the option per eligible selection and review the new result. Asset references carry an ID, version, storage type and checksum when available. Asset bytes and URLs stay within the original boundary. The file allowlist excludes the Vault, SQLite database, local bindings, raw messages, private or sensitive records, attachments and arbitrary workspace files. Keep the Workspace out of Git staging. A Private GitHub repository provides remote access control. Use the separate local Vault for raw and sensitive material.
+Read the review output locally. Check each source revision, purpose, redacted text and Private recipient, then record the review SHA-256 only after the owner confirms the redaction. Only accepted non-inferred memory is eligible. Resolve conflicting candidates first. Project or session checkpoints may supply a redacted `goal`, optional `decisions` and `next_actions`. A session can share a summary or L2 checkpoint only if the selected source has that layer. Its optional project alias must point to the selected project that actually owns the session.
+
+Approved records appear in `memory/reviewed.json`, `projects/index.json` and `sessions/index.json`. Raw source IDs and evidence locators stay local. The final preview contains a separate projection SHA-256. Review that digest and file diff before publishing. Changed sources or edited redacted text require a new review. Review input and output can reveal local source identifiers, so keep both local. Automated filters catch common unsafe patterns, and the owner must verify that even ordinary prose contains no sensitive information. Credentials, local paths, L3, attachments and Vault files remain local. Existing public Vaults can still use `--select ID` and `--asset ID@REV` in a separate preview.
 
 ## 5. Create and publish to a Private GitHub repository
 
@@ -75,12 +112,13 @@ ai-memory-hub repo probe --target OWNER/NAME
 ai-memory-hub repo create --workspace WORKSPACE \
   --target OWNER/NAME --consent
 ai-memory-hub repo publish --workspace WORKSPACE --target OWNER/NAME \
-  --projection REVIEWED_PROJECTION --digest APPROVED_SHA256 --consent
+  --repository-id VERIFIED_REPO_ID --projection REVIEWED_PROJECTION \
+  --digest APPROVED_SHA256 --consent
 ```
 
 The built-in create command targets the signed-in personal owner on github.com. For an organization or when `gh` is unavailable, use an authorized GitHub integration or the GitHub site. Create a new empty Private repository and verify visibility. If publishing manually, stage only the reviewed projection files in an independent Git history, verify the staged file hashes, and check the remote ref and visibility afterward. Keep manual operation receipts. The built-in publisher audits the history created by its own projection protocol and can block manually committed or otherwise altered history.
 
-Approve the exact projection digest and destination before publication. The first direct publication to an empty repository initializes a branch with the reviewed manifest, then commits the complete projection. If interrupted, use the same approved digest to retry. For changed content in an initialized repository, review the current remote base returned as `base_commit` by `repo probe` and pass the verified commit with `--base-sha`. Add `--pr` only with independent approval and after the base branch exists. Capture the verified private repository, commit and PR receipts when returned. A permission or tool failure leaves that stage blocked while the local deliverables remain usable.
+Approve the exact projection digest and destination before publication. A private review also requires the numeric `repository_id` from `repo create` or `repo probe`. Creation reserves an empty Private repository. The first approved direct publication seeds the branch with the reviewed manifest, then commits the 19-module scaffold with any reviewed records. Retry with the same digest if interrupted. If the source changed while only the manifest was published, review again and approve the new digest against that exact bootstrap commit with `--base-sha`. For other updates, use the verified `base_commit` from `repo probe`. Add `--pr` only with independent approval and a complete baseline. Keep the original Vault for verifying published private history and capture the actual repository, commit and PR receipts. A permission or tool failure leaves that stage blocked while the local deliverables remain usable.
 
 ## 6. Hand over the report and maintenance workflow
 

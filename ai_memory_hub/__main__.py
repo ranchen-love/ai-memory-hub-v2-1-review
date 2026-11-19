@@ -215,6 +215,15 @@ def parser():
     preview.add_argument("--previous", type=Path)
     preview.add_argument("--select", action="append", default=[], metavar="MEMORY_ID")
     preview.add_argument("--asset", action="append", default=[], metavar="ID@REV")
+    preview.add_argument("--review-digest", metavar="SHA256")
+    for name in ("review", "approve"):
+        review = project_git.add_parser(name, help="review or approve explicit redacted private records")
+        review.add_argument("--workspace", required=True, type=Path)
+        review.add_argument("--input", required=True, type=Path)
+        if name == "approve":
+            review.add_argument("--digest", required=True, metavar="SHA256")
+            review.add_argument("--confirm-redacted", action="store_true")
+            permit(review)
 
     repo = sub(commands.add_parser("repo", help="check or explicitly publish to a private GitHub repository"))
     for name in ("probe", "create", "publish"):
@@ -227,6 +236,7 @@ def parser():
             remote.add_argument("--projection", required=True, type=Path)
             remote.add_argument("--digest", required=True, metavar="SHA256")
             remote.add_argument("--base-sha", metavar="COMMIT", help="reviewed current default-branch commit")
+            remote.add_argument("--repository-id", type=int, help="approved repository identity from create or probe")
             remote.add_argument("--pr", action="store_true", help="open a review PR rather than update the default branch")
     return cli
 
@@ -372,10 +382,18 @@ def execute(args, governance=None, initial_switches=None):
         return result
     if args.command == "projection":
         from .projection import build_projection
+        from .projection_review import review
 
+        if args.action == "approve":
+            consent(args)
         root, _, store = bound_workspace(args.workspace)
-        return build_projection(store, args.output, workspace=root, selected=args.select,
-                                assets=args.asset, previous=args.previous)
+        if args.action == "preview":
+            return build_projection(store, args.output, workspace=root, selected=args.select, assets=args.asset,
+                                    previous=args.previous, review_digest=args.review_digest)
+        spec = read_json(local_input(args.input.expanduser().absolute()))
+        if args.action == "review":
+            return review(store, spec)
+        return review(store, spec, expected=args.digest, consent=True, redacted=args.confirm_redacted)
     if args.command == "repo":
         from . import github_publish
 
@@ -393,6 +411,7 @@ def execute(args, governance=None, initial_switches=None):
                 private_pair(store.root, candidate)
                 result = github_publish.publish_projection(
                     args.target, candidate, args.digest, consent=True, pull_request=args.pr, expected_base=args.base_sha,
+                    store=store, repository_id=args.repository_id,
                 )
         except onboarding.RECOVERABLE as exc:
             result = {"target": args.target.lower(), **onboarding.problem(exc)}

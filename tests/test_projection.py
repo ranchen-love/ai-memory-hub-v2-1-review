@@ -7,7 +7,8 @@ from pathlib import Path
 from ai_memory_hub.assets import LocalVault, put_file, put_link
 from ai_memory_hub.model import Conflict, Denied, HubError
 from ai_memory_hub.projection import (
-    MANIFEST, build_projection, declared_files, encoded, verify_projection, verify_projection_files,
+    MANIFEST, MANIFEST_FORMAT, PUBLIC_ASSETS, PUBLIC_MEMORY, STATIC, build_projection, declared_files, encoded,
+    verify_projection, verify_projection_files,
 )
 from ai_memory_hub.shared_version import check, reload
 from ai_memory_hub.store import Store
@@ -52,7 +53,7 @@ class ProjectionTests(unittest.TestCase):
         preview = self.build(store)
         self.assertEqual(preview["status"], "created")
         files = verify_projection(self.path, preview["digest"])
-        self.assertEqual(set(files), {"README.md", "inventory.json", "projection.json"})
+        self.assertEqual(set(files), set(STATIC) | {"inventory.json", MANIFEST})
         combined = b"".join(files.values())
         for private in (b"SYNTHETIC_PRIVATE_CLAIM", b"SYNTHETIC_PRIVATE_TITLE", b"private-chat",
                         b"SYNTHETIC_RAW_TEXT", b"SYNTHETIC_LOCAL_LOCATOR"):
@@ -87,13 +88,13 @@ class ProjectionTests(unittest.TestCase):
         self.assertNotIn(b"not projected.txt", combined)
         self.assertNotIn(b"SYNTHETIC_ASSET", combined)
         self.assertNotIn(b"asset.bin", combined)
-        self.assertEqual(json.loads(files["asset-refs.json"])["refs"],
+        self.assertEqual(json.loads(files[PUBLIC_ASSETS])["refs"],
                          [{"id": "opaque-file", "version": 1, "storage": "vault", "sha256": hash_bytes(first_bytes)},
                           {"id": "reference", "version": 1, "storage": "external", "sha256": None}])
         for entry in first["files"]:
             self.assertEqual(entry["content"].encode("utf-8"), files[entry["path"]])
         peer = self.vault("private")
-        checked = check(peer, "example", "agent", self.path / "shared-memory.json", consent=True)
+        checked = check(peer, "example", "agent", self.path / PUBLIC_MEMORY, consent=True)
         self.assertIsNone(checked["synced_sha"])
         loaded = reload(peer, "example", "agent", consent=True)
         record = loaded["scopes"]["reviewed"][0]
@@ -107,9 +108,9 @@ class ProjectionTests(unittest.TestCase):
         self.assertNotEqual(updated["digest"], first["digest"])
         changes = {entry["path"]: entry for entry in updated["changes"]}
         self.assertNotIn("README.md", changes)
-        self.assertEqual(changes["asset-refs.json"]["status"], "removed")
-        self.assertEqual(changes["shared-memory.json"]["status"], "changed")
-        self.assertIn("A revised fictional standard", changes["shared-memory.json"]["diff"])
+        self.assertEqual(changes[PUBLIC_ASSETS]["status"], "removed")
+        self.assertEqual(changes[PUBLIC_MEMORY]["status"], "changed")
+        self.assertIn("A revised fictional standard", changes[PUBLIC_MEMORY]["diff"])
         self.assertEqual(verify_projection(self.path, first["digest"]), files)
 
     def test_rejects_pending_inference_and_sensitive_markers(self):
@@ -132,20 +133,20 @@ class ProjectionTests(unittest.TestCase):
         files = verify_projection(self.path, preview["digest"])
         with self.assertRaises(Conflict):
             verify_projection(self.path, "0" * 64)
-        with (self.path / "shared-memory.json").open("ab") as output:
+        with (self.path / PUBLIC_MEMORY).open("ab") as output:
             output.write(b" ")
         with self.assertRaises(HubError):
             verify_projection(self.path, preview["digest"])
-        (self.path / "shared-memory.json").write_bytes(files["shared-memory.json"])
+        (self.path / PUBLIC_MEMORY).write_bytes(files[PUBLIC_MEMORY])
         (self.path / ".env").write_text("synthetic only", encoding="utf-8")
         with self.assertRaises(Denied):
             verify_projection(self.path, preview["digest"])
 
-        forged = json.loads(files["shared-memory.json"])
+        forged = json.loads(files[PUBLIC_MEMORY])
         forged["scopes"]["reviewed"][0]["data"]["claim"] = "Synthetic disclosure fixture@example.org"
-        payload = {**files, "shared-memory.json": encoded(forged)}
+        payload = {**files, PUBLIC_MEMORY: encoded(forged)}
         payload.pop(MANIFEST)
-        payload[MANIFEST] = encoded({"format": "1.0", "kind": "git_projection",
+        payload[MANIFEST] = encoded({"format": MANIFEST_FORMAT, "kind": "git_projection",
                                     "files": declared_files(payload)})
         with self.assertRaises(Denied):
             verify_projection_files(payload, hash_bytes(payload[MANIFEST]))
